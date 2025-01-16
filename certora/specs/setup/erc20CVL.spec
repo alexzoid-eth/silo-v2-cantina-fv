@@ -1,4 +1,4 @@
-import "./helperCVL.spec";
+// Home for all ERC20 tokens implemented in CVL
 
 methods {
 

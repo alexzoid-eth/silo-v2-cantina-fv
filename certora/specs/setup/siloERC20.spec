@@ -1,4 +1,13 @@
-import "./env.spec";
+// ERC20 part of Silo collateral share token
+
+methods {
+    function _Silo.totalSupply() external returns (uint256) envfree;
+    function _Silo.balanceOf(address account) external returns (uint256) envfree;
+    function _Silo.allowance(address owner, address spender) external returns (uint256) envfree;
+
+    function _Silo.name() external returns (string) => NONDET DELETE;
+    function _Silo.symbol() external returns (string) => NONDET DELETE;
+}
 
 // Assume 5 different users
 persistent ghost address ERC20_ACCOUNT_1 {

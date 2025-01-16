@@ -1,4 +1,4 @@
-// Separate contract with helper functions
+// Separate HelperCVL.sol contract with helper functions
 
 using HelperCVL as _HelperCVL;
 

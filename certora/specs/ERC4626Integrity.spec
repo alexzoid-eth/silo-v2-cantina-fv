@@ -1,4 +1,6 @@
-// Prove that ERC4626 is compatible with https://eips.ethereum.org/EIPS/eip-4626
+// Prove that Silo is compatible with ERC4626 (https://eips.ethereum.org/EIPS/eip-4626)
+
+import "setup/silo.spec";
 
 methods {
     // Mark as `envfree` all functions which don't involve environments calls (msg.sender, block.timestamp etc)

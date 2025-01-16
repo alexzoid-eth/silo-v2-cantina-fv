@@ -1,31 +1,25 @@
-// Prove that ERC20 is compatible with https://eips.ethereum.org/EIPS/eip-20
+// Prove that Silo is compatible with ERC20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "setup/erc20.spec";
-
-methods {
-    function totalSupply() external returns (uint256) envfree;
-    function balanceOf(address account) external returns (uint256) envfree;
-    function allowance(address owner, address spender) external returns (uint256) envfree;
-}
+import "setup/silo.spec";
 
 // ERC20 viewers integrity
 
 // Returns the total token supply
 rule totalSupplyIntegrity() {
-    assert(totalSupply() == ghostERC20TotalSupply);
-    satisfy(totalSupply() == ghostERC20TotalSupply);
+    assert(_Silo.totalSupply() == ghostERC20TotalSupply);
+    satisfy(_Silo.totalSupply() == ghostERC20TotalSupply);
 }
 
 // Returns the account balance of another account
 rule balanceOfIntegrity(address account) {
-    assert(balanceOf(account) == ghostERC20Balances[account]);
-    satisfy(balanceOf(account) == ghostERC20Balances[account]);
+    assert(_Silo.balanceOf(account) == ghostERC20Balances[account]);
+    satisfy(_Silo.balanceOf(account) == ghostERC20Balances[account]);
 }
 
 // Returns the amount which `spender` is still allowed to withdraw from `owner`
 rule allowanceIntegrity(address owner, address spender) {
-    assert(allowance(owner, spender) == ghostERC20Allowances[owner][spender]);
-    satisfy(allowance(owner, spender) == ghostERC20Allowances[owner][spender]);
+    assert(_Silo.allowance(owner, spender) == ghostERC20Allowances[owner][spender]);
+    satisfy(_Silo.allowance(owner, spender) == ghostERC20Allowances[owner][spender]);
 }
 
 // ERC20 transfer() integrity
@@ -51,7 +45,7 @@ rule transferIntegrity(env e, address to, uint256 amount) {
     mathint allowanceAny1Any2Prev = ghostERC20Allowances[any1][any2];
 
     // Perform transfer
-    transfer(e, to, amount);
+    _Silo.transfer(e, to, amount);
 
     // Check updates
     assert(ghostCaller != to ? ghostERC20Balances[ghostCaller] == fromBalancePrev - amount 
@@ -80,7 +74,7 @@ rule transferMustRevert(env e, address to, uint256 amount) {
     mathint fromBalancePrev = ghostERC20Balances[ghostCaller];
 
     // Attempt transfer with revert path
-    transfer@withrevert(e, to, amount);
+    _Silo.transfer@withrevert(e, to, amount);
     bool reverted = lastReverted;
 
     // Must revert if transferring from the zero address
@@ -116,7 +110,7 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
     mathint allowanceAny1Any2Prev = ghostERC20Allowances[any1][any2];
 
     // Perform the transferFrom
-    transferFrom(e, from, to, amount);
+    _Silo.transferFrom(e, from, to, amount);
 
     // Check updates
     assert(
@@ -153,7 +147,7 @@ rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
     mathint allowancePrev   = ghostERC20Allowances[from][ghostCaller];
 
     // Attempt the transferFrom with revert path
-    transferFrom@withrevert(e, from, to, amount);
+    _Silo.transferFrom@withrevert(e, from, to, amount);
     bool reverted = lastReverted;
 
     // Must revert if `from` is the zero address
@@ -192,7 +186,7 @@ rule approveIntegrity(env e, address spender, uint256 value) {
     mathint allowanceAny1Any2Prev = ghostERC20Allowances[any1][any2];
 
     // Perform the approve
-    approve(e, spender, value);
+    _Silo.approve(e, spender, value);
 
     // Check that balances remain unchanged
     assert(ghostERC20Balances[ghostCaller]   == ownerBalancePrev);
@@ -215,7 +209,7 @@ rule approveMustRevert(env e, address spender, uint256 value) {
     requireValidEnv(e);
 
     // Attempt the approve with revert path
-    approve@withrevert(e, spender, value);
+    _Silo.approve@withrevert(e, spender, value);
     bool reverted = lastReverted;
 
     // Must revert if the spender is the zero address
@@ -246,7 +240,7 @@ rule mintErc20Integrity(env e, address account, uint256 amount) {
     mathint allowanceAny1Any2Prev = ghostERC20Allowances[any1][any2];
 
     // Perform the mint
-    mint(e, account, amount);
+    _Silo.mint(e, account, amount);
 
     // Check that 'account' got credited by 'amount'
     assert(ghostERC20Balances[account] == accountBalancePrev + amount);
@@ -267,7 +261,7 @@ rule mintErc20MustRevert(env e, address account, uint256 amount) {
     requireValidEnv(e);
 
     // Attempt mint with revert path
-    mint@withrevert(e, account, amount);
+    _Silo.mint@withrevert(e, account, amount);
     bool reverted = lastReverted;
 
     // Must revert if `account` is the zero address
@@ -295,7 +289,7 @@ rule burnIntegrity(env e, address account, uint256 amount) {
     mathint allowanceAny1Any2Prev = ghostERC20Allowances[any1][any2];
 
     // Perform the burn
-    burn(e, account, amount);
+    _Silo.burn(e, account, amount);
 
     // Check that 'account' lost 'amount' tokens
     assert(ghostERC20Balances[account] == accountBalancePrev - amount);
@@ -319,7 +313,7 @@ rule burnMustRevert(env e, address account, uint256 amount) {
     mathint balancePrev = ghostERC20Balances[account];
 
     // Attempt burn with revert path
-    burn@withrevert(e, account, amount);
+    _Silo.burn@withrevert(e, account, amount);
     bool reverted = lastReverted;
 
     // Must revert if `account` is the zero address
