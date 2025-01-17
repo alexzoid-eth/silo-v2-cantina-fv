@@ -1,11 +1,10 @@
-// Prove that Silo is compatible with ERC4626 (https://eips.ethereum.org/EIPS/eip-4626)
+// Prove contract is compatible with ERC4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
-import "setup/silo.spec";
+import "./setup/env.spec";
 
 methods {
     // Mark as `envfree` all functions which don't involve environments calls (msg.sender, block.timestamp etc)
     function asset() external returns (address) envfree;
-    function totalAssets() external returns (uint256) envfree;
 }
 
 //
@@ -15,7 +14,7 @@ methods {
 // MUST be an EIP-20 token contract
 rule assetIntegrity() {
 
-    address asset = asset();
+    address asset = _ERC4626.asset();
 
     assert(asset == ghostERC20CVLToken[0]);
 }
@@ -23,7 +22,7 @@ rule assetIntegrity() {
 // MUST NOT revert
 rule assetMustNotRevert() {
 
-    asset@withrevert();
+    _ERC4626.asset@withrevert();
     
     assert(lastReverted == false);
 }
@@ -33,17 +32,20 @@ rule assetMustNotRevert() {
 //
 
 // SHOULD include any compounding that occurs from yield
-rule totalAssetsIntegrity() {
+rule totalAssetsIntegrity(env e) {
 
-    mathint totalAssets = totalAssets();
+    mathint totalAssets = _ERC4626.totalAssets(e);
 
     assert(totalAssets == ghostERC20CVLBalances[asset()][currentContract]);
 }
 
 // MUST NOT revert
-rule totalAssetsMustNotRevert() {
+rule totalAssetsMustNotRevert(env e) {
 
-    totalAssets@withrevert();
+    // Avoid reverting due non-zero msg.value
+    requireValidEnv(e);
+
+    _ERC4626.totalAssets@withrevert(e);
     
     assert(lastReverted == false);
 }
@@ -52,31 +54,39 @@ rule totalAssetsMustNotRevert() {
 // convertToShares()
 //
 
-// MUST NOT be inclusive of any fees that are charged against assets in the Vault
-rule convertToSharesNotIncludeFees(env e, uint256 assets) {
+// MUST NOT be inclusive of any fees that are charged against assets in the Vault (check deposit)
+rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
 
     // Another way: previewDeposit() factors in deposit fees, so it will return fewer shares 
-    //  if a fee is charged, previewWithdraw() includes withdrawal fees, so you typically have 
+    //  if a fee is charged
+
+    assert(_ERC4626.previewDeposit(e, assets) <= _ERC4626.convertToShares(e, assets));
+    satisfy(_ERC4626.previewDeposit(e, assets) <= _ERC4626.convertToShares(e, assets));
+}
+
+// MUST NOT be inclusive of any fees that are charged against assets in the Vault (check withdrawal)
+rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
+
+    // Solve complexity, avoiding unreasonably large input
+    require(assets < max_uint64);
+
+    // Another way: previewWithdraw() includes withdrawal fees, so you typically have 
     //  to burn more shares to net the same assets
 
-    assert(previewDeposit(e, assets) <= convertToShares(e, assets));
-    satisfy(previewDeposit(e, assets) <= convertToShares(e, assets));
-
-    assert(previewWithdraw(e, assets) >= convertToShares(e, assets));
-    satisfy(previewWithdraw(e, assets) >= convertToShares(e, assets));
+    assert(_ERC4626.previewWithdraw(e, assets) >= _ERC4626.convertToShares(e, assets));
+    satisfy(_ERC4626.previewWithdraw(e, assets) >= _ERC4626.convertToShares(e, assets));
 }
 
 // MUST NOT show any variations depending on the caller
 rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    mathint shares1 = convertToShares(e1, assets);
-    mathint shares2 = convertToShares(e2, assets);
+    mathint shares1 = _ERC4626.convertToShares(e1, assets);
+    mathint shares2 = _ERC4626.convertToShares(e2, assets);
 
     assert(shares1 == shares2);
-    satisfy(shares1 == shares2);
 }
 
 // MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
@@ -85,19 +95,19 @@ rule convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
     // Another way: if totalAssets and totalSupply remain the same between two calls, convertToShares 
     //  MUST return the same value
 
-    mathint totalAssets1 = totalAssets();
-    mathint totalSupply1 = totalSupply();
-    mathint shares1 = convertToShares(e1, assets);
+    mathint totalAssets1 = _ERC4626.totalAssets(e1);
+    mathint totalSupply1 = _ERC4626.totalSupply(e1);
+    mathint shares1 = _ERC4626.convertToShares(e1, assets);
 
     // Havoc storage
     method f;
     env e;
     calldataarg args;
-    f(e, args);
+    _ERC4626.f(e, args);
 
-    mathint totalAssets2 = totalAssets();
-    mathint totalSupply2 = totalSupply();
-    mathint shares2 = convertToShares(e2, assets);
+    mathint totalAssets2 = _ERC4626.totalAssets(e2);
+    mathint totalSupply2 = _ERC4626.totalSupply(e2);
+    mathint shares2 = _ERC4626.convertToShares(e2, assets);
 
     // if totalAssets() and totalSupply() remain unchanged, the result must be identical
     assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
@@ -115,7 +125,7 @@ rule convertToSharesMustNotRevert(env e, uint256 assets) {
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
     
-    convertToShares@withrevert(e, assets);
+    _ERC4626.convertToShares@withrevert(e, assets);
     bool reverted = lastReverted;
 
     assert(reverted == false);
@@ -130,8 +140,8 @@ rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
     // Indirectly prove that each function is rounding down. Going one way and then back will 
     //  produce no more than the original value
 
-    uint256 shares = convertToShares(e, assets);
-    mathint assets2 = convertToAssets(e, shares);
+    uint256 shares = _ERC4626.convertToShares(e, assets);
+    mathint assets2 = _ERC4626.convertToAssets(e, shares);
 
     // assets2 must be <= assets, proving that convertToShares didn’t round up
     assert(assets2 <= assets);
@@ -142,27 +152,34 @@ rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 // convertToAssets()
 //
 
-// MUST NOT be inclusive of any fees that are charged against assets in the Vault
-rule convertToAssetsNotIncludeFees(env e, uint256 shares) {
+// MUST NOT be inclusive of any fees that are charged against assets in the Vault (check redeem)
+rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
 
     // Typically, previewMint() includes deposit fees -> requires more assets to mint the same shares
-    // previewRedeem() includes withdrawal fees -> yields fewer assets for the same shares
     // Therefore, the "ideal scenario" convertToAssets() is >= previewRedeem() and <= previewMint()
+    assert(_ERC4626.previewRedeem(e, shares) <= _ERC4626.convertToAssets(e, shares));
+    satisfy(_ERC4626.previewRedeem(e, shares) <= _ERC4626.convertToAssets(e, shares));
+}
 
-    assert(previewRedeem(e, shares) <= convertToAssets(e, shares));
-    satisfy(previewRedeem(e, shares) <= convertToAssets(e, shares));
+// MUST NOT be inclusive of any fees that are charged against assets in the Vault (check mint)
+rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 
-    assert(previewMint(e, shares) >= convertToAssets(e, shares));
-    satisfy(previewMint(e, shares) >= convertToAssets(e, shares));
+    // Solve complexity, avoiding unreasonably large input
+    require(shares < max_uint64);
+
+    // Typically previewRedeem() includes withdrawal fees -> yields fewer assets for the same shares
+    // Therefore, the "ideal scenario" convertToAssets() is >= previewRedeem() and <= previewMint()
+    assert(_ERC4626.previewMint(e, shares) >= _ERC4626.convertToAssets(e, shares));
+    satisfy(_ERC4626.previewMint(e, shares) >= _ERC4626.convertToAssets(e, shares));
 }
 
 // MUST NOT show any variations depending on the caller
 rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
-    mathint assets1 = convertToAssets(e1, shares);
-    mathint assets2 = convertToAssets(e2, shares);
+    mathint assets1 = _ERC4626.convertToAssets(e1, shares);
+    mathint assets2 = _ERC4626.convertToAssets(e2, shares);
 
     // If no state changed, the result should be identical regardless of the caller
     assert(assets1 == assets2);
@@ -173,21 +190,21 @@ rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
 
     // Snapshot totalAssets() and totalSupply() before first call
-    mathint totalAssets1  = totalAssets();
-    mathint totalSupply1  = totalSupply();
-    mathint assets1 = convertToAssets(e1, shares);
+    mathint totalAssets1  = _ERC4626.totalAssets(e1);
+    mathint totalSupply1  = _ERC4626.totalSupply(e1);
+    mathint assets1 = _ERC4626.convertToAssets(e1, shares);
 
     // "Havoc" the contract by calling an arbitrary method (f), but if it does not affect 
     // totalAssets/totalSupply, then convertToAssets must remain the same
     method f;
     env e;
     calldataarg args;
-    f(e, args);
+    _ERC4626.f(e, args);
 
     // Snapshot again
-    mathint totalAssets2 = totalAssets();
-    mathint totalSupply2 = totalSupply();
-    mathint assets2 = convertToAssets(e2, shares);
+    mathint totalAssets2 = _ERC4626.totalAssets(e2);
+    mathint totalSupply2 = _ERC4626.totalSupply(e2);
+    mathint assets2 = _ERC4626.convertToAssets(e2, shares);
 
     // If totalAssets() and totalSupply() are unchanged, the output must match
     assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
@@ -205,7 +222,7 @@ rule convertToAssetsMustNotRevert(env e, uint256 shares) {
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
 
-    convertToAssets@withrevert(e, shares);
+    _ERC4626.convertToAssets@withrevert(e, shares);
     assert(lastReverted == false);
 }
 
@@ -218,8 +235,8 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
     // Indirectly prove rounding down. If we convert to assets and back, 
     // we can't exceed the original shares.
 
-    uint256 assets = convertToAssets(e, shares);
-    mathint shares2 = convertToShares(e, assets);
+    uint256 assets = _ERC4626.convertToAssets(e, shares);
+    mathint shares2 = _ERC4626.convertToShares(e, assets);
 
     // shares2 must be <= shares, proving convertToAssets didn't round up
     assert(shares2 <= shares);
@@ -235,32 +252,30 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 // MUST NOT be higher than the actual maximum that would be accepted
 rule maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
     // Query the reported limit
-    mathint limit = maxDeposit(e, receiver);
+    mathint limit = _ERC4626.maxDeposit(e, receiver);
 
     // Attempt deposit any assets
-    deposit@withrevert(e, assets, receiver);
+    _ERC4626.deposit@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
 
     // Because the spec says “it should *not* be higher than the true limit”
     assert(limit != max_uint256 && limit < assets => reverted);
-    satisfy(limit == max_uint256 => !reverted);
 } 
 
 // MUST NOT rely on balanceOf of asset
 rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    mathint limit1 = maxDeposit(e1, receiver);
+    mathint limit1 = _ERC4626.maxDeposit(e1, receiver);
 
     // The vault must not factor the user's actual underlying asset balance
     havoc ghostERC20CVLBalances assuming ghostERC20CVLBalances@new[asset()][receiver] 
         != ghostERC20CVLBalances@old[asset()][receiver];
 
-    mathint limit2 = maxDeposit(e2, receiver);
+    mathint limit2 = _ERC4626.maxDeposit(e2, receiver);
 
     // The spec says they SHOULD match if all else is the same (global state).
     // If deposit is truly disabled or unlimited, they must match, etc.
     assert(limit1 == limit2);
-    satisfy(limit1 == limit2);
 }
 
 // MUST factor in both global and user-specific limits, like if deposits are entirely 
@@ -270,10 +285,10 @@ rule maxDepositZeroIfDisabled(env e, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    mathint limit = maxDeposit(e, receiver);
+    mathint limit = _ERC4626.maxDeposit(e, receiver);
 
     // Attempt depositing 1
-    deposit@withrevert(e, 1, receiver);
+    _ERC4626.deposit@withrevert(e, 1, receiver);
     bool reverted = lastReverted;
 
     // If deposit(1) reverts, then EIP-4626 says maxDeposit *must* be 0
@@ -288,11 +303,11 @@ rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    mathint limit = maxDeposit(e, receiver);
+    mathint limit = _ERC4626.maxDeposit(e, receiver);
 
     // If deposit(e, anyLargeNumber, receiver) DOES NOT revert,
     // that means the vault truly imposes no limit. Then maxDeposit MUST be 2^256-1.
-    deposit@withrevert(e, assets, receiver);
+    _ERC4626.deposit@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
 
     // If deposit did NOT revert at a very large number, we interpret that as "no limit".
@@ -308,7 +323,7 @@ rule maxDepositMustNotRevert(env e, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    maxDeposit@withrevert(e, receiver);
+    _ERC4626.maxDeposit@withrevert(e, receiver);
 
     assert(!lastReverted);
 }
@@ -321,8 +336,8 @@ rule maxDepositMustNotRevert(env e, address receiver) {
 //  be minted in a deposit call in the same transaction
 rule previewDepositNoMoreThanActualShares(env e, uint256 assets, address receiver) {
 
-    mathint previewedShares = previewDeposit(e, assets);
-    mathint sharesDeposited = deposit(e, assets, receiver);
+    mathint previewedShares = _ERC4626.previewDeposit(e, assets);
+    mathint sharesDeposited = _ERC4626.deposit(e, assets, receiver);
 
     // The returned real minted shares must be at least as many as the “previewed” shares
     assert(sharesDeposited >= previewedShares);
@@ -338,9 +353,9 @@ rule previewDepositMustIgnoreLimits(env e, uint256 assets) {
     requireValidEnv(e);
 
     bool enoughAllowance = ghostERC20CVLAllowances[asset()][ghostCaller][currentContract] >= assets;
-    mathint limit = maxDeposit(e, ghostCaller);
+    mathint limit = _ERC4626.maxDeposit(e, ghostCaller);
 
-    mathint shares = previewDeposit(e, assets);
+    mathint shares = _ERC4626.previewDeposit(e, assets);
 
     // Preview deposit even when user don't have "enough tokens approved"
     satisfy(enoughAllowance == false => shares != 0);
@@ -355,8 +370,8 @@ rule previewDepositMustIncludeFees(env e, uint256 assets) {
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64); 
 
-    mathint previewed = previewDeposit(e, assets);
-    mathint idealNoFee = convertToShares(e, assets);
+    mathint previewed = _ERC4626.previewDeposit(e, assets);
+    mathint idealNoFee = _ERC4626.convertToShares(e, assets);
 
     // Because deposit fees reduce the minted shares, previewDeposit <= convertToShares
     assert(previewed <= idealNoFee);
@@ -367,8 +382,8 @@ rule previewDepositMustIncludeFees(env e, uint256 assets) {
 rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
     // Like convertToShares or convertToAssets, previewDeposit(assets) must not change based on msg.sender
-    mathint pd1 = previewDeposit(e1, assets);
-    mathint pd2 = previewDeposit(e2, assets);
+    mathint pd1 = _ERC4626.previewDeposit(e1, assets);
+    mathint pd2 = _ERC4626.previewDeposit(e2, assets);
 
     assert(pd1 == pd2);
     satisfy(pd1 == pd2);
@@ -383,10 +398,10 @@ rule previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address
     // Save current storage 
     storage init = lastStorage;
 
-    deposit@withrevert(e, assets, receiver) at init;
+    _ERC4626.deposit@withrevert(e, assets, receiver) at init;
     bool depositReverted = lastReverted;
 
-    previewDeposit@withrevert(e, assets) at init;
+    _ERC4626.previewDeposit@withrevert(e, assets) at init;
     bool previewReverted = lastReverted;
 
     // previewDeposit() may revert only when deposit() reverts
@@ -406,11 +421,11 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
     // Pre-state checks
     mathint vaultAssetsPrev    = ghostERC20CVLBalances[asset()][currentContract];
     mathint callerBalancePrev  = ghostERC20CVLBalances[asset()][ghostCaller];
-    mathint receiverSharesPrev = ghostERC20Balances[receiver];
-    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply;
+    mathint receiverSharesPrev = ghostERC20Balances[ghostContract][receiver];
+    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[ghostContract];
 
     // Attempt deposit
-    mathint shares = deposit(e, assets, receiver);
+    mathint shares = _ERC4626.deposit(e, assets, receiver);
 
     // Post-state checks
 
@@ -423,15 +438,21 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
     assert(callerBalancePost == callerBalancePrev - assets);
 
     // The receiver's share balance must have increased by `shares`
-    mathint receiverSharesPost = ghostERC20Balances[receiver];
+    mathint receiverSharesPost = ghostERC20Balances[ghostContract][receiver];
     assert(receiverSharesPost == receiverSharesPrev + shares);
 
     // The vault's total supply of shares must have increased by `shares`
-    mathint vaultSharesSupplyPost = ghostERC20TotalSupply;
+    mathint vaultSharesSupplyPost = ghostERC20TotalSupply[ghostContract];
     assert(vaultSharesSupplyPost == vaultSharesSupplyPrev + shares);
+}
+
+rule depositToSelfIntegrity(env e, uint256 assets, address receiver) {
+
+    // Attempt deposit
+    mathint shares = _ERC4626.deposit(e, assets, receiver);
 
     // At least one non-reverted path where `receiver` is caller
-    satisfy(receiver == ghostCaller);
+    satisfy(shares != 0 && receiver == ghostCaller);
 }
 
 // MUST support EIP-20 approve / transferFrom on asset as a deposit flow
@@ -442,12 +463,11 @@ rule depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 
     mathint allowanceBefore = ghostERC20CVLAllowances[asset()][ghostCaller][currentContract];
 
-    deposit@withrevert(e, assets, receiver);
+    _ERC4626.deposit@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
 
     // Checks that the deposit logic is actually pulling tokens via “approve + transferFrom.”
     assert(allowanceBefore != max_uint256 && allowanceBefore < assets => reverted);
-    satisfy(allowanceBefore >= assets && !reverted);
 }
 
 // MUST revert if all of assets cannot be deposited (due to deposit limit being reached, slippage, the 
@@ -459,7 +479,7 @@ rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
     mathint balanceBefore = ghostERC20CVLBalances[asset()][currentContract];
 
-    deposit@withrevert(e, assets, receiver);
+    _ERC4626.deposit@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
 
     mathint balanceAfter = ghostERC20CVLBalances[asset()][currentContract];
@@ -469,6 +489,21 @@ rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
     // At least one path when balance changed correctly and not reverted
     satisfy(balanceAfter == balanceBefore + assets && !reverted);
+}
+
+rule depositPossibility(env e, uint256 assets, address receiver) {
+
+    // Avoid reverting due non-zero msg.value, msg.sender not current contract
+    requireValidEnv(e);
+
+    mathint balanceBefore = ghostERC20CVLBalances[asset()][currentContract];
+
+    _ERC4626.deposit(e, assets, receiver);
+
+    mathint balanceAfter = ghostERC20CVLBalances[asset()][currentContract];
+
+    // At least one path when balance increased correctly
+    satisfy(assets != 0 && balanceAfter == balanceBefore + assets);
 }
 
 //
@@ -483,10 +518,10 @@ rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
     requireValidEnv(e);
 
     // Query the reported limit
-    mathint limit = maxMint(e, receiver);
+    mathint limit = _ERC4626.maxMint(e, receiver);
 
     // Attempt mint any shares
-    mint@withrevert(e, shares, receiver);
+    _ERC4626.mint@withrevert(e, shares, receiver);
     bool reverted = lastReverted;
 
     // MUST NOT exceed the “true” maximum
@@ -496,13 +531,13 @@ rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 // MUST NOT rely on balanceOf of asset
 rule maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    mathint limit1 = maxMint(e1, receiver);
+    mathint limit1 = _ERC4626.maxMint(e1, receiver);
 
     // The vault must not factor the user's actual underlying asset balance
     havoc ghostERC20CVLBalances assuming ghostERC20CVLBalances@new[asset()][receiver] 
         != ghostERC20CVLBalances@old[asset()][receiver];
 
-    mathint limit2 = maxMint(e2, receiver);
+    mathint limit2 = _ERC4626.maxMint(e2, receiver);
 
     // If global state is the same, the two calls must return the same
     assert(limit1 == limit2);
@@ -515,7 +550,7 @@ rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    mathint limit = maxMint(e, receiver);
+    mathint limit = _ERC4626.maxMint(e, receiver);
 
     // Try minting any shares
     mint@withrevert(e, shares, receiver);
@@ -523,7 +558,6 @@ rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 
     // Always reverted with zero limit
     assert(limit == 0 => reverted);
-    satisfy(limit != 0 && !reverted);
 }
 
 // MUST return `2 ** 256 - 1` if there is no limit on the maximum amount of shares that may be minted
@@ -532,10 +566,10 @@ rule maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    mathint limit = maxMint(e, receiver);
+    mathint limit = _ERC4626.maxMint(e, receiver);
 
     // Attempt mint
-    mint@withrevert(e, shares, receiver);
+    _ERC4626.mint@withrevert(e, shares, receiver);
     bool reverted = lastReverted;
 
     // If mint did NOT revert at a large number, we interpret that as “no limit.”
@@ -549,7 +583,7 @@ rule maxMintMustNotRevert(env e, address receiver) {
     // Avoid reverting due non-zero msg.value
     requireValidEnv(e);
 
-    maxMint@withrevert(e, receiver);
+    _ERC4626.maxMint@withrevert(e, receiver);
     bool reverted = lastReverted;
 
     assert(!reverted);
@@ -563,9 +597,9 @@ rule maxMintMustNotRevert(env e, address receiver) {
 //  deposited in a mint call in the same transaction
 rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver) {
     
-    mathint previewedAssets = previewMint(e, shares);
+    mathint previewedAssets = _ERC4626.previewMint(e, shares);
 
-    mathint actualAssets = mint(e, shares, receiver);
+    mathint actualAssets = _ERC4626.mint(e, shares, receiver);
 
     // EIP-4626 says: mint(...) >= previewMint(...) in terms of assets used
     // "no fewer than the exact amount"
@@ -581,9 +615,9 @@ rule previewMintMustIgnoreLimits(env e, uint256 shares) {
     requireValidEnv(e);
 
     mathint allowance = ghostERC20CVLAllowances[asset()][ghostCaller][currentContract];
-    mathint sharesLimit = maxMint(e, ghostCaller);
+    mathint sharesLimit = _ERC4626.maxMint(e, ghostCaller);
 
-    mathint assets = previewMint(e, shares);
+    mathint assets = _ERC4626.previewMint(e, shares);
 
     // Preview mint even when user don't have "enough tokens approved"
     satisfy(allowance == 0 => assets != 0);
@@ -598,8 +632,8 @@ rule previewMintMustIncludeFees(env e, uint256 shares) {
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64); 
 
-    mathint pm = previewMint(e, shares);
-    mathint cta = convertToAssets(e, shares);
+    mathint pm = _ERC4626.previewMint(e, shares);
+    mathint cta = _ERC4626.convertToAssets(e, shares);
 
     // Because deposit fees => user needs more assets => pm >= cta
     // If no fees, pm == cta. But never < cta.
@@ -611,8 +645,8 @@ rule previewMintMustIncludeFees(env e, uint256 shares) {
 //  (i.e. MUST NOT show any variations depending on the caller)
 rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    mathint pm1 = previewMint(e1, shares);
-    mathint pm2 = previewMint(e2, shares);
+    mathint pm1 = _ERC4626.previewMint(e1, shares);
+    mathint pm2 = _ERC4626.previewMint(e2, shares);
 
     // If the vault state is identical, the results must match
     assert(pm1 == pm2);
@@ -629,11 +663,11 @@ rule previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address recei
     storage init = lastStorage;
 
     // Attempt the real mint
-    mint@withrevert(e, shares, receiver) at init;
+    _ERC4626.mint@withrevert(e, shares, receiver) at init;
     bool mintReverted = lastReverted;
 
     // Attempt previewMint
-    previewMint@withrevert(e, shares) at init;
+    _ERC4626.previewMint@withrevert(e, shares) at init;
     bool previewReverted = lastReverted;
 
     // previewMint may revert only if mint also reverts (e.g. overflow)
@@ -653,17 +687,17 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
     // Capture pre-state
     mathint vaultAssetsPrev         = ghostERC20CVLBalances[asset()][currentContract];
     mathint callerAssetBalancePrev  = ghostERC20CVLBalances[asset()][ghostCaller];
-    mathint receiverSharesPrev      = ghostERC20Balances[receiver];
-    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply;
+    mathint receiverSharesPrev      = ghostERC20Balances[ghostContract][receiver];
+    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[ghostContract];
 
     // Perform the mint
-    mathint actualAssetsUsed = mint(e, shares, receiver);
+    mathint actualAssetsUsed = _ERC4626.mint(e, shares, receiver);
 
     // Capture post-state
     mathint vaultAssetsPost         = ghostERC20CVLBalances[asset()][currentContract];
     mathint callerAssetBalancePost  = ghostERC20CVLBalances[asset()][ghostCaller];
-    mathint receiverSharesPost      = ghostERC20Balances[receiver];
-    mathint vaultShareSupplyPost    = ghostERC20TotalSupply;
+    mathint receiverSharesPost      = ghostERC20Balances[ghostContract][receiver];
+    mathint vaultShareSupplyPost    = ghostERC20TotalSupply[ghostContract];
 
     // The vault’s asset balance must have increased by exactly `actualAssetsUsed`
     assert(vaultAssetsPost == vaultAssetsPrev + actualAssetsUsed);
@@ -676,9 +710,18 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
 
     // The vault’s total share supply must have increased by `shares`
     assert(vaultShareSupplyPost == vaultShareSupplyPrev + shares);
+}
+
+rule mintToSelfIntegrity(env e, uint256 shares, address receiver) {
+
+    // Set ghost caller
+    requireValidEnv(e);
+
+    // Perform the mint
+    _ERC4626.mint(e, shares, receiver);
 
     // At least one non-reverted path where `receiver` is caller
-    satisfy(receiver == ghostCaller);
+    satisfy(shares != 0 && receiver == ghostCaller);
 }
 
 // MUST support EIP-20 approve / transferFrom on asset as a mint flow
@@ -689,18 +732,17 @@ rule mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 
     // Snapshot the caller’s allowance and needed assets prior to calling mint
     mathint allowanceBefore = ghostERC20CVLAllowances[asset()][ghostCaller][currentContract];
-    mathint neededAssets = previewMint(e, shares);
+    mathint neededAssets = _ERC4626.previewMint(e, shares);
 
     // Select code flow where user doesn't allow unlimited allowance to the Vault
     require(allowanceBefore != max_uint256);
 
     // Attempt the mint
-    mint@withrevert(e, shares, receiver);
+    _ERC4626.mint@withrevert(e, shares, receiver);
     bool reverted = lastReverted;
 
     // Checks that the mint logic is actually pulling tokens via “approve + transferFrom.”
     assert(allowanceBefore < neededAssets => reverted);
-    satisfy(allowanceBefore >= neededAssets && !reverted);
 }
 
 // MUST revert if all of `shares` cannot be minted (due to limit reached, user not approving enough tokens, etc.)
@@ -709,21 +751,31 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    mathint receiverSharesBefore = ghostERC20Balances[receiver];
+    mathint receiverSharesBefore = ghostERC20Balances[ghostContract][receiver];
 
     // Attempt the mint
-    mint@withrevert(e, shares, receiver);
+    _ERC4626.mint@withrevert(e, shares, receiver);
     bool mintReverted = lastReverted;
 
-    mathint receiverSharesAfter = ghostERC20Balances[receiver];
+    mathint receiverSharesAfter = ghostERC20Balances[ghostContract][receiver];
 
     // If the receiver's share balance did not increase by the required amount for these shares,
     //    EIP-4626 says it MUST revert
     assert(receiverSharesAfter != receiverSharesBefore + shares => mintReverted);
     assert(!mintReverted => receiverSharesAfter == receiverSharesBefore + shares);
 
+}
+
+rule mintPossibility(env e, uint256 shares, address receiver) {
+
+    mathint receiverSharesBefore = ghostERC20Balances[ghostContract][receiver];
+
+    _ERC4626.mint(e, shares, receiver);
+
+    mathint receiverSharesAfter = ghostERC20Balances[ghostContract][receiver];
+
     // At least one path when balance changed correctly and not reverted
-    satisfy(receiverSharesAfter == receiverSharesBefore + shares && !mintReverted);
+    satisfy(shares != 0 && receiverSharesAfter == receiverSharesBefore + shares);
 }
 
 //
@@ -731,37 +783,46 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 //
 
 // MUST NOT be higher than the actual maximum that would be accepted 
-rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address owner, address receiver) {
+rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, address owner) {
 
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
     // Query the reported limit
-    mathint limit = maxWithdraw(e, owner);
+    mathint limit = _ERC4626.maxWithdraw(e, owner);
 
     // Attempt a withdraw any assets amount
-    withdraw@withrevert(e, assets, receiver, owner);
+    _ERC4626.withdraw@withrevert(e, assets, receiver, owner);
     bool reverted = lastReverted;
 
     // Always revert when withdraw over the limit
     assert(assets > limit => reverted);
+}
+
+rule withdrawPossibilityUnderMaxWithdraw(env e, uint256 assets, address receiver, address owner) {
+
+    // Query the reported limit
+    mathint assetsLimit = _ERC4626.maxWithdraw(e, owner);
+
+    // Attempt a withdraw any assets amount
+    _ERC4626.withdraw(e, assets, receiver, owner);
 
     // At least one path when withdraw is possible inside limits
-    satisfy(assets <= limit && !reverted);
+    satisfy(assets != 0 && assets <= assetsLimit);
 }
 
 // MUST factor in both global and user-specific limits
 rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 
     // Query the limit first time
-    mathint limit1 = maxWithdraw(e1, owner);
+    mathint limit1 = _ERC4626.maxWithdraw(e1, owner);
 
     // Havoc the user’s share balance in the vault
     havoc ghostERC20Balances assuming
-        ghostERC20Balances@new[owner] != ghostERC20Balances@old[owner];
+        ghostERC20Balances@new[ghostContract][owner] != ghostERC20Balances@old[ghostContract][owner];
 
     // Query the limit again in a second environment
-    mathint limit2 = maxWithdraw(e2, owner);
+    mathint limit2 = _ERC4626.maxWithdraw(e2, owner);
 
     // If global state is otherwise the same, the two calls must return the same
     assert(limit1 == limit2);
@@ -773,15 +834,14 @@ rule maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address rec
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    mathint limit = maxWithdraw(e, owner);
+    mathint limit = _ERC4626.maxWithdraw(e, owner);
 
     // Attempt withdrawing any assets
-    withdraw@withrevert(e, assets, receiver, owner);
+    _ERC4626.withdraw@withrevert(e, assets, receiver, owner);
     bool reverted = lastReverted;
 
     // Always reverted with zero limit
     assert(limit == 0 => (reverted || assets == 0));
-    satisfy(limit != 0 && !reverted);
 }
 
 // MUST NOT revert
@@ -790,7 +850,7 @@ rule maxWithdrawMustNotRevert(env e, address owner) {
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    maxWithdraw@withrevert(e, owner);
+    _ERC4626.maxWithdraw@withrevert(e, owner);
     bool reverted = lastReverted;
 
     assert(!reverted);
@@ -805,9 +865,9 @@ rule maxWithdrawMustNotRevert(env e, address owner) {
 rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address receiver, address owner) {
 
     // Compare the previewed shares vs. the actual shares burned by withdraw.
-    mathint previewedShares = previewWithdraw(e, assets);
+    mathint previewedShares = _ERC4626.previewWithdraw(e, assets);
 
-    mathint sharesBurned = withdraw(e, assets, receiver, owner);
+    mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
     // The spec says: "withdraw should return the same or fewer shares as previewWithdraw."
     // => sharesBurned <= previewedShares
@@ -822,10 +882,10 @@ rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, ad
     // Set ghost caller
     requireValidEnv(e);
 
-    mathint assetsLimit = maxWithdraw(e, ghostCaller);
-    mathint userShares = ghostERC20Balances[ghostCaller];
+    mathint assetsLimit = _ERC4626.maxWithdraw(e, ghostCaller);
+    mathint userShares = ghostERC20Balances[ghostContract][ghostCaller];
 
-    mathint previewShares = previewWithdraw(e, assets);
+    mathint previewShares = _ERC4626.previewWithdraw(e, assets);
 
     // Preview withdraw even when user "maxWithdraw" limit is exceeded 
     satisfy(assetsLimit < assets => previewShares != 0);
@@ -841,8 +901,8 @@ rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, ad
 //  (i.e. MUST NOT vary by the caller if the state is the same).
 rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    mathint pw1 = previewWithdraw(e1, assets);
-    mathint pw2 = previewWithdraw(e2, assets);
+    mathint pw1 = _ERC4626.previewWithdraw(e1, assets);
+    mathint pw2 = _ERC4626.previewWithdraw(e2, assets);
 
     // If the vault state didn't change, the result must be identical
     assert(pw1 == pw2);
@@ -859,11 +919,11 @@ rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, addre
     storage init = lastStorage;
 
     // Attempt withdraw in that snapshot
-    withdraw@withrevert(e, assets, receiver, owner) at init;
+    _ERC4626.withdraw@withrevert(e, assets, receiver, owner) at init;
     bool withdrawReverted = lastReverted;
 
     // Attempt previewWithdraw in the same snapshot
-    previewWithdraw@withrevert(e, assets) at init;
+    _ERC4626.previewWithdraw@withrevert(e, assets) at init;
     bool previewReverted = lastReverted;
 
     // If previewWithdraw reverts, that can only happen if withdraw also reverts
@@ -881,21 +941,21 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
     requireValidEnv(e);
 
     // Pre-state snapshots
-    mathint ownerSharesBefore    = ghostERC20Balances[owner];                       // The owner's share balance
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply;                        // The vault’s total share supply
+    mathint ownerSharesBefore    = ghostERC20Balances[ghostContract][owner];                       // The owner's share balance
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[ghostContract];                        // The vault’s total share supply
     mathint vaultAssetsBefore    = ghostERC20CVLBalances[asset()][currentContract]; // The vault’s asset balance
     mathint receiverAssetsBefore = ghostERC20CVLBalances[asset()][receiver];        // The receiver’s asset balance
-    mathint ownerAllowancesBefore= ghostERC20Allowances[owner][ghostCaller];
+    mathint ownerAllowancesBefore= ghostERC20Allowances[ghostContract][owner][ghostCaller];
 
     // Perform the withdraw
-    mathint sharesBurned = withdraw(e, assets, receiver, owner);
+    mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
     // Post-state snapshots
-    mathint ownerSharesAfter    = ghostERC20Balances[owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply;
+    mathint ownerSharesAfter    = ghostERC20Balances[ghostContract][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[ghostContract];
     mathint vaultAssetsAfter    = ghostERC20CVLBalances[asset()][currentContract];
     mathint receiverAssetsAfter = ghostERC20CVLBalances[asset()][receiver];
-    mathint ownerAllowancesAfter= ghostERC20Allowances[owner][ghostCaller];
+    mathint ownerAllowancesAfter= ghostERC20Allowances[ghostContract][owner][ghostCaller];
 
     // The `owner`’s share balance must have decreased by exactly `sharesBurned`
     assert(ownerSharesAfter == ownerSharesBefore - sharesBurned);
@@ -913,10 +973,6 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
         : receiverAssetsAfter == receiverAssetsBefore
         );
 
-    // MUST support a withdraw flow where the shares are burned from owner directly where msg.sender has 
-    //  EIP-20 approval over the shares of owner.
-    satisfy(owner != ghostCaller);
-
     // SHOULD check msg.sender can spend owner funds, assets needs to be converted to shares and shares 
     //  should be checked for allowance
     assert(owner != ghostCaller => 
@@ -924,15 +980,28 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
         );
 }
 
+// MUST support a withdraw flow where the shares are burned from owner directly where msg.sender has 
+//  EIP-20 approval over the shares of owner
+rule withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address owner) {
+
+    // Set ghost caller
+    requireValidEnv(e);
+
+    // Perform the withdraw
+    mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
+
+    satisfy(sharesBurned != 0 && owner != ghostCaller);
+}
+
 // MUST support a `withdraw` flow where the shares are burned from owner directly where owner is msg.sender
-rule withdrawOwnerIsCaller(env e, uint256 assets, address receiver, address owner) {
+rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address owner) {
 
     // Ensure valid environment: no msg.value, valid msg.sender, etc.
     requireValidEnv(e);
 
-    withdraw(e, assets, receiver, owner);
+    mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
-    satisfy(owner == ghostCaller);
+    satisfy(sharesBurned != 0 && owner == ghostCaller);
 }
 
 // MUST revert if all of assets cannot be withdrawn
@@ -944,7 +1013,7 @@ rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver,
     mathint vaultAssetsBefore = ghostERC20CVLBalances[asset()][currentContract];
     mathint receiverAssetsBefore = ghostERC20CVLBalances[asset()][receiver];
 
-    withdraw@withrevert(e, assets, receiver, owner);
+    _ERC4626.withdraw@withrevert(e, assets, receiver, owner);
     bool reverted = lastReverted;
 
     mathint vaultAssetsAfter = ghostERC20CVLBalances[asset()][currentContract];
@@ -970,10 +1039,10 @@ rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address r
     requireValidEnv(e);
 
     // Query the reported limit
-    mathint maxShares = maxRedeem(e, owner);
+    mathint maxShares = _ERC4626.maxRedeem(e, owner);
 
     // Attempt redeeming `shares`
-    redeem@withrevert(e, shares, receiver, owner);
+    _ERC4626.redeem@withrevert(e, shares, receiver, owner);
     bool reverted = lastReverted;
 
     // Going above that limit must revert
@@ -987,9 +1056,9 @@ rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address recei
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    mathint maxShares = maxRedeem(e, owner);
+    mathint maxShares = _ERC4626.maxRedeem(e, owner);
 
-    mathint assets = redeem@withrevert(e, shares, receiver, owner);
+    mathint assets = _ERC4626.redeem@withrevert(e, shares, receiver, owner);
     bool reverted = lastReverted;
 
     // Redemption is entirely disabled when `maxRedeem` returns zero
@@ -1002,7 +1071,7 @@ rule maxRedeemMustNotRevert(env e, address owner) {
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    maxRedeem@withrevert(e, owner);
+    _ERC4626.maxRedeem@withrevert(e, owner);
     bool reverted = lastReverted;
 
     assert(!reverted);
@@ -1017,10 +1086,10 @@ rule maxRedeemMustNotRevert(env e, address owner) {
 rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver, address owner) {
 
     // Compute the “previewed” assets
-    mathint previewedAssets = previewRedeem(e, shares);
+    mathint previewedAssets = _ERC4626.previewRedeem(e, shares);
 
     // Perform the actual redeem
-    mathint actualAssets = redeem(e, shares, receiver, owner);
+    mathint actualAssets = _ERC4626.redeem(e, shares, receiver, owner);
 
     // EIP-4626: "redeem should return the same or MORE assets as previewRedeem"
     assert(actualAssets >= previewedAssets);
@@ -1034,10 +1103,10 @@ rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, addr
     // Set ghost caller
     requireValidEnv(e);
 
-    mathint sharesLimit = maxRedeem(e, ghostCaller);
-    mathint userShares = ghostERC20Balances[ghostCaller];
+    mathint sharesLimit = _ERC4626.maxRedeem(e, ghostCaller);
+    mathint userShares = ghostERC20Balances[ghostContract][ghostCaller];
 
-    mathint previewAssets = previewRedeem(e, shares);
+    mathint previewAssets = _ERC4626.previewRedeem(e, shares);
 
     // Preview redeem even when user "maxRedeem" limit is exceeded 
     satisfy(sharesLimit < shares => previewAssets != 0);
@@ -1054,8 +1123,8 @@ rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, addr
 //  (i.e. MUST NOT vary by the caller if the state is unchanged).
 rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    mathint pr1 = previewRedeem(e1, shares);
-    mathint pr2 = previewRedeem(e2, shares);
+    mathint pr1 = _ERC4626.previewRedeem(e1, shares);
+    mathint pr2 = _ERC4626.previewRedeem(e2, shares);
 
     // If the vault state didn’t change, results must match
     assert(pr1 == pr2);
@@ -1072,11 +1141,11 @@ rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address r
     storage init = lastStorage;
 
     // Attempt the real redeem in that snapshot
-    redeem@withrevert(e, shares, receiver, owner) at init;
+    _ERC4626.redeem@withrevert(e, shares, receiver, owner) at init;
     bool redeemReverted = lastReverted;
 
     // Attempt previewRedeem in the same snapshot
-    previewRedeem@withrevert(e, shares) at init;
+    _ERC4626.previewRedeem@withrevert(e, shares) at init;
     bool previewReverted = lastReverted;
 
     // If previewRedeem reverts, that can only happen if redeem also reverts
@@ -1094,21 +1163,21 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
     requireValidEnv(e);
 
     // Pre-state snapshots
-    mathint ownerSharesBefore       = ghostERC20Balances[owner];                       
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply;                         
+    mathint ownerSharesBefore       = ghostERC20Balances[ghostContract][owner];                       
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[ghostContract];                         
     mathint vaultAssetsBefore       = ghostERC20CVLBalances[asset()][currentContract];
     mathint receiverAssetsBefore    = ghostERC20CVLBalances[asset()][receiver];
-    mathint ownerAllowancesBefore   = ghostERC20Allowances[owner][ghostCaller];
+    mathint ownerAllowancesBefore   = ghostERC20Allowances[ghostContract][owner][ghostCaller];
 
     // Perform redeem
-    mathint assetsOut = redeem(e, shares, receiver, owner);
+    mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
     // Post-state snapshots
-    mathint ownerSharesAfter       = ghostERC20Balances[owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply;
+    mathint ownerSharesAfter       = ghostERC20Balances[ghostContract][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[ghostContract];
     mathint vaultAssetsAfter       = ghostERC20CVLBalances[asset()][currentContract];
     mathint receiverAssetsAfter    = ghostERC20CVLBalances[asset()][receiver];
-    mathint ownerAllowancesAfter   = ghostERC20Allowances[owner][ghostCaller];
+    mathint ownerAllowancesAfter   = ghostERC20Allowances[ghostContract][owner][ghostCaller];
 
     // The `owner`’s share balance must decrease by exactly `shares`
     assert(ownerSharesAfter == ownerSharesBefore - shares);
@@ -1140,15 +1209,27 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
 }
 
 // MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
-rule redeemOwnerIsCaller(env e, uint256 shares, address receiver, address owner) {
+rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address owner) {
 
-    // Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
+    // Set ghost caller
     requireValidEnv(e);
 
-    redeem(e, shares, receiver, owner);
+    mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
     // This path must succeed if `owner == msg.sender`
-    satisfy(owner == ghostCaller);
+    satisfy(assetsOut != 0 && owner != ghostCaller);
+}
+
+// MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
+rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address owner) {
+
+    // Set ghost caller
+    requireValidEnv(e);
+
+    mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
+
+    // This path must succeed if `owner == msg.sender`
+    satisfy(assetsOut != 0 && owner == ghostCaller);
 }
 
 // MUST revert if all of shares cannot be redeemed
@@ -1160,7 +1241,7 @@ rule redeemMustRevertIfCannotRedeem(env e, uint256 shares, address receiver, add
     mathint vaultAssetsBefore    = ghostERC20CVLBalances[asset()][currentContract];
     mathint receiverAssetsBefore = ghostERC20CVLBalances[asset()][receiver];
 
-    mathint assetsOut = redeem@withrevert(e, shares, receiver, owner);
+    mathint assetsOut = _ERC4626.redeem@withrevert(e, shares, receiver, owner);
     bool reverted = lastReverted;
 
     mathint vaultAssetsAfter    = ghostERC20CVLBalances[asset()][currentContract];

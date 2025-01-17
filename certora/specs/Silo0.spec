@@ -1,14 +1,17 @@
+import "setup/silo0/silo0.spec";
+
+import "./ValidState.spec";
 import "./ERC20Integrity.spec";
 import "./ERC4626Integrity.spec";
 
 // Sanity
 
-// use builtin rule sanity;
+use builtin rule sanity;
 
 // Valid State
 
-invariant crossReentrancyGuardOpenedOnExit()
-    ghostCrossReentrantStatus == _NOT_ENTERED();
+use invariant crossReentrancyGuardOpenedOnExit;
+use invariant crossReentrancyProtectionNoDoubleCall;
 
 // ERC20 integrity
 
@@ -16,8 +19,10 @@ use rule totalSupplyIntegrity;
 use rule balanceOfIntegrity;
 use rule allowanceIntegrity;
 use rule transferIntegrity;
+use rule transferSupportZeroAmount;
 use rule transferMustRevert;
 use rule transferFromIntegrity;
+use rule transferFromSupportZeroAmount;
 use rule transferFromMustRevert;
 use rule approveIntegrity;
 use rule approveMustRevert;
@@ -30,13 +35,15 @@ use rule assetMustNotRevert;
 use rule totalAssetsIntegrity;
 use rule totalAssetsMustNotRevert;
 
-use rule convertToSharesNotIncludeFees;
+use rule convertToSharesNotIncludeFeesInDeposit;
+use rule convertToSharesNotIncludeFeesInWithdraw;
 use rule convertToSharesMustNotDependOnCaller;
 use rule convertToSharesNoSlippage;
 use rule convertToSharesMustNotRevert;
 use rule convertToSharesRoundTripDoesNotExceed;
 
-use rule convertToAssetsNotIncludeFees;
+use rule convertToAssetsNotIncludeFeesRedeem;
+use rule convertToAssetsNotIncludeFeesMint;
 use rule convertToAssetsMustNotDependOnCaller;
 use rule convertToAssetsNoSlippage;
 use rule convertToAssetsMustNotRevert;
@@ -55,8 +62,10 @@ use rule previewDepositMustNotDependOnCaller;
 use rule previewDepositMayRevertOnlyWithDepositRevert;
 
 use rule depositIntegrity;
+use rule depositToSelfIntegrity;
 use rule depositRespectsApproveTransfer;
 use rule depositMustRevertIfCannotDeposit;
+use rule depositPossibility;
 
 use rule maxMintNoHigherThanActual;
 use rule maxMintDoesNotDependOnUserBalance;
@@ -73,8 +82,10 @@ use rule previewMintMayRevertOnlyWithMintRevert;
 use rule mintIntegrity;
 use rule mintRespectsApproveTransfer;
 use rule mintMustRevertIfCannotMint;
+use rule mintPossibility;
 
 use rule maxWithdrawNoHigherThanActual;
+use rule withdrawPossibilityUnderMaxWithdraw;
 use rule maxWithdrawDoesNotDependOnUserShares;
 use rule maxWithdrawZeroIfDisabled;
 use rule maxWithdrawMustNotRevert;
@@ -85,7 +96,8 @@ use rule previewWithdrawMustNotDependOnCaller;
 use rule previewWithdrawMayRevertOnlyWithWithdrawRevert;
 
 use rule withdrawIntegrity;
-use rule withdrawOwnerIsCaller;
+use rule withdrawFromOtherIntegrity;
+use rule withdrawFromSelfIntegrity;
 use rule withdrawMustRevertIfCannotWithdraw;
 
 use rule maxRedeemNoHigherThanActual;
@@ -98,5 +110,6 @@ use rule previewRedeemMustNotDependOnCaller;
 use rule previewRedeemMayRevertOnlyWithRedeemRevert;
 
 use rule redeemIntegrity;
-use rule redeemOwnerIsCaller;
+use rule redeemFromOtherIntegrity;
+use rule redeemFromSelfIntegrity;
 use rule redeemMustRevertIfCannotRedeem;

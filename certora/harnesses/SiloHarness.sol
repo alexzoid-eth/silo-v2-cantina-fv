@@ -14,7 +14,7 @@ import { ERC20Upgradeable } from "openzeppelin5-upgradeable/token/ERC20/ERC20Upg
 import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgradeable.sol";
 import { EIP712Upgradeable } from "openzeppelin5-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
-contract SiloHarness is Silo {
+abstract contract SiloHarness is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
 
     // 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200

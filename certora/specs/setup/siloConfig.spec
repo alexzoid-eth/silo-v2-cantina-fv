@@ -1,20 +1,19 @@
-// Silo config implemented in CVL
+// Silo config contract support
 
 import "./siloConfigCrossReentrancyGuard.spec";
 
-methods {
-    function _.getAssetForSilo(address _silo) external
-        => ghostConfigToken0 expect address;
+using SiloConfigHarness as _SiloConfig;
+
+// Storage hooks
+
+persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {
+    init_state axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == 0;
 }
 
-persistent ghost address ghostConfigToken0 {
-    axiom ghostConfigToken0 == ghostERC20CVLToken[0];
+hook Sload address collateralSilo _SiloConfig.borrowerCollateralSilo[KEY address borrower] {
+    require(ghostConfigBorrowerCollateralSilo[borrower] == collateralSilo);
 }
 
-persistent ghost mapping(address => address) ghostBorrowerCollateralSilo;
-
-definition onlySiloOrTokenOrHookReceiver(address caller) returns bool =
-    caller == _Silo
-    || caller == ghostConfigToken0
-    // @todo
-    ;
+hook Sstore _SiloConfig.borrowerCollateralSilo[KEY address borrower] address collateralSilo {
+    ghostConfigBorrowerCollateralSilo[borrower] = collateralSilo;
+}

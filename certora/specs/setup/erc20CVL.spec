@@ -1,4 +1,4 @@
-// Home for all ERC20 tokens implemented in CVL
+// All ERC20 tokens implemented in CVL
 
 methods {
 

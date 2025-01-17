@@ -19,10 +19,14 @@ persistent ghost mathint ghostCrossReentrantStatus {
     axiom ghostCrossReentrantStatus == _NOT_ENTERED() || ghostCrossReentrantStatus == _ENTERED();
 }
 
+// Set true when on or off was execute twice
+ghost bool ghostReentrancyProtectionDoubleCall;
+
 function turnOnReentrancyProtectionCVL(env e) {
 
-    ASSERT(onlySiloOrTokenOrHookReceiver(e.msg.sender));
+    _SiloConfig.onlySiloOrTokenOrHookReceiverHarness(e);
 
+    ghostReentrancyProtectionDoubleCall = ghostCrossReentrantStatus == _ENTERED();
     ASSERT(ghostCrossReentrantStatus != _ENTERED());
     
     ghostCrossReentrantStatus = _ENTERED();
@@ -30,8 +34,9 @@ function turnOnReentrancyProtectionCVL(env e) {
 
 function turnOffReentrancyProtectionCVL(env e) {
 
-    ASSERT(onlySiloOrTokenOrHookReceiver(e.msg.sender));
+    _SiloConfig.onlySiloOrTokenOrHookReceiverHarness(e);
 
+    ghostReentrancyProtectionDoubleCall = ghostCrossReentrantStatus == _NOT_ENTERED();
     ASSERT(ghostCrossReentrantStatus != _NOT_ENTERED());
     
     ghostCrossReentrantStatus = _NOT_ENTERED();

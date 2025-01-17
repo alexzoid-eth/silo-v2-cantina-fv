@@ -1,24 +1,54 @@
-// Silo core
+// Silo core, CVL storage ghosts and hooks
 
-import "./siloStorage.spec";
 import "./siloConfig.spec";
 import "./helperCVL.spec";
 import "./erc20CVL.spec";
-import "./siloERC20.spec";
+import "./env.spec";
 
-using SiloHarness as _Silo;
+definition COLLATERAL_TOKEN() returns mathint = 2^11;
+definition _100_PERCENT() returns mathint = 10^18;
 
-methods {
-    function _Silo.initialize(address _config) external => NONDET DELETE;
+//
+// IERC20R
+//
+
+// Ghost copy of `IERC20RStorage._receiveAllowances`
+
+persistent ghost mapping(address => mapping(address => mapping(address => mathint))) ghostReceiveAllowances {
+    init_state axiom forall address contract. forall address owner. forall address recipient. 
+        ghostReceiveAllowances[contract][owner][recipient] == 0;
+    axiom forall address contract. forall address owner. forall address recipient. 
+        ghostReceiveAllowances[contract][owner][recipient] >= 0 
+            && ghostReceiveAllowances[contract][owner][recipient] <= max_uint256;
 }
 
-persistent ghost address ghostCaller;
+//
+// SiloStorage
+//
 
-function requireValidEnv(env e) {
-    // Avoid reverting due non-zero msg.value
-    require(e.msg.value == 0);
+// Ghost copy of `SiloStorage.daoAndDeployerRevenue`
 
-    // Valid msg.sender
-    require(e.msg.sender != 0 && e.msg.sender != currentContract);
-    require(ghostCaller == e.msg.sender);
+persistent ghost mapping(address => mathint) ghostDaoAndDeployerRevenue {
+    init_state axiom forall address contract. ghostDaoAndDeployerRevenue[contract] == 0;
+    axiom forall address contract. 
+        ghostDaoAndDeployerRevenue[contract] >= 0 && ghostDaoAndDeployerRevenue[contract] <= max_uint192;
+}
+
+// Ghost copy of `SiloStorage.interestRateTimestamp`
+
+persistent ghost mapping(address => mathint) ghostInterestRateTimestamp {
+    init_state axiom forall address contract. ghostInterestRateTimestamp[contract] == 0;
+    axiom forall address contract. 
+        ghostInterestRateTimestamp[contract] >= 0 && ghostInterestRateTimestamp[contract] <= max_uint64;
+}
+
+// Ghost copy of `SiloStorage.totalAssets`
+
+persistent ghost mapping(address => mapping(mathint => mathint)) ghostTotalAssets {
+    init_state axiom forall address contract. forall mathint assetType. ghostTotalAssets[contract][assetType] == 0;
+    axiom forall address contract. forall mathint assetType. 
+        ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= max_uint256;
+    // Support only 3 types of accounting 
+    axiom forall address contract. forall mathint assetType. 
+        assetType > 2 => ghostTotalAssets[contract][assetType] == 0; 
 }
