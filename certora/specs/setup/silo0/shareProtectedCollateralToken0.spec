@@ -39,11 +39,11 @@ hook Sstore _ShareProtectedCollateralToken0.shareTokenStorage.siloConfig address
 // Hooks for `ShareTokenStorage.hookSetup.hookReceiver`
 
 hook Sload address val _ShareProtectedCollateralToken0.shareTokenStorage.hookSetup.hookReceiver {
-    require(ghostShareTokenHookReceiver[executingContract] == val);
+    require(ghostShareTokenHookReceiver == val);
 }
 
 hook Sstore _ShareProtectedCollateralToken0.shareTokenStorage.hookSetup.hookReceiver address val {
-    ghostShareTokenHookReceiver[executingContract] = val;
+    ghostShareTokenHookReceiver = val;
 }
 
 // Hooks for `ShareTokenStorage.hookSetup.hooksBefore`

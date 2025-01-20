@@ -1,19 +1,45 @@
 // Common ShareTokenStorage ghosts for all contracts
 
-// Ghost copy of `ShareTokenStorage.silo` in `siloX.spec`
+methods {
+
+    // External call to `IShareToken`
+    
+    function _.synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external with (env e)
+        => synchronizeHooksCVL(e, calledContract, _hooksBefore, _hooksAfter) expect void;
+
+    function _.balanceOfAndTotalSupply(address _account) external with (env e)
+        => balanceOfAndTotalSupplyCVL(e, calledContract, _account) expect (uint256, uint256);
+    
+    function _.mint(address _owner, address _spender, uint256 _amount) external with (env e)
+        => mintCVL(e, calledContract, _owner, _spender, _amount) expect void;
+
+    function _.burn(address _owner, address _spender, uint256 _amount) external with (env e)
+        => burnCVL(e, calledContract, _owner, _spender, _amount) expect void;
+}
+
+//
+// Methods summarize
+//
+
+function mintCVL(env e, address contract, address _owner, address _spender, uint256 _amount) {
+    contract.mint(e, _owner, _spender, _amount);
+}
+
+function burnCVL(env e, address contract, address _owner, address _spender, uint256 _amount) {
+    contract.burn(e, _owner, _spender, _amount);
+}
+
+// Ghost copy of `ShareTokenStorage.silo`
+
+persistent ghost mapping (address => address) ghostShareTokenSilo;
 
 // Ghost copy of `ShareTokenStorage.siloConfig`
 
-persistent ghost address ghostShareTokenSiloConfig {
-    // Link global config
-    axiom ghostShareTokenSiloConfig == _SiloConfig;
-}
+persistent ghost address ghostShareTokenSiloConfig;
 
 // Ghost copy of `ShareTokenStorage.hookSetup.hookReceiver`
 
-persistent ghost mapping (address => address) ghostShareTokenHookReceiver {
-    init_state axiom forall address contract. ghostShareTokenHookReceiver[contract] == 0;
-}
+persistent ghost address ghostShareTokenHookReceiver;
 
 // Ghost copy of `ShareTokenStorage.hookSetup.hooksBefore`
 

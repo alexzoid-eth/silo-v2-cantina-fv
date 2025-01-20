@@ -1,6 +1,7 @@
 // Prove contract is compatible with ERC20 (https://eips.ethereum.org/EIPS/eip-20)
 
 import "./setup/env.spec";
+import "./setup/env.spec";
 
 // ERC20 viewers integrity
 

@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import { Silo } from "silo-core/contracts/Silo.sol";
 import { ISiloFactory } from "silo-core/contracts/interfaces/ISiloFactory.sol";
-
 import { IERC20R } from "silo-core/contracts/interfaces/IERC20R.sol";
 import { IShareToken } from "silo-core/contracts/interfaces/IShareToken.sol";
 import { ISilo } from "silo-core/contracts/interfaces/ISilo.sol";

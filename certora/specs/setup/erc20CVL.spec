@@ -15,65 +15,72 @@ methods {
         => require_uint256(ghostERC20CVLAllowances[calledContract][owner][spender]) expect uint256;
 
     function _.approve(address spender, uint256 value) external with (env e)
-        => approveCVL(calledContract, e.msg.sender, spender, value) expect bool;
+        => approveCVL(e, calledContract, e.msg.sender, spender, value) expect bool;
 
     function _.transfer(address to, uint256 value) external with (env e)
-        => transferFromCVL(calledContract, e.msg.sender, to, value, false) expect bool;
+        => transferFromCVL(e, calledContract, e.msg.sender, to, value, false) expect bool;
 
     function _.transferFrom(address from, address to, uint256 value) external with (env e)
-        => transferFromCVL(calledContract, e.msg.sender, to, value, true) expect bool;
+        => transferFromCVL(e, calledContract, from, to, value, true) expect bool;
 
-    function _.safeTransfer(address token, address to, uint256 value) internal
-        => safeTransferFromCVL(token, calledContract, to, value, false) expect void;
+    function _.safeTransfer(address token, address to, uint256 value) internal with (env e)
+        => safeTransferFromCVL(e, token, calledContract, to, value, false) expect void;
 
-    function _.safeTransferFrom(address token, address from, address to, uint256 value) internal
-        => safeTransferFromCVL(token, from, to, value, true) expect void;
-
+    function _.safeTransferFrom(address token, address from, address to, uint256 value) internal with (env e)
+        => safeTransferFromCVL(e, token, from, to, value, true) expect void;
+    /*
     function _.mint(address account, uint256 value) external
-        => mintCVL(calledContract, account, value) expect void;
+        => mintERC20CVL(calledContract, account, value) expect void;
 
     function _.burn(address account, uint256 value) external
-        => burnCVL(calledContract, account, value) expect void;
+        => burnERC20CVL(calledContract, account, value) expect void;
+    */
 }
 
-// Assume 5 different users
-persistent ghost address ERC20CVL_ACCOUNT_1 {
-    axiom ERC20CVL_ACCOUNT_1 != ERC20CVL_ACCOUNT_2 
-        && ERC20CVL_ACCOUNT_1 != ERC20CVL_ACCOUNT_3 
-        && ERC20CVL_ACCOUNT_1 != ERC20CVL_ACCOUNT_4 
-        && ERC20CVL_ACCOUNT_1 != ERC20CVL_ACCOUNT_5;
+// Assume 10 different users
+persistent ghost address ERC20CVL_A_1 {
+    axiom ERC20CVL_A_1 != ERC20CVL_A_2 && ERC20CVL_A_1 != ERC20CVL_A_3 && ERC20CVL_A_1 != ERC20CVL_A_4 && ERC20CVL_A_1 != ERC20CVL_A_5 && ERC20CVL_A_1 != ERC20CVL_A_6 && ERC20CVL_A_1 != ERC20CVL_A_7 && ERC20CVL_A_1 != ERC20CVL_A_8 && ERC20CVL_A_1 != ERC20CVL_A_9 && ERC20CVL_A_1 != ERC20CVL_A_10;
 }
-persistent ghost address ERC20CVL_ACCOUNT_2 {
-    axiom ERC20CVL_ACCOUNT_2 != ERC20CVL_ACCOUNT_1 
-        && ERC20CVL_ACCOUNT_2 != ERC20CVL_ACCOUNT_3 
-        && ERC20CVL_ACCOUNT_2 != ERC20CVL_ACCOUNT_4 
-        && ERC20CVL_ACCOUNT_2 != ERC20CVL_ACCOUNT_5;
+persistent ghost address ERC20CVL_A_2 {
+    axiom ERC20CVL_A_2 != ERC20CVL_A_1 && ERC20CVL_A_2 != ERC20CVL_A_3 && ERC20CVL_A_2 != ERC20CVL_A_4 && ERC20CVL_A_2 != ERC20CVL_A_5 && ERC20CVL_A_2 != ERC20CVL_A_6 && ERC20CVL_A_2 != ERC20CVL_A_7 && ERC20CVL_A_2 != ERC20CVL_A_8 && ERC20CVL_A_2 != ERC20CVL_A_9 && ERC20CVL_A_2 != ERC20CVL_A_10;
 }
-persistent ghost address ERC20CVL_ACCOUNT_3 {
-    axiom ERC20CVL_ACCOUNT_3 != ERC20CVL_ACCOUNT_1 
-        && ERC20CVL_ACCOUNT_3 != ERC20CVL_ACCOUNT_2 
-        && ERC20CVL_ACCOUNT_3 != ERC20CVL_ACCOUNT_4 
-        && ERC20CVL_ACCOUNT_3 != ERC20CVL_ACCOUNT_5;
+persistent ghost address ERC20CVL_A_3 {
+    axiom ERC20CVL_A_3 != ERC20CVL_A_1 && ERC20CVL_A_3 != ERC20CVL_A_2 && ERC20CVL_A_3 != ERC20CVL_A_4 && ERC20CVL_A_3 != ERC20CVL_A_5 && ERC20CVL_A_3 != ERC20CVL_A_6 && ERC20CVL_A_3 != ERC20CVL_A_7 && ERC20CVL_A_3 != ERC20CVL_A_8 && ERC20CVL_A_3 != ERC20CVL_A_9 && ERC20CVL_A_3 != ERC20CVL_A_10;
 }
-persistent ghost address ERC20CVL_ACCOUNT_4 {
-    axiom ERC20CVL_ACCOUNT_4 != ERC20CVL_ACCOUNT_1 
-        && ERC20CVL_ACCOUNT_4 != ERC20CVL_ACCOUNT_2 
-        && ERC20CVL_ACCOUNT_4 != ERC20CVL_ACCOUNT_3 
-        && ERC20CVL_ACCOUNT_4 != ERC20CVL_ACCOUNT_5;
+persistent ghost address ERC20CVL_A_4 {
+    axiom ERC20CVL_A_4 != ERC20CVL_A_1 && ERC20CVL_A_4 != ERC20CVL_A_2 && ERC20CVL_A_4 != ERC20CVL_A_3 && ERC20CVL_A_4 != ERC20CVL_A_5 && ERC20CVL_A_4 != ERC20CVL_A_6 && ERC20CVL_A_4 != ERC20CVL_A_7 && ERC20CVL_A_4 != ERC20CVL_A_8 && ERC20CVL_A_4 != ERC20CVL_A_9 && ERC20CVL_A_4 != ERC20CVL_A_10;
 }
-persistent ghost address ERC20CVL_ACCOUNT_5 {
-    axiom ERC20CVL_ACCOUNT_5 != ERC20CVL_ACCOUNT_1 
-        && ERC20CVL_ACCOUNT_5 != ERC20CVL_ACCOUNT_2 
-        && ERC20CVL_ACCOUNT_5 != ERC20CVL_ACCOUNT_3 
-        && ERC20CVL_ACCOUNT_5 != ERC20CVL_ACCOUNT_4;
+persistent ghost address ERC20CVL_A_5 {
+    axiom ERC20CVL_A_5 != ERC20CVL_A_1 && ERC20CVL_A_5 != ERC20CVL_A_2 && ERC20CVL_A_5 != ERC20CVL_A_3 && ERC20CVL_A_5 != ERC20CVL_A_4 && ERC20CVL_A_5 != ERC20CVL_A_6 && ERC20CVL_A_5 != ERC20CVL_A_7 && ERC20CVL_A_5 != ERC20CVL_A_8 && ERC20CVL_A_5 != ERC20CVL_A_9 && ERC20CVL_A_5 != ERC20CVL_A_10;
+}
+persistent ghost address ERC20CVL_A_6 {
+    axiom ERC20CVL_A_6 != ERC20CVL_A_1 && ERC20CVL_A_6 != ERC20CVL_A_2 && ERC20CVL_A_6 != ERC20CVL_A_3 && ERC20CVL_A_6 != ERC20CVL_A_4 && ERC20CVL_A_6 != ERC20CVL_A_5 && ERC20CVL_A_6 != ERC20CVL_A_7 && ERC20CVL_A_6 != ERC20CVL_A_8 && ERC20CVL_A_6 != ERC20CVL_A_9 && ERC20CVL_A_6 != ERC20CVL_A_10;
+}
+persistent ghost address ERC20CVL_A_7 {
+    axiom ERC20CVL_A_7 != ERC20CVL_A_1 && ERC20CVL_A_7 != ERC20CVL_A_2 && ERC20CVL_A_7 != ERC20CVL_A_3 && ERC20CVL_A_7 != ERC20CVL_A_4 && ERC20CVL_A_7 != ERC20CVL_A_5 && ERC20CVL_A_7 != ERC20CVL_A_6 && ERC20CVL_A_7 != ERC20CVL_A_8 && ERC20CVL_A_7 != ERC20CVL_A_9 && ERC20CVL_A_7 != ERC20CVL_A_10;
+}
+persistent ghost address ERC20CVL_A_8 {
+    axiom ERC20CVL_A_8 != ERC20CVL_A_1 && ERC20CVL_A_8 != ERC20CVL_A_2 && ERC20CVL_A_8 != ERC20CVL_A_3 && ERC20CVL_A_8 != ERC20CVL_A_4 && ERC20CVL_A_8 != ERC20CVL_A_5 && ERC20CVL_A_8 != ERC20CVL_A_6 && ERC20CVL_A_8 != ERC20CVL_A_7 && ERC20CVL_A_8 != ERC20CVL_A_9 && ERC20CVL_A_8 != ERC20CVL_A_10;
+}
+persistent ghost address ERC20CVL_A_9 {
+    axiom ERC20CVL_A_9 != ERC20CVL_A_1 && ERC20CVL_A_9 != ERC20CVL_A_2 && ERC20CVL_A_9 != ERC20CVL_A_3 && ERC20CVL_A_9 != ERC20CVL_A_4 && ERC20CVL_A_9 != ERC20CVL_A_5 && ERC20CVL_A_9 != ERC20CVL_A_6 && ERC20CVL_A_9 != ERC20CVL_A_7 && ERC20CVL_A_9 != ERC20CVL_A_8 && ERC20CVL_A_9 != ERC20CVL_A_10;
+}
+persistent ghost address ERC20CVL_A_10 {
+    axiom ERC20CVL_A_10 != ERC20CVL_A_1 && ERC20CVL_A_10 != ERC20CVL_A_2 && ERC20CVL_A_10 != ERC20CVL_A_3 && ERC20CVL_A_10 != ERC20CVL_A_4 && ERC20CVL_A_10 != ERC20CVL_A_5 && ERC20CVL_A_10 != ERC20CVL_A_6 && ERC20CVL_A_10 != ERC20CVL_A_7 && ERC20CVL_A_10 != ERC20CVL_A_8 && ERC20CVL_A_10 != ERC20CVL_A_9;
 }
 
-definition ERC20CVL_ACCOUNT_BOUNDS(address account) returns bool = 
-    account == ERC20CVL_ACCOUNT_1 
-    || account == ERC20CVL_ACCOUNT_2 
-    || account == ERC20CVL_ACCOUNT_3 
-    || account == ERC20CVL_ACCOUNT_4 
-    || account == ERC20CVL_ACCOUNT_5;
+definition ERC20CVL_A_BOUNDS(address account) returns bool = 
+    account == ERC20CVL_A_1 
+    || account == ERC20CVL_A_2 
+    || account == ERC20CVL_A_3 
+    || account == ERC20CVL_A_4 
+    || account == ERC20CVL_A_5
+    || account == ERC20CVL_A_6
+    || account == ERC20CVL_A_7
+    || account == ERC20CVL_A_8
+    || account == ERC20CVL_A_9
+    || account == ERC20CVL_A_10
+    ;
 
 // Supported ERC20CVL tokens (up to 3)
 
@@ -102,11 +109,11 @@ persistent ghost mapping (address => mathint) ghostERC20CVLTotalSupply {
     init_state axiom forall address token. ghostERC20CVLTotalSupply[token] == 0;
     axiom forall address token. VALID_TOKEN_ADDRESS(token) 
         ? ghostERC20CVLTotalSupply[token] == (
-            ghostERC20CVLBalances[token][ERC20CVL_ACCOUNT_1] 
-            + ghostERC20CVLBalances[token][ERC20CVL_ACCOUNT_2] 
-            + ghostERC20CVLBalances[token][ERC20CVL_ACCOUNT_3]
-            + ghostERC20CVLBalances[token][ERC20CVL_ACCOUNT_4] 
-            + ghostERC20CVLBalances[token][ERC20CVL_ACCOUNT_5]
+            ghostERC20CVLBalances[token][ERC20CVL_A_1] 
+            + ghostERC20CVLBalances[token][ERC20CVL_A_2] 
+            + ghostERC20CVLBalances[token][ERC20CVL_A_3]
+            + ghostERC20CVLBalances[token][ERC20CVL_A_4] 
+            + ghostERC20CVLBalances[token][ERC20CVL_A_5]
         ) : ghostERC20CVLTotalSupply[token] == 0;
 }
 
@@ -114,19 +121,24 @@ persistent ghost mapping (address => mathint) ghostERC20CVLTotalSupply {
 
 persistent ghost mapping(address => mapping(address => mathint)) ghostERC20CVLBalances {
     init_state axiom forall address token. forall address owner. ghostERC20CVLBalances[token][owner] == 0;
-    axiom forall address token. forall address owner. VALID_TOKEN_ADDRESS(token) && ERC20CVL_ACCOUNT_BOUNDS(owner)
+    axiom forall address token. forall address owner. VALID_TOKEN_ADDRESS(token) && ERC20CVL_A_BOUNDS(owner)
         ? ghostERC20CVLBalances[token][owner] >= 0 && ghostERC20CVLBalances[token][owner] <= max_uint128
         : ghostERC20CVLBalances[token][owner] == 0;
 }
 
-function transferFromCVL(address token, address from, address to, mathint amount, bool transferFrom) returns bool {
+function transferFromCVL(
+    env e, address token, address from, address to, mathint amount, bool transferFrom
+    ) returns bool {
+    
+    // Safe assumptions about environment
+    requireValidEnv(e);
 
     // Only specific tokens are supported
     require(VALID_TOKEN_ADDRESS(token));
 
     // Only specific accounts are supported
-    require(ERC20CVL_ACCOUNT_BOUNDS(from));
-    require(ERC20CVL_ACCOUNT_BOUNDS(to));
+    require(ERC20CVL_A_BOUNDS(from));
+    require(ERC20CVL_A_BOUNDS(to));
 
     // Safe assumptions about transferFrom()
     require(from != to);
@@ -146,8 +158,8 @@ function transferFromCVL(address token, address from, address to, mathint amount
     return true;
 }
 
-function safeTransferFromCVL(address token, address from, address to, uint256 amount, bool transferFrom) {
-    ASSERT(transferFromCVL(token, from, to, amount, transferFrom));
+function safeTransferFromCVL(env e, address token, address from, address to, uint256 amount, bool transferFrom) {
+    ASSERT(transferFromCVL(e, token, from, to, amount, transferFrom));
 }
 
 // Allowances
@@ -156,20 +168,23 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
     init_state axiom forall address token. forall address owner. forall address spender. 
         ghostERC20CVLAllowances[token][owner][spender] == 0;
     axiom forall address token. forall address owner. forall address spender. 
-        VALID_TOKEN_ADDRESS(token) && ERC20CVL_ACCOUNT_BOUNDS(owner) && ERC20CVL_ACCOUNT_BOUNDS(spender)
+        VALID_TOKEN_ADDRESS(token) && ERC20CVL_A_BOUNDS(owner) && ERC20CVL_A_BOUNDS(spender)
         ? ghostERC20CVLAllowances[token][owner][spender] >= 0 
             && ghostERC20CVLAllowances[token][owner][spender] <= max_uint128
         : ghostERC20CVLAllowances[token][owner][spender] == 0;
 }
 
-function approveCVL(address token, address owner, address spender, mathint value) returns bool {
+function approveCVL(env e, address token, address owner, address spender, mathint value) returns bool {
+
+    // Safe assumptions about environment
+    requireValidEnv(e);
 
     // Only specific tokens are supported
     require(VALID_TOKEN_ADDRESS(token));
 
     // Only specific accounts are supported
-    require(ERC20CVL_ACCOUNT_BOUNDS(owner));
-    require(ERC20CVL_ACCOUNT_BOUNDS(spender));
+    require(ERC20CVL_A_BOUNDS(owner));
+    require(ERC20CVL_A_BOUNDS(spender));
 
     ghostERC20CVLAllowances[token][owner][spender] = value;
 
@@ -177,14 +192,14 @@ function approveCVL(address token, address owner, address spender, mathint value
 }
 
 // Mint and burn
-
-function mintCVL(address token, address account, mathint value) {
+/*
+function mintERC20CVL(address token, address account, mathint value) {
 
     // Only specific tokens are supported
     require(VALID_TOKEN_ADDRESS(token));
 
     // Only specific accounts are supported
-    require(ERC20CVL_ACCOUNT_BOUNDS(account));
+    require(ERC20CVL_A_BOUNDS(account));
 
     // Revert on zero address
     ASSERT(account != 0);
@@ -193,13 +208,13 @@ function mintCVL(address token, address account, mathint value) {
     ghostERC20CVLBalances[token][account] = require_uint256(ghostERC20CVLBalances[token][account] + value);
 }
 
-function burnCVL(address token, address account, mathint value) {
+function burnERC20CVL(address token, address account, mathint value) {
 
     // Only specific tokens are supported
     require(VALID_TOKEN_ADDRESS(token));
 
     // Only specific accounts are supported
-    require(ERC20CVL_ACCOUNT_BOUNDS(account));
+    require(ERC20CVL_A_BOUNDS(account));
 
     // Revert on zero address
     ASSERT(account != 0);
@@ -207,3 +222,4 @@ function burnCVL(address token, address account, mathint value) {
     ghostERC20CVLTotalSupply[token] = assert_uint256(ghostERC20CVLTotalSupply[token] - value);
     ghostERC20CVLBalances[token][account] = assert_uint256(ghostERC20CVLBalances[token][account] - value);
 }
+*/

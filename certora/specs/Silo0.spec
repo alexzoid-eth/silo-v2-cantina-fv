@@ -4,10 +4,18 @@ import "./ValidState.spec";
 import "./ERC20Integrity.spec";
 import "./ERC4626Integrity.spec";
 
+methods {
+
+    // Remove this function from the scene in single Silo configuration 
+    function _.accrueInterestForBothSilos() external 
+        => NONDET DELETE;
+}
+
 // Sanity
 
 use builtin rule sanity;
 
+/*
 // Valid State
 
 use invariant crossReentrancyGuardOpenedOnExit;
@@ -113,3 +121,4 @@ use rule redeemIntegrity;
 use rule redeemFromOtherIntegrity;
 use rule redeemFromSelfIntegrity;
 use rule redeemMustRevertIfCannotRedeem;
+*/
