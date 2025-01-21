@@ -1,41 +1,36 @@
 // Silo core, CVL storage ghosts and hooks
 
-import "./siloConfig.spec";
-import "./helperCVL.spec";
-import "./erc20CVL.spec";
-import "./env.spec";
+import "./silo_config.spec";
 
 using EmptyHookReceiver as _EmptyHookReceiver;
 
 methods {
 
-    // Resolve calls in libs
+    // Remove from the scene
 
-    function Actions.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes calldata) internal returns (bool, bytes memory)
-        => callOnBehalfOfSiloCVL();
+    function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
+        => NONDET DELETE;
 
     // Resolve external calls to `SiloFactory`
 
     function _.getFeeReceivers(address _silo) external
         => getFeeReceiversCVL(_silo) expect (address, address);
 
-    
     // Resolve external calls to `Silo`
 
-    function _.getTotalAssetsStorage(ISilo.AssetType _assetType) external with (env e) 
-        => getTotalAssetsStorageCVL(e, _assetType) expect (uint256);
+    function _.getTotalAssetsStorage(ISilo.AssetType _assetType) external
+        => DISPATCHER(true);
 
+    function _.getCollateralAndDebtTotalsStorage() external
+        => DISPATCHER(true);
     
-    function _.getCollateralAndDebtTotalsStorage() external with (env e)
-        => getCollateralAndDebtTotalsStorageCVL(e) expect (uint256, uint256);
-    
-    function _.getCollateralAndProtectedTotalsStorage() external with (env e)
-        => getCollateralAndProtectedTotalsStorageCVL(e) expect (uint256, uint256);
+    function _.getCollateralAndProtectedTotalsStorage() external
+        => DISPATCHER(true);
 
     // Resolve external call to `IHookReceiver`
 
-    function _.hookReceiverConfig(address _silo) external with (env e)
-        => hookReceiverConfigCVL(e) expect (uint24, uint24);
+    function _.hookReceiverConfig(address _silo) external
+        => DISPATCHER(true);
     
     // Resolve external call in `IERC3156FlashBorrower`
 
@@ -53,7 +48,7 @@ methods {
     function _.getCompoundInterestRate(
         address _silo,
         uint256 _blockTimestamp
-    ) external => getCompoundInterestRateForSiloCVL(_blockTimestamp) expect (uint256);
+    ) external => getCompoundInterestRateForSiloCVL(_silo, _blockTimestamp) expect (uint256);
 
     // Resolve external calls in `ISiloOracle`
 
@@ -64,21 +59,19 @@ methods {
         => NONDET;
 }
 
-definition COLLATERAL_TOKEN() returns mathint = 2^11;
-definition _100_PERCENT() returns mathint = 10^18;
-
+//
 // Methods summarizes
+//
 
-function callOnBehalfOfSiloCVL() returns (bool, bytes) {
-    bool success; bytes result;
-    return (success, result);
-}
+// `SiloFactory`
 
 persistent ghost mapping(address => address) ghostDaoFeeReceiver; 
 persistent ghost mapping(address => address) ghostDeployerFeeReceiver;
 function getFeeReceiversCVL(address _silo) returns (address, address) {
     return (ghostDaoFeeReceiver[_silo], ghostDeployerFeeReceiver[_silo]);
 }
+
+// `IInterestRateModel`
 
 ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) ghostInterest;
 function getCompoundInterestRateCVL(
@@ -89,8 +82,13 @@ function getCompoundInterestRateCVL(
     return ghostInterest[_collateralAssets][_debtAssets][_interestRateTimestamp];
 }
 
+persistent ghost mapping(address => mapping(uint256 => uint256)) ghostInterestSilo;
+function getCompoundInterestRateForSiloCVL(address _silo, uint256 _blockTimestamp) returns uint256 {
+    return ghostInterestSilo[_silo][_blockTimestamp];
+}
+
 //
-// IERC20R
+// Storage ghosts
 //
 
 // Ghost copy of `IERC20RStorage._receiveAllowances`
@@ -102,10 +100,6 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
         ghostReceiveAllowances[contract][owner][recipient] >= 0 
             && ghostReceiveAllowances[contract][owner][recipient] <= max_uint256;
 }
-
-//
-// SiloStorage
-//
 
 // Ghost copy of `SiloStorage.daoAndDeployerRevenue`
 

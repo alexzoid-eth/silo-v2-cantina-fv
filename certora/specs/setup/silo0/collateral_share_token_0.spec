@@ -1,5 +1,6 @@
-import "../shareToken.spec";
+import "../silo/share_token.spec";
 import "../erc20.spec";
+import "../env.spec";
 
 using Silo0 as _CollateralShareToken0;
 
@@ -15,36 +16,6 @@ methods {
 //
 // ShareTokenStorage
 //
-
-// Hooks for `ShareTokenStorage.silo`
-
-hook Sload address val _CollateralShareToken0.shareTokenStorage.silo {
-    require(ghostShareTokenSilo[executingContract] == val);
-}
-
-hook Sstore _CollateralShareToken0.shareTokenStorage.silo address val {
-    ghostShareTokenSilo[executingContract] = val;
-}
-
-// Hooks for `ShareTokenStorage.siloConfig`
-
-hook Sload address val _CollateralShareToken0.shareTokenStorage.siloConfig {
-    require(ghostShareTokenSiloConfig == val);
-}
-
-hook Sstore _CollateralShareToken0.shareTokenStorage.siloConfig address val {
-    ghostShareTokenSiloConfig = val;
-}
-
-// Hooks for `ShareTokenStorage.hookSetup.hookReceiver`
-
-hook Sload address val _CollateralShareToken0.shareTokenStorage.hookSetup.hookReceiver {
-    require(ghostShareTokenHookReceiver == val);
-}
-
-hook Sstore _CollateralShareToken0.shareTokenStorage.hookSetup.hookReceiver address val {
-    ghostShareTokenHookReceiver = val;
-}
 
 // Hooks for `ShareTokenStorage.hookSetup.hooksBefore`
 
@@ -70,10 +41,6 @@ hook Sstore _CollateralShareToken0.shareTokenStorage.hookSetup.hooksAfter uint24
 
 hook Sload uint24 val _CollateralShareToken0.shareTokenStorage.hookSetup.tokenType {
     require(require_uint24(ghostShareTokenTokenType[executingContract]) == val);
-}
-
-hook Sstore _CollateralShareToken0.shareTokenStorage.hookSetup.tokenType uint24 val {
-    ghostShareTokenTokenType[executingContract] = val;
 }
 
 // Hooks for `ShareTokenStorage.transferWithChecks`

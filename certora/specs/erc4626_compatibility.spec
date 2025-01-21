@@ -2,6 +2,8 @@
 
 import "./setup/env.spec";
 
+using Silo0 as _ERC4626;
+
 methods {
     // Mark as `envfree` all functions which don't involve environments calls (msg.sender, block.timestamp etc)
     function asset() external returns (address) envfree;

@@ -1,0 +1,67 @@
+// Common ShareTokenStorage ghosts for all contracts
+
+methods {
+
+    // External calls to `IShareToken`
+    
+    function _.synchronizeHooks(uint24 _hooksBefore, uint24 _hooksAfter) external
+        => DISPATCHER(true);
+    
+    function _.mint(address _owner, address _spender, uint256 _amount) external
+        => DISPATCHER(true);
+        
+    function _.burn(address _owner, address _spender, uint256 _amount) external
+        => DISPATCHER(true);
+
+    function _.balanceOfAndTotalSupply(address _account) external with (env e)
+        => balanceOfAndTotalSupplyCVL(e, calledContract, _account) expect (uint256, uint256);
+}
+
+//
+// Methods summarizes
+//
+
+function balanceOfAndTotalSupplyCVL(env e, address contract, address _account) returns (uint256, uint256) {
+    return (
+        require_uint256(ghostERC20Balances[contract][_account]), 
+        require_uint256(ghostERC20TotalSupply[contract])
+        );
+}
+
+//
+// Storage ghosts
+// 
+
+// Ghost copy of `ShareTokenStorage.hookSetup.hooksBefore`
+
+persistent ghost mapping (address => mathint) ghostShareTokenHooksBefore {
+    init_state axiom forall address contract. ghostShareTokenHooksBefore[contract] == 0;
+    axiom forall address contract. 
+        ghostShareTokenHooksBefore[contract] >= 0 && ghostShareTokenHooksBefore[contract] <= max_uint24;
+}
+
+// Ghost copy of `ShareTokenStorage.hookSetup.hooksAfter`
+
+persistent ghost mapping (address => mathint) ghostShareTokenHooksAfter {
+    init_state axiom forall address contract. ghostShareTokenHooksAfter[contract] == 0;
+    axiom forall address contract. 
+        ghostShareTokenHooksAfter[contract] >= 0 && ghostShareTokenHooksAfter[contract] <= max_uint24;
+}
+
+// Ghost copy of `ShareTokenStorage.hookSetup.tokenType`
+
+definition COLLATERAL_TOKEN() returns mathint = 2^11;
+definition PROTECTED_TOKEN() returns mathint = 2^12;
+definition DEBT_TOKEN() returns mathint = 2^13;
+
+persistent ghost mapping (address => mathint) ghostShareTokenTokenType {
+    axiom ghostShareTokenTokenType[_CollateralShareToken0] == COLLATERAL_TOKEN();
+    axiom ghostShareTokenTokenType[_ShareProtectedCollateralToken0] == PROTECTED_TOKEN();
+    axiom ghostShareTokenTokenType[_ShareDebtToken0] == DEBT_TOKEN();
+}
+
+// Ghost copy of `ShareTokenStorage.transferWithChecks`
+
+persistent ghost mapping (address => bool) ghostShareTokenTransferWithChecks {
+    init_state axiom forall address contract. ghostShareTokenTransferWithChecks[contract] == true;
+}

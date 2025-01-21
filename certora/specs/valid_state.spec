@@ -1,3 +1,10 @@
+// Global valid state
+
+function requireValidState() {
+    requireInvariant crossReentrancyGuardOpenedOnExit;
+    requireInvariant crossReentrancyProtectionNoDoubleCall;
+}
+
 // CrossReentrancyGuard
 
 invariant crossReentrancyGuardOpenedOnExit()

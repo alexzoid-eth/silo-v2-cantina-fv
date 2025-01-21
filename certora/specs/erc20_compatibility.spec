@@ -1,7 +1,8 @@
 // Prove contract is compatible with ERC20 (https://eips.ethereum.org/EIPS/eip-20)
 
 import "./setup/env.spec";
-import "./setup/env.spec";
+
+using Silo0 as _ERC20;
 
 // ERC20 viewers integrity
 

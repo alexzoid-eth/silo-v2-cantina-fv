@@ -1,6 +1,6 @@
 // Silo config contract support
 
-import "./siloConfigCrossReentrancyGuard.spec";
+import "./silo_config_cross_reentrancy_guard.spec";
 
 using SiloConfigHarness as _SiloConfig;
 
@@ -8,17 +8,14 @@ methods {
 
     // Resolve external calls to SiloConfig
     
-    function _.getConfig(address _silo) external with (env e)
-        => getConfigCVL(e) expect (ISiloConfig.ConfigData memory);
+    function _.getConfig(address _silo) external
+        => DISPATCHER(true);
 
-    function _.getFeesWithAsset(address _silo) external with (env e) 
-        => getFeesWithAssetCVL(e) expect (uint256, uint256, uint256, address);
-}
+    function _.getFeesWithAsset(address _silo) external
+        => DISPATCHER(true);
 
-// Universal methods summarizes
-
-function setOtherSiloAsCollateralSiloCVL(env e, address _borrower) {
-    _SiloConfig.setOtherSiloAsCollateralSilo(e, _borrower);
+    function _.getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType) external
+        => DISPATCHER(true);
 }
 
 // Storage hooks
