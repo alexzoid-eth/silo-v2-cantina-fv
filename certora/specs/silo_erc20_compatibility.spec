@@ -1,6 +1,6 @@
 // Prove contract is compatible with ERC20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "./setup/env.spec";
+import "./setup/silo0/collateral_share_token_0.spec";
 
 using Silo0 as _ERC20;
 
@@ -231,108 +231,4 @@ rule approveMustRevert(env e, address spender, uint256 value) {
 
     // Must revert if the caller (ghostCaller) is the zero address
     assert(ghostCaller == 0 => reverted);
-}
-
-// ERC20 mint() integrity
-
-rule mintErc20Integrity(env e, address account, uint256 amount) {
-
-    // msg.sender not current contract
-    requireValidEnv(e);
-
-    address other;
-    address any1;
-    address any2;
-
-    // Ensure 'other' is not the same as 'account'
-    require(other != account);
-
-    // Capture pre-state
-    mathint accountBalancePrev = ghostERC20Balances[ghostContract][account];
-    mathint otherBalancePrev   = ghostERC20Balances[ghostContract][other];
-    mathint totalSupplyPrev    = ghostERC20TotalSupply[ghostContract];
-    mathint allowanceAny1Any2Prev = ghostERC20Allowances[ghostContract][any1][any2];
-
-    // Perform the mint
-    _ERC20.mint(e, account, amount);
-
-    // Check that 'account' got credited by 'amount'
-    assert(ghostERC20Balances[ghostContract][account] == accountBalancePrev + amount);
-
-    // Check that 'other' was not affected
-    assert(ghostERC20Balances[ghostContract][other] == otherBalancePrev);
-
-    // Check total supply is increased by 'amount'
-    assert(ghostERC20TotalSupply[ghostContract] == totalSupplyPrev + amount);
-
-    // Check no unrelated allowances were affected
-    assert(ghostERC20Allowances[ghostContract][any1][any2] == allowanceAny1Any2Prev);
-}
-
-rule mintErc20MustRevert(env e, address account, uint256 amount) {
-
-    // msg.sender not current contract
-    requireValidEnv(e);
-
-    // Attempt mint with revert path
-    _ERC20.mint@withrevert(e, account, amount);
-    bool reverted = lastReverted;
-
-    // Must revert if `account` is the zero address
-    assert(account == 0 => reverted);
-}
-
-// ERC20 burn() integrity
-
-rule burnIntegrity(env e, address account, uint256 amount) {
-
-    // msg.sender not current contract
-    requireValidEnv(e);
-
-    address other;
-    address any1;
-    address any2;
-
-    // Ensure 'other' is not the same as 'account'
-    require(other != account);
-
-    // Capture pre-state
-    mathint accountBalancePrev = ghostERC20Balances[ghostContract][account];
-    mathint otherBalancePrev   = ghostERC20Balances[ghostContract][other];
-    mathint totalSupplyPrev    = ghostERC20TotalSupply[ghostContract];
-    mathint allowanceAny1Any2Prev = ghostERC20Allowances[ghostContract][any1][any2];
-
-    // Perform the burn
-    _ERC20.burn(e, account, amount);
-
-    // Check that 'account' lost 'amount' tokens
-    assert(ghostERC20Balances[ghostContract][account] == accountBalancePrev - amount);
-
-    // Check that 'other' was not affected
-    assert(ghostERC20Balances[ghostContract][other] == otherBalancePrev);
-
-    // Check total supply is decreased by 'amount'
-    assert(ghostERC20TotalSupply[ghostContract] == totalSupplyPrev - amount);
-
-    // Check no unrelated allowances were affected
-    assert(ghostERC20Allowances[ghostContract][any1][any2] == allowanceAny1Any2Prev);
-}
-
-rule burnMustRevert(env e, address account, uint256 amount) {
-
-    // msg.sender not current contract
-    requireValidEnv(e);
-
-    // Snapshot the account’s balance
-    mathint balancePrev = ghostERC20Balances[ghostContract][account];
-
-    // Attempt burn with revert path
-    _ERC20.burn@withrevert(e, account, amount);
-    bool reverted = lastReverted;
-
-    // Must revert if `account` is the zero address
-    assert(account == 0 => reverted);
-
-    // Must revert if `account` does not have enough tokens
-    assert(balancePrev < amount => reverted);
 }

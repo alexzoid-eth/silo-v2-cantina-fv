@@ -40,7 +40,7 @@ hook Sstore _ShareDebtToken1.shareTokenStorage.hookSetup.hooksAfter uint24 val {
 // Hooks for `ShareTokenStorage.hookSetup.tokenType`
 
 hook Sload uint24 val _ShareDebtToken1.shareTokenStorage.hookSetup.tokenType {
-    require(require_uint24(ghostShareTokenTokenType[executingContract]) == val);
+    require(require_uint24(DEBT_TOKEN()) == val);
 }
 
 // Hooks for `ShareTokenStorage.transferWithChecks`

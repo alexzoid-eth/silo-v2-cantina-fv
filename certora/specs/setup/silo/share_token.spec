@@ -54,12 +54,6 @@ definition COLLATERAL_TOKEN() returns mathint = 2^11;
 definition PROTECTED_TOKEN() returns mathint = 2^12;
 definition DEBT_TOKEN() returns mathint = 2^13;
 
-persistent ghost mapping (address => mathint) ghostShareTokenTokenType {
-    axiom ghostShareTokenTokenType[_CollateralShareToken0] == COLLATERAL_TOKEN();
-    axiom ghostShareTokenTokenType[_ShareProtectedCollateralToken0] == PROTECTED_TOKEN();
-    axiom ghostShareTokenTokenType[_ShareDebtToken0] == DEBT_TOKEN();
-}
-
 // Ghost copy of `ShareTokenStorage.transferWithChecks`
 
 persistent ghost mapping (address => bool) ghostShareTokenTransferWithChecks {

@@ -40,7 +40,7 @@ hook Sstore _ShareProtectedCollateralToken1.shareTokenStorage.hookSetup.hooksAft
 // Hooks for `ShareTokenStorage.hookSetup.tokenType`
 
 hook Sload uint24 val _ShareProtectedCollateralToken1.shareTokenStorage.hookSetup.tokenType {
-    require(require_uint24(ghostShareTokenTokenType[executingContract]) == val);
+    require(require_uint24(PROTECTED_TOKEN()) == val);
 }
 
 // Hooks for `ShareTokenStorage.transferWithChecks`

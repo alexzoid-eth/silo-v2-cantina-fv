@@ -40,7 +40,7 @@ hook Sstore _CollateralShareToken0.shareTokenStorage.hookSetup.hooksAfter uint24
 // Hooks for `ShareTokenStorage.hookSetup.tokenType`
 
 hook Sload uint24 val _CollateralShareToken0.shareTokenStorage.hookSetup.tokenType {
-    require(require_uint24(ghostShareTokenTokenType[executingContract]) == val);
+    require(require_uint24(COLLATERAL_TOKEN()) == val);
 }
 
 // Hooks for `ShareTokenStorage.transferWithChecks`
