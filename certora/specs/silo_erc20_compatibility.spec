@@ -4,21 +4,27 @@ import "./setup/silo0/collateral_share_token_0.spec";
 
 using Silo0 as _ERC20;
 
+methods {
+    function _ERC20.totalSupply() external returns (uint256) envfree;
+    function _ERC20.balanceOf(address account) external returns (uint256) envfree;
+    function _ERC20.allowance(address owner, address spender) external returns (uint256) envfree;
+}
+
 // ERC20 viewers integrity
 
 // Returns the total token supply
 rule totalSupplyIntegrity() {
-    assert(_ERC20.totalSupply() == ghostERC20TotalSupply[ghostContract]);
+    assert(_ERC20.totalSupply() == ghostERC20TotalSupply[currentContract]);
 }
 
 // Returns the account balance of another account
 rule balanceOfIntegrity(address account) {
-    assert(_ERC20.balanceOf(account) == ghostERC20Balances[ghostContract][account]);
+    assert(_ERC20.balanceOf(account) == ghostERC20Balances[currentContract][account]);
 }
 
 // Returns the amount which `spender` is still allowed to withdraw from `owner`
 rule allowanceIntegrity(address owner, address spender) {
-    assert(_ERC20.allowance(owner, spender) == ghostERC20Allowances[ghostContract][owner][spender]);
+    assert(_ERC20.allowance(owner, spender) == ghostERC20Allowances[currentContract][owner][spender]);
 }
 
 // ERC20 transfer() integrity
@@ -37,25 +43,25 @@ rule transferIntegrity(env e, address to, uint256 amount) {
     require(other != ghostCaller && other != to);
 
     // Capture pre-state
-    mathint fromBalancePrev = ghostERC20Balances[ghostContract][ghostCaller];
-    mathint toBalancePrev = ghostERC20Balances[ghostContract][to];
-    mathint otherBalancePrev = ghostERC20Balances[ghostContract][other];
-    mathint totalSupplyPrev = ghostERC20TotalSupply[ghostContract];
-    mathint allowanceAny1Any2Prev = ghostERC20Allowances[ghostContract][any1][any2];
+    mathint fromBalancePrev = ghostERC20Balances[currentContract][ghostCaller];
+    mathint toBalancePrev = ghostERC20Balances[currentContract][to];
+    mathint otherBalancePrev = ghostERC20Balances[currentContract][other];
+    mathint totalSupplyPrev = ghostERC20TotalSupply[currentContract];
+    mathint allowanceAny1Any2Prev = ghostERC20Allowances[currentContract][any1][any2];
 
     // Perform transfer
     _ERC20.transfer(e, to, amount);
 
     // Check updates
-    assert(ghostCaller != to ? ghostERC20Balances[ghostContract][ghostCaller] == fromBalancePrev - amount 
-                      : ghostERC20Balances[ghostContract][ghostCaller] == fromBalancePrev);
+    assert(ghostCaller != to ? ghostERC20Balances[currentContract][ghostCaller] == fromBalancePrev - amount 
+                      : ghostERC20Balances[currentContract][ghostCaller] == fromBalancePrev);
 
-    assert(ghostCaller != to ? ghostERC20Balances[ghostContract][to] == toBalancePrev   + amount 
-                      : ghostERC20Balances[ghostContract][to] == toBalancePrev);
+    assert(ghostCaller != to ? ghostERC20Balances[currentContract][to] == toBalancePrev   + amount 
+                      : ghostERC20Balances[currentContract][to] == toBalancePrev);
 
-    assert(ghostERC20Balances[ghostContract][other] == otherBalancePrev);
-    assert(ghostERC20TotalSupply[ghostContract] == totalSupplyPrev);
-    assert(ghostERC20Allowances[ghostContract][any1][any2] == allowanceAny1Any2Prev);
+    assert(ghostERC20Balances[currentContract][other] == otherBalancePrev);
+    assert(ghostERC20TotalSupply[currentContract] == totalSupplyPrev);
+    assert(ghostERC20Allowances[currentContract][any1][any2] == allowanceAny1Any2Prev);
 }
 
 // Transfers of 0 values MUST be treated as normal transfers
@@ -75,7 +81,7 @@ rule transferMustRevert(env e, address to, uint256 amount) {
     requireValidEnv(e);
 
     // Snapshot the 'from' balance
-    mathint fromBalancePrev = ghostERC20Balances[ghostContract][ghostCaller];
+    mathint fromBalancePrev = ghostERC20Balances[currentContract][ghostCaller];
 
     // Attempt transfer with revert path
     _ERC20.transfer@withrevert(e, to, amount);
@@ -107,11 +113,11 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
     require(other != from && other != to);
 
     // Capture pre-state
-    mathint fromBalancePrev = ghostERC20Balances[ghostContract][from];
-    mathint toBalancePrev   = ghostERC20Balances[ghostContract][to];
-    mathint otherBalancePrev = ghostERC20Balances[ghostContract][other];
-    mathint totalSupplyPrev  = ghostERC20TotalSupply[ghostContract];
-    mathint allowanceAny1Any2Prev = ghostERC20Allowances[ghostContract][any1][any2];
+    mathint fromBalancePrev = ghostERC20Balances[currentContract][from];
+    mathint toBalancePrev   = ghostERC20Balances[currentContract][to];
+    mathint otherBalancePrev = ghostERC20Balances[currentContract][other];
+    mathint totalSupplyPrev  = ghostERC20TotalSupply[currentContract];
+    mathint allowanceAny1Any2Prev = ghostERC20Allowances[currentContract][any1][any2];
 
     // Perform the transferFrom
     _ERC20.transferFrom(e, from, to, amount);
@@ -119,24 +125,21 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
     // Check updates
     assert(
         from != to 
-            ? ghostERC20Balances[ghostContract][from] == fromBalancePrev - amount 
-            : ghostERC20Balances[ghostContract][from] == fromBalancePrev
+            ? ghostERC20Balances[currentContract][from] == fromBalancePrev - amount 
+            : ghostERC20Balances[currentContract][from] == fromBalancePrev
     );
-    satisfy(ghostERC20Balances[ghostContract][from] == fromBalancePrev - amount);
+    satisfy(ghostERC20Balances[currentContract][from] == fromBalancePrev - amount);
 
     assert(
         from != to
-            ? ghostERC20Balances[ghostContract][to] == toBalancePrev + amount
-            : ghostERC20Balances[ghostContract][to] == toBalancePrev
+            ? ghostERC20Balances[currentContract][to] == toBalancePrev + amount
+            : ghostERC20Balances[currentContract][to] == toBalancePrev
     );
-    satisfy(ghostERC20Balances[ghostContract][to] == toBalancePrev + amount);
+    satisfy(ghostERC20Balances[currentContract][to] == toBalancePrev + amount);
 
-    assert(ghostERC20Balances[ghostContract][other] == otherBalancePrev);
-    assert(ghostERC20TotalSupply[ghostContract] == totalSupplyPrev);
-    assert(ghostERC20Allowances[ghostContract][any1][any2] == allowanceAny1Any2Prev);
-
-    // Transfers of 0 values MUST be treated as normal transfers
-    satisfy(amount == 0);
+    assert(ghostERC20Balances[currentContract][other] == otherBalancePrev);
+    assert(ghostERC20TotalSupply[currentContract] == totalSupplyPrev);
+    assert(ghostERC20Allowances[currentContract][any1][any2] == allowanceAny1Any2Prev);
 }
 
 // Transfers of 0 values MUST be treated as normal transfers
@@ -157,8 +160,8 @@ rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
     requireValidEnv(e);
 
     // Snapshot the 'from' balance and allowance
-    mathint fromBalancePrev = ghostERC20Balances[ghostContract][from];
-    mathint allowancePrev   = ghostERC20Allowances[ghostContract][from][ghostCaller];
+    mathint fromBalancePrev = ghostERC20Balances[currentContract][from];
+    mathint allowancePrev   = ghostERC20Allowances[currentContract][from][ghostCaller];
 
     // Attempt the transferFrom with revert path
     _ERC20.transferFrom@withrevert(e, from, to, amount);
@@ -193,27 +196,27 @@ rule approveIntegrity(env e, address spender, uint256 value) {
     require(other != ghostCaller && other != spender);
 
     // Capture pre-state
-    mathint ownerBalancePrev   = ghostERC20Balances[ghostContract][ghostCaller];
-    mathint spenderBalancePrev = ghostERC20Balances[ghostContract][spender];
-    mathint otherBalancePrev   = ghostERC20Balances[ghostContract][other];
-    mathint totalSupplyPrev    = ghostERC20TotalSupply[ghostContract];
-    mathint allowanceAny1Any2Prev = ghostERC20Allowances[ghostContract][any1][any2];
+    mathint ownerBalancePrev   = ghostERC20Balances[currentContract][ghostCaller];
+    mathint spenderBalancePrev = ghostERC20Balances[currentContract][spender];
+    mathint otherBalancePrev   = ghostERC20Balances[currentContract][other];
+    mathint totalSupplyPrev    = ghostERC20TotalSupply[currentContract];
+    mathint allowanceAny1Any2Prev = ghostERC20Allowances[currentContract][any1][any2];
 
     // Perform the approve
     _ERC20.approve(e, spender, value);
 
     // Check that balances remain unchanged
-    assert(ghostERC20Balances[ghostContract][ghostCaller]   == ownerBalancePrev);
-    assert(ghostERC20Balances[ghostContract][spender] == spenderBalancePrev);
-    assert(ghostERC20Balances[ghostContract][other]   == otherBalancePrev);
+    assert(ghostERC20Balances[currentContract][ghostCaller]   == ownerBalancePrev);
+    assert(ghostERC20Balances[currentContract][spender] == spenderBalancePrev);
+    assert(ghostERC20Balances[currentContract][other]   == otherBalancePrev);
 
     // Total supply must be unchanged
-    assert(ghostERC20TotalSupply[ghostContract] == totalSupplyPrev);
+    assert(ghostERC20TotalSupply[currentContract] == totalSupplyPrev);
 
     // Allowances: only the `(owner -> spender)` pair changes
     assert(any1 == ghostCaller && any2 == spender 
-        ? ghostERC20Allowances[ghostContract][ghostCaller][spender] == value
-        : ghostERC20Allowances[ghostContract][any1][any2] == allowanceAny1Any2Prev
+        ? ghostERC20Allowances[currentContract][ghostCaller][spender] == value
+        : ghostERC20Allowances[currentContract][any1][any2] == allowanceAny1Any2Prev
     );
 }
 

@@ -2,6 +2,11 @@
 
 import "./silo_config.spec";
 
+// From initial contest's setup
+import "./initial/SiloMathLib_SAFE.spec";
+import "./initial/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
+import "./initial/priceOracle_UNSAFE.spec";
+
 using EmptyHookReceiver as _EmptyHookReceiver;
 
 methods {
@@ -36,27 +41,6 @@ methods {
 
     function _.onFlashLoan(address, address, uint256, uint256, bytes) external
         => NONDET;
-
-    // Resolve external calls in `IInterestRateModel`
-
-    function _.getCompoundInterestRateAndUpdate(
-        uint256 _collateralAssets, uint256 _debtAssets, uint256 _interestRateTimestamp
-    ) external => getCompoundInterestRateCVL(
-        _collateralAssets, _debtAssets, _interestRateTimestamp
-        ) expect (uint256);
-
-    function _.getCompoundInterestRate(
-        address _silo,
-        uint256 _blockTimestamp
-    ) external => getCompoundInterestRateForSiloCVL(_silo, _blockTimestamp) expect (uint256);
-
-    // Resolve external calls in `ISiloOracle`
-
-    function _.beforeQuote(address _baseToken) external
-        => NONDET;
-
-    function _.quote(uint256 _baseAmount, address _baseToken) external
-        => NONDET;
 }
 
 //
@@ -69,22 +53,6 @@ persistent ghost mapping(address => address) ghostDaoFeeReceiver;
 persistent ghost mapping(address => address) ghostDeployerFeeReceiver;
 function getFeeReceiversCVL(address _silo) returns (address, address) {
     return (ghostDaoFeeReceiver[_silo], ghostDeployerFeeReceiver[_silo]);
-}
-
-// `IInterestRateModel`
-
-ghost mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) ghostInterest;
-function getCompoundInterestRateCVL(
-    uint256 _collateralAssets,
-    uint256 _debtAssets,
-    uint256 _interestRateTimestamp
-) returns uint256 {
-    return ghostInterest[_collateralAssets][_debtAssets][_interestRateTimestamp];
-}
-
-persistent ghost mapping(address => mapping(uint256 => uint256)) ghostInterestSilo;
-function getCompoundInterestRateForSiloCVL(address _silo, uint256 _blockTimestamp) returns uint256 {
-    return ghostInterestSilo[_silo][_blockTimestamp];
 }
 
 //

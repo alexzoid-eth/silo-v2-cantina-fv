@@ -7,7 +7,7 @@ using Token0 as _Asset;
 
 methods {
     // Mark as `envfree` all functions which don't involve environments calls (msg.sender, block.timestamp etc)
-    function asset() external returns (address) envfree;
+    function _ERC4626.asset() external returns (address) envfree;
 }
 
 //
@@ -424,8 +424,8 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
     // Pre-state checks
     mathint vaultAssetsPrev    = ghostERC20Balances[asset()][currentContract];
     mathint callerBalancePrev  = ghostERC20Balances[asset()][ghostCaller];
-    mathint receiverSharesPrev = ghostERC20Balances[ghostContract][receiver];
-    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[ghostContract];
+    mathint receiverSharesPrev = ghostERC20Balances[currentContract][receiver];
+    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[currentContract];
 
     // Attempt deposit
     mathint shares = _ERC4626.deposit(e, assets, receiver);
@@ -441,11 +441,11 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
     assert(callerBalancePost == callerBalancePrev - assets);
 
     // The receiver's share balance must have increased by `shares`
-    mathint receiverSharesPost = ghostERC20Balances[ghostContract][receiver];
+    mathint receiverSharesPost = ghostERC20Balances[currentContract][receiver];
     assert(receiverSharesPost == receiverSharesPrev + shares);
 
     // The vault's total supply of shares must have increased by `shares`
-    mathint vaultSharesSupplyPost = ghostERC20TotalSupply[ghostContract];
+    mathint vaultSharesSupplyPost = ghostERC20TotalSupply[currentContract];
     assert(vaultSharesSupplyPost == vaultSharesSupplyPrev + shares);
 }
 
@@ -690,8 +690,8 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
     // Capture pre-state
     mathint vaultAssetsPrev         = ghostERC20Balances[asset()][currentContract];
     mathint callerAssetBalancePrev  = ghostERC20Balances[asset()][ghostCaller];
-    mathint receiverSharesPrev      = ghostERC20Balances[ghostContract][receiver];
-    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[ghostContract];
+    mathint receiverSharesPrev      = ghostERC20Balances[currentContract][receiver];
+    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[currentContract];
 
     // Perform the mint
     mathint actualAssetsUsed = _ERC4626.mint(e, shares, receiver);
@@ -699,8 +699,8 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
     // Capture post-state
     mathint vaultAssetsPost         = ghostERC20Balances[asset()][currentContract];
     mathint callerAssetBalancePost  = ghostERC20Balances[asset()][ghostCaller];
-    mathint receiverSharesPost      = ghostERC20Balances[ghostContract][receiver];
-    mathint vaultShareSupplyPost    = ghostERC20TotalSupply[ghostContract];
+    mathint receiverSharesPost      = ghostERC20Balances[currentContract][receiver];
+    mathint vaultShareSupplyPost    = ghostERC20TotalSupply[currentContract];
 
     // The vault’s asset balance must have increased by exactly `actualAssetsUsed`
     assert(vaultAssetsPost == vaultAssetsPrev + actualAssetsUsed);
@@ -754,13 +754,13 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
     // Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidEnv(e);
 
-    mathint receiverSharesBefore = ghostERC20Balances[ghostContract][receiver];
+    mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
 
     // Attempt the mint
     _ERC4626.mint@withrevert(e, shares, receiver);
     bool mintReverted = lastReverted;
 
-    mathint receiverSharesAfter = ghostERC20Balances[ghostContract][receiver];
+    mathint receiverSharesAfter = ghostERC20Balances[currentContract][receiver];
 
     // If the receiver's share balance did not increase by the required amount for these shares,
     //    EIP-4626 says it MUST revert
@@ -771,11 +771,11 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 
 rule mintPossibility(env e, uint256 shares, address receiver) {
 
-    mathint receiverSharesBefore = ghostERC20Balances[ghostContract][receiver];
+    mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
 
     _ERC4626.mint(e, shares, receiver);
 
-    mathint receiverSharesAfter = ghostERC20Balances[ghostContract][receiver];
+    mathint receiverSharesAfter = ghostERC20Balances[currentContract][receiver];
 
     // At least one path when balance changed correctly and not reverted
     satisfy(shares != 0 && receiverSharesAfter == receiverSharesBefore + shares);
@@ -822,7 +822,7 @@ rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 
     // Havoc the user’s share balance in the vault
     havoc ghostERC20Balances assuming
-        ghostERC20Balances@new[ghostContract][owner] != ghostERC20Balances@old[ghostContract][owner];
+        ghostERC20Balances@new[currentContract][owner] != ghostERC20Balances@old[currentContract][owner];
 
     // Query the limit again in a second environment
     mathint limit2 = _ERC4626.maxWithdraw(e2, owner);
@@ -886,7 +886,7 @@ rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, ad
     requireValidEnv(e);
 
     mathint assetsLimit = _ERC4626.maxWithdraw(e, ghostCaller);
-    mathint userShares = ghostERC20Balances[ghostContract][ghostCaller];
+    mathint userShares = ghostERC20Balances[currentContract][ghostCaller];
 
     mathint previewShares = _ERC4626.previewWithdraw(e, assets);
 
@@ -944,21 +944,21 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
     requireValidEnv(e);
 
     // Pre-state snapshots
-    mathint ownerSharesBefore    = ghostERC20Balances[ghostContract][owner];                       // The owner's share balance
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[ghostContract];                        // The vault’s total share supply
+    mathint ownerSharesBefore    = ghostERC20Balances[currentContract][owner];                       // The owner's share balance
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];                        // The vault’s total share supply
     mathint vaultAssetsBefore    = ghostERC20Balances[asset()][currentContract]; // The vault’s asset balance
     mathint receiverAssetsBefore = ghostERC20Balances[asset()][receiver];        // The receiver’s asset balance
-    mathint ownerAllowancesBefore= ghostERC20Allowances[ghostContract][owner][ghostCaller];
+    mathint ownerAllowancesBefore= ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // Perform the withdraw
     mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
     // Post-state snapshots
-    mathint ownerSharesAfter    = ghostERC20Balances[ghostContract][owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[ghostContract];
+    mathint ownerSharesAfter    = ghostERC20Balances[currentContract][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
     mathint vaultAssetsAfter    = ghostERC20Balances[asset()][currentContract];
     mathint receiverAssetsAfter = ghostERC20Balances[asset()][receiver];
-    mathint ownerAllowancesAfter= ghostERC20Allowances[ghostContract][owner][ghostCaller];
+    mathint ownerAllowancesAfter= ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // The `owner`’s share balance must have decreased by exactly `sharesBurned`
     assert(ownerSharesAfter == ownerSharesBefore - sharesBurned);
@@ -1107,7 +1107,7 @@ rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, addr
     requireValidEnv(e);
 
     mathint sharesLimit = _ERC4626.maxRedeem(e, ghostCaller);
-    mathint userShares = ghostERC20Balances[ghostContract][ghostCaller];
+    mathint userShares = ghostERC20Balances[currentContract][ghostCaller];
 
     mathint previewAssets = _ERC4626.previewRedeem(e, shares);
 
@@ -1166,21 +1166,21 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
     requireValidEnv(e);
 
     // Pre-state snapshots
-    mathint ownerSharesBefore       = ghostERC20Balances[ghostContract][owner];                       
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[ghostContract];                         
+    mathint ownerSharesBefore       = ghostERC20Balances[currentContract][owner];                       
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];                         
     mathint vaultAssetsBefore       = ghostERC20Balances[asset()][currentContract];
     mathint receiverAssetsBefore    = ghostERC20Balances[asset()][receiver];
-    mathint ownerAllowancesBefore   = ghostERC20Allowances[ghostContract][owner][ghostCaller];
+    mathint ownerAllowancesBefore   = ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // Perform redeem
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
     // Post-state snapshots
-    mathint ownerSharesAfter       = ghostERC20Balances[ghostContract][owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[ghostContract];
+    mathint ownerSharesAfter       = ghostERC20Balances[currentContract][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
     mathint vaultAssetsAfter       = ghostERC20Balances[asset()][currentContract];
     mathint receiverAssetsAfter    = ghostERC20Balances[asset()][receiver];
-    mathint ownerAllowancesAfter   = ghostERC20Allowances[ghostContract][owner][ghostCaller];
+    mathint ownerAllowancesAfter   = ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // The `owner`’s share balance must decrease by exactly `shares`
     assert(ownerSharesAfter == ownerSharesBefore - shares);

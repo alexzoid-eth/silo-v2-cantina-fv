@@ -1,10 +1,7 @@
 // Common environment for all tested contracts
 
 import "./helper_cvl.spec";
-
-persistent ghost address ghostContract {
-    axiom ghostContract == currentContract;
-}
+import "./math_cvl.spec";
 
 persistent ghost address ghostCaller;
 

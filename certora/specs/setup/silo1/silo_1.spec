@@ -12,11 +12,11 @@ using Silo1 as _Silo1;
 // IERC20R
 
 hook Sload uint256 val _Silo1.iERC20RStorage._receiveAllowances[KEY address owner][KEY address recipient] {
-    require(require_uint256(ghostReceiveAllowances[executingContract][owner][recipient]) == val);
+    require(require_uint256(ghostReceiveAllowances[_Silo1][owner][recipient]) == val);
 }
 
 hook Sstore _Silo1.iERC20RStorage._receiveAllowances[KEY address owner][KEY address recipient] uint256 val {
-    ghostReceiveAllowances[executingContract][owner][recipient] = val;
+    ghostReceiveAllowances[_Silo1][owner][recipient] = val;
 }
 
 // SiloStorage
@@ -24,29 +24,29 @@ hook Sstore _Silo1.iERC20RStorage._receiveAllowances[KEY address owner][KEY addr
 // Hooks for `SiloStorage.daoAndDeployerRevenue`
 
 hook Sload uint192 val _Silo1.siloStorage.daoAndDeployerRevenue {
-    require(require_uint192(ghostDaoAndDeployerRevenue[executingContract]) == val);
+    require(require_uint192(ghostDaoAndDeployerRevenue[_Silo1]) == val);
 }
 
 hook Sstore _Silo1.siloStorage.daoAndDeployerRevenue uint192 val {
-    ghostDaoAndDeployerRevenue[executingContract] = val;
+    ghostDaoAndDeployerRevenue[_Silo1] = val;
 }
 
 // Hooks for `SiloStorage.interestRateTimestamp`
 
 hook Sload uint64 val _Silo1.siloStorage.interestRateTimestamp {
-    require(require_uint64(ghostInterestRateTimestamp[executingContract]) == val);
+    require(require_uint64(ghostInterestRateTimestamp[_Silo1]) == val);
 }
 
 hook Sstore _Silo1.siloStorage.interestRateTimestamp uint64 val {
-    ghostInterestRateTimestamp[executingContract] = val;
+    ghostInterestRateTimestamp[_Silo1] = val;
 }
 
 // Hooks for `SiloStorage.totalAssets`
 
 hook Sload uint256 val _Silo1.siloStorage.totalAssets[KEY ISilo.AssetType assetType] {
-    require(require_uint256(ghostTotalAssets[executingContract][to_mathint(assetType)]) == val);
+    require(require_uint256(ghostTotalAssets[_Silo1][to_mathint(assetType)]) == val);
 }
 
 hook Sstore _Silo1.siloStorage.totalAssets[KEY ISilo.AssetType assetType] uint256 val {
-    ghostTotalAssets[executingContract][to_mathint(assetType)] = val;
+    ghostTotalAssets[_Silo1][to_mathint(assetType)] = val;
 }

@@ -7,18 +7,17 @@ import { IERC20R } from "silo-core/contracts/interfaces/IERC20R.sol";
 import { IShareToken } from "silo-core/contracts/interfaces/IShareToken.sol";
 import { ISilo } from "silo-core/contracts/interfaces/ISilo.sol";
 
-import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-
 import { ERC20Upgradeable } from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgradeable.sol";
 import { EIP712Upgradeable } from "openzeppelin5-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 abstract contract SiloHarness is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
 
     // 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200
     uint256[764520080237424869752330524124367139483859928243420876645759593088794890752] private _relativeOffset1;
-    IShareToken.ShareTokenStorage private shareTokenStorage; // 4 slots total
+    IShareToken.ShareTokenStorage private shareTokenStorage; // 4 slots
     
     // 0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00
     uint256[36675316247685935355585565347270393484796677538529859497619462915077111331836] private _relativeOffset2;
@@ -41,6 +40,5 @@ abstract contract SiloHarness is Silo {
     ISilo.SiloStorage private siloStorage; // 2 slots
 
     // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
-    uint256[11513204037206332369002621323848524806439336312072540614442918004527698077438] private _relativeOffset7;
-    Initializable.InitializableStorage private initializableStorage; // 1 slot
+    // Don't worry about `initializableStorage` somewhere in the bottom
 }
