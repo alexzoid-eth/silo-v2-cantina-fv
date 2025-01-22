@@ -51,20 +51,24 @@ hook Sstore _ShareDebtToken0.shareTokenStorage.transferWithChecks bool val {
 // Balances hooks
 
 hook Sload uint256 val _ShareDebtToken0.erc20Storage._balances[KEY address account] {
+    require(ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, account));
     require(require_uint256(ghostERC20Balances[_ShareDebtToken0][account]) == val);
 }
 
 hook Sstore _ShareDebtToken0.erc20Storage._balances[KEY address account] uint256 val {
+    require(ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, account));
     ghostERC20Balances[_ShareDebtToken0][account] = val;
 }
 
 // Allowances hooks  
 
 hook Sload uint256 val _ShareDebtToken0.erc20Storage._allowances[KEY address owner][KEY address spender] {
+    require(ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, owner) && ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, spender));
     require(require_uint256(ghostERC20Allowances[_ShareDebtToken0][owner][spender]) == val);
 }
 
 hook Sstore _ShareDebtToken0.erc20Storage._allowances[KEY address owner][KEY address spender] uint256 val {
+    require(ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, owner) && ERC20_ACCOUNT_BOUNDS(_ShareDebtToken0, spender));
     ghostERC20Allowances[_ShareDebtToken0][owner][spender] = val;
 }
 

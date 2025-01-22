@@ -22,9 +22,24 @@ persistent ghost mathint ghostCrossReentrantStatus {
 // Set true when on or off was execute twice
 ghost bool ghostReentrancyProtectionDoubleCall;
 
+function onlySiloOrTokenOrHookReceiverCVL(env e) {
+    if (e.msg.sender != _SiloConfig._SILO0 &&
+        e.msg.sender != _SiloConfig._SILO1 &&
+        e.msg.sender != _SiloConfig._HOOK_RECEIVER &&
+        e.msg.sender != _SiloConfig._COLLATERAL_SHARE_TOKEN0 &&
+        e.msg.sender != _SiloConfig._COLLATERAL_SHARE_TOKEN1 &&
+        e.msg.sender != _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
+        e.msg.sender != _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
+        e.msg.sender != _SiloConfig._DEBT_SHARE_TOKEN0 &&
+        e.msg.sender != _SiloConfig._DEBT_SHARE_TOKEN1
+    ) {
+        ASSERT(false);
+    }
+}
+
 function turnOnReentrancyProtectionCVL(env e) {
 
-    _SiloConfig.onlySiloOrTokenOrHookReceiverHarness(e);
+    onlySiloOrTokenOrHookReceiverCVL(e);
 
     ghostReentrancyProtectionDoubleCall = ghostCrossReentrantStatus == _ENTERED();
     ASSERT(ghostCrossReentrantStatus != _ENTERED());
@@ -34,7 +49,7 @@ function turnOnReentrancyProtectionCVL(env e) {
 
 function turnOffReentrancyProtectionCVL(env e) {
 
-    _SiloConfig.onlySiloOrTokenOrHookReceiverHarness(e);
+    onlySiloOrTokenOrHookReceiverCVL(e);
 
     ghostReentrancyProtectionDoubleCall = ghostCrossReentrantStatus == _NOT_ENTERED();
     ASSERT(ghostCrossReentrantStatus != _NOT_ENTERED());

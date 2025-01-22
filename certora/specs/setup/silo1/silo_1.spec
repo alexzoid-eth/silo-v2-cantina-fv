@@ -6,8 +6,28 @@ import "./collateral_share_token_1.spec";
 import "./share_debt_token_1.spec";
 import "./share_protected_collateral_token_1.spec";
 import "./token_1.spec";
+import "./silo_1_valid_state.spec";
 
 using Silo1 as _Silo1;
+
+function requireValidSilo1Env(env e) {
+
+    // Common environment for all tested contracts
+    requireValidEnv(e);
+
+    // Silo1 specific environment
+    require(e.msg.sender != _CollateralShareToken1 
+        && e.msg.sender != _ShareDebtToken1
+        && e.msg.sender != _ShareProtectedCollateralToken1
+        && e.msg.sender != _Token1
+        );
+
+    // Common valid state invariants working both for Silo0 and Silo1
+    requireSiloCommonValidStateEnv(e);
+
+    // Silo0 specific valid state invariants
+    requireSilo1ValidStateEnv(e);
+}
 
 // IERC20R
 

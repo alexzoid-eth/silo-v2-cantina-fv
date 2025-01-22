@@ -1,6 +1,6 @@
 // Silo config contract support
 
-import "./silo_config_cross_reentrancy_guard.spec";
+import "./silo_config_cross_reentrancy_guard_cvl.spec";
 
 using SiloConfigHarness as _SiloConfig;
 

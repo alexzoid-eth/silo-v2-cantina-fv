@@ -1,37 +1,34 @@
-// Prove contract is compatible with ERC20 (https://eips.ethereum.org/EIPS/eip-20)
+// Prove contract is compatible with EIP20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "./setup/silo0/collateral_share_token_0.spec";
+import "setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC20;
-
-methods {
-    function _ERC20.totalSupply() external returns (uint256) envfree;
-    function _ERC20.balanceOf(address account) external returns (uint256) envfree;
-    function _ERC20.allowance(address owner, address spender) external returns (uint256) envfree;
-}
 
 // ERC20 viewers integrity
 
 // Returns the total token supply
-rule totalSupplyIntegrity() {
-    assert(_ERC20.totalSupply() == ghostERC20TotalSupply[currentContract]);
+rule totalSupplyIntegrity(env e) {
+    assert(_ERC20.totalSupply(e) == ghostERC20TotalSupply[currentContract]);
 }
 
 // Returns the account balance of another account
-rule balanceOfIntegrity(address account) {
-    assert(_ERC20.balanceOf(account) == ghostERC20Balances[currentContract][account]);
+rule balanceOfIntegrity(env e, address account) {
+    assert(_ERC20.balanceOf(e, account) == ghostERC20Balances[currentContract][account]);
 }
 
 // Returns the amount which `spender` is still allowed to withdraw from `owner`
-rule allowanceIntegrity(address owner, address spender) {
-    assert(_ERC20.allowance(owner, spender) == ghostERC20Allowances[currentContract][owner][spender]);
+rule allowanceIntegrity(env e, address owner, address spender) {
+    assert(_ERC20.allowance(e, owner, spender) == ghostERC20Allowances[currentContract][owner][spender]);
 }
 
 // ERC20 transfer() integrity
 
 // Transfers `amount` of tokens to address `to`
 rule transferIntegrity(env e, address to, uint256 amount) {
-    
+
+    // Total supply solvency
+    requireErc20ValidState();
+
     // msg.sender not current contract
     requireValidEnv(e);
 
@@ -64,16 +61,6 @@ rule transferIntegrity(env e, address to, uint256 amount) {
     assert(ghostERC20Allowances[currentContract][any1][any2] == allowanceAny1Any2Prev);
 }
 
-// Transfers of 0 values MUST be treated as normal transfers
-rule transferSupportZeroAmount(env e, address to, uint256 amount) {
-
-    // Perform transfer
-    _ERC20.transfer(e, to, amount);
-
-    // Transfers of 0 values MUST be treated as normal transfers
-    satisfy(amount == 0);
-}
-
 // The function SHOULD throw if the message caller’s account balance does not have enough tokens to spend
 rule transferMustRevert(env e, address to, uint256 amount) {
 
@@ -102,12 +89,16 @@ rule transferMustRevert(env e, address to, uint256 amount) {
 // Transfers `amount` of tokens from address `from` to address `to`
 rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
 
+    // Total supply solvency
+    requireErc20ValidState();
+
     // msg.sender not current contract
     requireValidEnv(e);
 
     address other; 
     address any1;
     address any2;
+    require(any1 != from && any2 != to);
 
     // Ensure 'other' is not involved in the transferFrom call
     require(other != from && other != to);
@@ -128,28 +119,16 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
             ? ghostERC20Balances[currentContract][from] == fromBalancePrev - amount 
             : ghostERC20Balances[currentContract][from] == fromBalancePrev
     );
-    satisfy(ghostERC20Balances[currentContract][from] == fromBalancePrev - amount);
 
     assert(
         from != to
             ? ghostERC20Balances[currentContract][to] == toBalancePrev + amount
             : ghostERC20Balances[currentContract][to] == toBalancePrev
     );
-    satisfy(ghostERC20Balances[currentContract][to] == toBalancePrev + amount);
 
     assert(ghostERC20Balances[currentContract][other] == otherBalancePrev);
     assert(ghostERC20TotalSupply[currentContract] == totalSupplyPrev);
     assert(ghostERC20Allowances[currentContract][any1][any2] == allowanceAny1Any2Prev);
-}
-
-// Transfers of 0 values MUST be treated as normal transfers
-rule transferFromSupportZeroAmount(env e, address to, address from, uint256 amount) {
-
-    // Perform the transferFrom
-    _ERC20.transferFrom(e, from, to, amount);
-
-    // Transfers of 0 values MUST be treated as normal transfers
-    satisfy(amount == 0);
 }
 
 // The function SHOULD throw unless the `from` account has deliberately authorized the 
