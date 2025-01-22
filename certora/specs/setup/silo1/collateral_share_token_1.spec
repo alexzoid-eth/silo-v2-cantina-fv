@@ -1,6 +1,4 @@
 import "../silo/share_token.spec";
-import "../erc20.spec";
-import "../env.spec";
 
 using Silo1 as _CollateralShareToken1;
 

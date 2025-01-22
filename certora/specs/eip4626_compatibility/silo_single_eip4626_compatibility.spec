@@ -1,8 +1,10 @@
 // Prove contract is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
-import "silo_single_eip20_compatibility.spec";
+import "../setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC4626;
+
+// @todo change to ghostToken0
 using Token0 as _Asset;
 
 //
@@ -100,8 +102,12 @@ rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
-    mathint shares1 = _ERC4626.convertToShares(e1, assets);
-    mathint shares2 = _ERC4626.convertToShares(e2, assets);
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
+    storage init = lastStorage;
+    mathint shares1 = _ERC4626.convertToShares(e1, assets) at init;
+    mathint shares2 = _ERC4626.convertToShares(e2, assets) at init;
 
     assert(shares1 == shares2);
 }
@@ -213,8 +219,12 @@ rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
-    mathint assets1 = _ERC4626.convertToAssets(e1, shares);
-    mathint assets2 = _ERC4626.convertToAssets(e2, shares);
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
+    storage init = lastStorage;
+    mathint assets1 = _ERC4626.convertToAssets(e1, shares) at init;
+    mathint assets2 = _ERC4626.convertToAssets(e2, shares) at init;
 
     // If no state changed, the result should be identical regardless of the caller
     assert(assets1 == assets2);
@@ -441,9 +451,13 @@ rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
     // Like convertToShares or convertToAssets, previewDeposit(assets) must not change based on msg.sender
-    mathint pd1 = _ERC4626.previewDeposit(e1, assets);
-    mathint pd2 = _ERC4626.previewDeposit(e2, assets);
+    storage init = lastStorage;
+    mathint pd1 = _ERC4626.previewDeposit(e1, assets) at init;
+    mathint pd2 = _ERC4626.previewDeposit(e2, assets) at init;
 
     assert(pd1 == pd2);
     satisfy(pd1 == pd2);
@@ -722,8 +736,12 @@ rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
-    mathint pm1 = _ERC4626.previewMint(e1, shares);
-    mathint pm2 = _ERC4626.previewMint(e2, shares);
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
+    storage init = lastStorage;
+    mathint pm1 = _ERC4626.previewMint(e1, shares) at init;
+    mathint pm2 = _ERC4626.previewMint(e2, shares) at init;
 
     // If the vault state is identical, the results must match
     assert(pm1 == pm2);
@@ -995,8 +1013,12 @@ rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
-    mathint pw1 = _ERC4626.previewWithdraw(e1, assets);
-    mathint pw2 = _ERC4626.previewWithdraw(e2, assets);
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
+    storage init = lastStorage;
+    mathint pw1 = _ERC4626.previewWithdraw(e1, assets) at init;
+    mathint pw2 = _ERC4626.previewWithdraw(e2, assets) at init;
 
     // If the vault state didn't change, the result must be identical
     assert(pw1 == pw2);
@@ -1224,8 +1246,12 @@ rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
     requireValidSilo0Env(e1);
     requireValidSilo0Env(e2);
 
-    mathint pr1 = _ERC4626.previewRedeem(e1, shares);
-    mathint pr2 = _ERC4626.previewRedeem(e2, shares);
+    // Same timestamp, but different callers
+    require(e1.block.timestamp == e2.block.timestamp);
+
+    storage init = lastStorage;
+    mathint pr1 = _ERC4626.previewRedeem(e1, shares) at init;
+    mathint pr2 = _ERC4626.previewRedeem(e2, shares) at init;
 
     // If the vault state didn’t change, results must match
     assert(pr1 == pr2);

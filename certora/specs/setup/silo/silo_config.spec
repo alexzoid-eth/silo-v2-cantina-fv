@@ -18,6 +18,14 @@ methods {
         => DISPATCHER(true);
 }
 
+// Link config immutables 
+
+persistent ghost address ghostToken0 {
+    axiom ghostToken0 == _SiloConfig._TOKEN0;
+    axiom ghostToken0 == ghostERC20CVLToken[0];
+    axiom ghostToken0 != _CollateralShareToken0 &&
+}
+
 // Storage hooks
 
 persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {

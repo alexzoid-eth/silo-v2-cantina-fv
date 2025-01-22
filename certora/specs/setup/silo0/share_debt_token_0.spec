@@ -1,6 +1,4 @@
 import "../silo/share_token.spec";
-import "../erc20.spec";
-import "../env.spec";
 
 using ShareDebtToken0 as _ShareDebtToken0;
 

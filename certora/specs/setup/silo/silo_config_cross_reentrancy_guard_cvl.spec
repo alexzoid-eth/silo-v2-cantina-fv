@@ -20,7 +20,9 @@ persistent ghost mathint ghostCrossReentrantStatus {
 }
 
 // Set true when on or off was execute twice
-ghost bool ghostReentrancyProtectionDoubleCall;
+persistent ghost bool ghostReentrancyProtectionDoubleCall {
+    init_state axiom ghostReentrancyProtectionDoubleCall == false;
+}
 
 function onlySiloOrTokenOrHookReceiverCVL(env e) {
     if (e.msg.sender != _SiloConfig._SILO0 &&

@@ -2,13 +2,15 @@
 
 import "./silo_config.spec";
 import "./silo_common_valid_state.spec";
+import "./hook_receiver_cvl.spec";
+
+import "../erc20/erc20Silo.spec";
+import "../env.spec";
 
 // From initial contest's setup
 import "./initial/SiloMathLib_SAFE.spec";
 import "./initial/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 import "./initial/priceOracle_UNSAFE.spec";
-
-using EmptyHookReceiver as _EmptyHookReceiver;
 
 methods {
 
@@ -19,11 +21,6 @@ methods {
     // Remove from the scene in order to support single Silo configuration 
     function _.accrueInterestForBothSilos() external 
         => NONDET DELETE;
-
-    // Assume decimals via `ShareTokenLib.decimals()` summarization
-
-    function ShareTokenLib.decimals() external returns (uint8)
-        => decimalsCVL(calledContract);
 
     // Resolve external calls to `SiloFactory`
 
@@ -40,11 +37,6 @@ methods {
     
     function _.getCollateralAndProtectedTotalsStorage() external
         => DISPATCHER(true);
-
-    // Resolve external call to `IHookReceiver`
-
-    function _.hookReceiverConfig(address _silo) external
-        => DISPATCHER(true);
     
     // Resolve external call in `IERC3156FlashBorrower`
 
@@ -53,26 +45,24 @@ methods {
 }
 
 //
-// Methods summarizes
+// Valid state common for Silo and Silo1
 //
 
-// `ShareTokenLib.decimals()`
+function requireValidSiloCommonEnv(env e) {
 
-persistent ghost uint8 ghostDecimals0 {
-    axiom ghostDecimals0 == 0 || (ghostDecimals0 >= 6 && ghostDecimals0 <= 18);
+    // Common environment for all tested contracts
+    requireValidEnv(e);
+
+    // Common environment both Silo0 and Silo1
+    require(e.msg.sender != _SiloConfig);
+
+    // Common valid state invariants working both for Silo0 and Silo1
+    requireSiloCommonValidStateEnv(e);
 }
-persistent ghost uint8 ghostDecimals1 {
-    axiom ghostDecimals0 == 0 || (ghostDecimals1 >= 6 && ghostDecimals1 <= 18);
-}
-function decimalsCVL(address contract) returns uint8 {
-    // Different decimals for Token0 and Token1
-    bool isSilo0 = (contract == _CollateralShareToken0 
-        || contract == _ShareDebtToken0 
-        || contract == _ShareProtectedCollateralToken0
-        || contract == _Token0
-        ); 
-    return (isSilo0 ? ghostDecimals0 : ghostDecimals1);
-}
+
+//
+// Methods summarizes
+//
 
 // `SiloFactory`
 

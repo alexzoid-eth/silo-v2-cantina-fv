@@ -1,6 +1,6 @@
 // Prove contract is compatible with EIP20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "setup/silo0/silo_0.spec";
+import "../setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC20;
 
@@ -8,16 +8,28 @@ using Silo0 as _ERC20;
 
 // Returns the total token supply
 rule totalSupplyIntegrity(env e) {
+
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
+
     assert(_ERC20.totalSupply(e) == ghostERC20TotalSupply[currentContract]);
 }
 
 // Returns the account balance of another account
 rule balanceOfIntegrity(env e, address account) {
+
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
+
     assert(_ERC20.balanceOf(e, account) == ghostERC20Balances[currentContract][account]);
 }
 
 // Returns the amount which `spender` is still allowed to withdraw from `owner`
 rule allowanceIntegrity(env e, address owner, address spender) {
+
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
+
     assert(_ERC20.allowance(e, owner, spender) == ghostERC20Allowances[currentContract][owner][spender]);
 }
 
@@ -26,11 +38,8 @@ rule allowanceIntegrity(env e, address owner, address spender) {
 // Transfers `amount` of tokens to address `to`
 rule transferIntegrity(env e, address to, uint256 amount) {
 
-    // Total supply solvency
-    requireErc20ValidState();
-
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     address other; 
     address any1;
@@ -64,8 +73,8 @@ rule transferIntegrity(env e, address to, uint256 amount) {
 // The function SHOULD throw if the message caller’s account balance does not have enough tokens to spend
 rule transferMustRevert(env e, address to, uint256 amount) {
 
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     // Snapshot the 'from' balance
     mathint fromBalancePrev = ghostERC20Balances[currentContract][ghostCaller];
@@ -89,11 +98,8 @@ rule transferMustRevert(env e, address to, uint256 amount) {
 // Transfers `amount` of tokens from address `from` to address `to`
 rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
 
-    // Total supply solvency
-    requireErc20ValidState();
-
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     address other; 
     address any1;
@@ -135,8 +141,8 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
 //  sender of the message via some mechanism
 rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
 
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     // Snapshot the 'from' balance and allowance
     mathint fromBalancePrev = ghostERC20Balances[currentContract][from];
@@ -164,8 +170,8 @@ rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
 // Allows `spender` to withdraw from your account multiple times, up to the `value` amount
 rule approveIntegrity(env e, address spender, uint256 value) {
 
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     address other;
     address any1;
@@ -201,8 +207,8 @@ rule approveIntegrity(env e, address spender, uint256 value) {
 
 rule approveMustRevert(env e, address spender, uint256 value) {
 
-    // msg.sender not current contract
-    requireValidEnv(e);
+    // Assume valid Silo0 state
+    requireValidSilo0Env(e);
 
     // Attempt the approve with revert path
     _ERC20.approve@withrevert(e, spender, value);

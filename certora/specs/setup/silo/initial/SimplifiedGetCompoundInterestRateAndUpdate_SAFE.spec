@@ -34,8 +34,7 @@ ghost compoundInterestRate(uint256) returns uint256 {
 
 /// @title Implementation of `getCompoundInterestRate` in CVL
 function getCompoundInterestRateSumm(address _silo, uint256 _blockTimestamp) returns uint256 {
-    // ADDED: This function will revert if the given `_blockTimestamp` is less than the interest rate time stamp
-    ASSERT(_blockTimestamp >= ghostInterestRateTimestamp[_silo]);
+    require(_blockTimestamp >= ghostInterestRateTimestamp[_silo]);
     mathint timestampDiff = _blockTimestamp - ghostInterestRateTimestamp[_silo];
     return compoundInterestRate(require_uint256(timestampDiff));
 }
