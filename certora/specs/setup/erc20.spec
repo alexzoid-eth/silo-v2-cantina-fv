@@ -1,6 +1,16 @@
 // ERC20 ghosts for storage hooks
 
 methods {
+
+    // ERC20/ERC20Upgradeable
+    function _.decimals() external => DISPATCHER(true);
+    function _.totalSupply() external => DISPATCHER(true);
+    function _.balanceOf(address) external => DISPATCHER(true);
+    function _.allowance(address,address) external => DISPATCHER(true);
+    function _.approve(address,uint256) external => DISPATCHER(true);
+    function _.transfer(address,uint256) external => DISPATCHER(true);
+    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
+
     // Remove from the scene
     function _.name() external => NONDET DELETE;
     function _.symbol() external => NONDET DELETE;

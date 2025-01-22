@@ -5,7 +5,7 @@ import "../silo/silo_common.spec";
 import "./collateral_share_token_0.spec";
 import "./share_debt_token_0.spec";
 import "./share_protected_collateral_token_0.spec";
-// import "./token_0.spec";
+import "./token_0.spec";
 import "./silo_0_valid_state.spec";
 
 using Silo0 as _Silo0;
@@ -21,7 +21,7 @@ function requireValidSilo0Env(env e) {
     require(e.msg.sender != _CollateralShareToken0 
         && e.msg.sender != _ShareDebtToken0
         && e.msg.sender != _ShareProtectedCollateralToken0
-        && e.msg.sender != ghostToken0
+        && e.msg.sender != _Token0
         );
 
     // Silo0 specific valid state invariants

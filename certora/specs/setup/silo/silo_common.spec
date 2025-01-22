@@ -4,7 +4,7 @@ import "./silo_config.spec";
 import "./silo_common_valid_state.spec";
 import "./hook_receiver_cvl.spec";
 
-import "../erc20/erc20Silo.spec";
+import "../erc20.spec";
 import "../env.spec";
 
 // From initial contest's setup
@@ -14,13 +14,10 @@ import "./initial/priceOracle_UNSAFE.spec";
 
 methods {
 
-    // Remove from the scene as it as admin specific with unlimited rights
-    function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
-        => NONDET DELETE;
+    // Decimals
 
-    // Remove from the scene in order to support single Silo configuration 
-    function _.accrueInterestForBothSilos() external 
-        => NONDET DELETE;
+    function ShareTokenLib.decimals() external returns (uint8)
+        => shareTokenLibDecimalsCVL(calledContract);
 
     // Resolve external calls to `SiloFactory`
 
@@ -42,6 +39,14 @@ methods {
 
     function _.onFlashLoan(address, address, uint256, uint256, bytes) external
         => NONDET;
+
+    // Remove from the scene 
+    
+    function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
+        => NONDET DELETE;
+
+    function _.accrueInterestForBothSilos() external 
+        => NONDET DELETE;
 }
 
 //
@@ -63,6 +68,24 @@ function requireValidSiloCommonEnv(env e) {
 //
 // Methods summarizes
 //
+
+// `ShareTokenLib.decimals`
+
+persistent ghost uint8 ghostDecimals0 {
+    axiom ghostDecimals0 == 0 || (ghostDecimals0 >= 6 && ghostDecimals0 <= 18);
+}
+persistent ghost uint8 ghostDecimals1 {
+    axiom ghostDecimals0 == 0 || (ghostDecimals1 >= 6 && ghostDecimals1 <= 18);
+}
+function shareTokenLibDecimalsCVL(address token) returns uint8 {
+    // Different decimals for Token0 and Token1
+    bool isSilo0 = (token == _CollateralShareToken0 
+        || token == _ShareDebtToken0 
+        || token == _ShareProtectedCollateralToken0
+        || token == _Token0
+        ); 
+    return (isSilo0 ? ghostDecimals0 : ghostDecimals1);
+}
 
 // `SiloFactory`
 

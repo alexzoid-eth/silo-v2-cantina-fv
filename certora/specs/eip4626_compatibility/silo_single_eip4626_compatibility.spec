@@ -3,8 +3,6 @@
 import "../setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC4626;
-
-// @todo change to ghostToken0
 using Token0 as _Asset;
 
 //
