@@ -15,9 +15,11 @@ function requireSiloValidStateEnv(env e) {
 
 // CrossReentrancyGuard
 
+// VS- The cross reentrancy guard must remain opened on exit
 invariant crossReentrancyGuardOpenedOnExit()
     ghostCrossReentrantStatus == _NOT_ENTERED();
 
+// VS- No double calls to cross reentrancy protection
 invariant crossReentrancyProtectionNoDoubleCall()
     ghostReentrancyProtectionDoubleCall == false;
 
@@ -27,7 +29,7 @@ invariant crossReentrancyProtectionNoDoubleCall()
 strong invariant shareTokenHooksSynchronization()
     forall address contract. ghostShareTokenHooksBefore[contract] == ghostHooksBefore[_Silo0]
         && ghostShareTokenHooksAfter[contract] == ghostHooksAfter[_Silo0] {
-            preserved synchronizeHooks(uint24 hooksBefore, uint24 hooksAfter) {
+            preserved synchronizeHooks(uint24 hooksBefore, uint24 hooksAfter) with (env e) {
                 // Only silo executes this function with parameters from IHookReceiver.hookReceiverConfig
                 require(hooksBefore == ghostHooksBefore[_Silo0]);
                 require(hooksAfter == ghostHooksAfter[_Silo0]);

@@ -6,18 +6,24 @@ import "./collateral_share_token_1.spec";
 import "./share_debt_token_1.spec";
 import "./share_protected_collateral_token_1.spec";
 import "./token_1.spec";
+import "./silo1_valid_state_invariants.spec";
 
 using Silo1 as _Silo1;
 
-// Valid state for Silo1
+// Valid state for Silo1. You only one of these functions to setup the whole Silo1
+
+function requireValidSilo1() {
+    // Valid state for Silo1
+    requireValidSilo1();
+}
 
 function requireValidSilo1Env(env e) {
 
-    // Valid state common for Silo and Silo1
-    requireValidSiloEnv(e);
+    // Valid state for Silo1
+    requireValidSilo1Env(e);
 
-    // Silo1 specific environment
-    require(e.msg.sender != _CollateralShareToken1 
+    // Silo0 specific environment
+    require(e.msg.sender != _CollateralShareToken1
         && e.msg.sender != _ShareDebtToken1
         && e.msg.sender != _ShareProtectedCollateralToken1
         && e.msg.sender != _Token1
