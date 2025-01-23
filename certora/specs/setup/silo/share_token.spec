@@ -59,3 +59,16 @@ definition DEBT_TOKEN() returns mathint = 2^13;
 persistent ghost mapping (address => bool) ghostShareTokenTransferWithChecks {
     init_state axiom forall address contract. ghostShareTokenTransferWithChecks[contract] == true;
 }
+
+// Ghost copy of `IERC20RStorage._receiveAllowances`
+
+persistent ghost mapping(address => mapping(address => mapping(address => mathint))) ghostReceiveAllowances {
+    init_state axiom forall address contract. forall address owner. forall address recipient. 
+        ghostReceiveAllowances[contract][owner][recipient] == 0;
+    axiom forall address contract. forall address owner. forall address recipient. 
+        ghostReceiveAllowances[contract][owner][recipient] >= 0 
+            && ghostReceiveAllowances[contract][owner][recipient] <= max_uint256;
+    // Owner and spender cannot be zero
+    axiom forall address contract. forall address owner. forall address recipient. owner == 0 || recipient == 0 
+        => ghostReceiveAllowances[contract][owner][recipient] == 0;
+}

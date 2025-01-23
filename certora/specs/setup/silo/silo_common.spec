@@ -1,8 +1,8 @@
 // Silo core, CVL storage ghosts and hooks
 
 import "./silo_config.spec";
-import "./silo_common_valid_state.spec";
 import "./hook_receiver_cvl.spec";
+import "./silo_valid_state_invariants.spec";
 
 import "../erc20.spec";
 import "../env.spec";
@@ -53,7 +53,7 @@ methods {
 // Valid state common for Silo and Silo1
 //
 
-function requireValidSiloCommonEnv(env e) {
+function requireValidSiloEnv(env e) {
 
     // Common environment for all tested contracts
     requireValidEnv(e);
@@ -62,7 +62,7 @@ function requireValidSiloCommonEnv(env e) {
     require(e.msg.sender != _SiloConfig);
 
     // Common valid state invariants working both for Silo0 and Silo1
-    requireSiloCommonValidStateEnv(e);
+    requireSiloValidStateEnv(e);
 }
 
 //
@@ -98,16 +98,6 @@ function getFeeReceiversCVL(address _silo) returns (address, address) {
 //
 // Storage ghosts
 //
-
-// Ghost copy of `IERC20RStorage._receiveAllowances`
-
-persistent ghost mapping(address => mapping(address => mapping(address => mathint))) ghostReceiveAllowances {
-    init_state axiom forall address contract. forall address owner. forall address recipient. 
-        ghostReceiveAllowances[contract][owner][recipient] == 0;
-    axiom forall address contract. forall address owner. forall address recipient. 
-        ghostReceiveAllowances[contract][owner][recipient] >= 0 
-            && ghostReceiveAllowances[contract][owner][recipient] <= max_uint256;
-}
 
 // Ghost copy of `SiloStorage.daoAndDeployerRevenue`
 

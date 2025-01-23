@@ -25,15 +25,15 @@ abstract contract SiloHarness is Silo {
     
     // 0x5a499b742bad5e18c139447ced974d19a977bcf86e03691ee458d10efcd04d00
     uint256[3398372782936750532598662385469945099948450566250362509185534835799841144571] private _relativeOffset3;
-    IERC20R.Storage private iERC20RStorage; // 1 slot
+    IERC20R.Storage private iERC20RStorage; // 1 slot (not in use)
     
     // 0x5ab42ced628888259c08ac98db1eb0cf702fc1501344311d8b100cd1bfe4bb00
     uint256[188289810017362792616136603551264427055408370604868558661199683125064789503] private _relativeOffset4;
-    NoncesUpgradeable.NoncesStorage private noncesStorage; // 1 slot
+    NoncesUpgradeable.NoncesStorage private noncesStorage; // 1 slot (not in use)
 
     // 0xa16a46d94261c7517cc8ff89f61c0ce93598e3c849801011dee649a6a557d100
     uint256[31983644469438460855457864970702758242316333351067685845255559058820655420927] private _relativeOffset5;
-    EIP712Upgradeable.EIP712Storage private eip712Storage; // 4 slots
+    EIP712Upgradeable.EIP712Storage private eip712Storage; // 4 slots (not in use)
 
     // 0xd7513ffe3a01a9f6606089d1b67011bca35bec018ac0faa914e1c529408f8300
     uint256[24380675331288486898706811435138660356087723579803824137572707285927581954556] private _relativeOffset6;

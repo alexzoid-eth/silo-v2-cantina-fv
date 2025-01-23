@@ -103,10 +103,12 @@ rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
 
+    // Same storage state for both calls
     storage init = lastStorage;
-    mathint shares1 = _ERC4626.convertToShares(e1, assets) at init;
-    mathint shares2 = _ERC4626.convertToShares(e2, assets) at init;
+    mathint shares1 = convertToShares(e1, assets) at init;
+    mathint shares2 = convertToShares(e2, assets) at init;
 
+    // If the function is truly caller-agnostic, the results must match
     assert(shares1 == shares2);
 }
 

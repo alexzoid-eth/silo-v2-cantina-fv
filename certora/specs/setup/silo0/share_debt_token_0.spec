@@ -79,3 +79,15 @@ hook Sload uint256 val _ShareDebtToken0.erc20Storage._totalSupply {
 hook Sstore _ShareDebtToken0.erc20Storage._totalSupply uint256 val {
     ghostERC20TotalSupply[_ShareDebtToken0] = val;
 }
+
+//
+// IERC20R
+//
+
+hook Sload uint256 val _ShareDebtToken0.iERC20RStorage._receiveAllowances[KEY address owner][KEY address recipient] {
+    require(require_uint256(ghostReceiveAllowances[_ShareDebtToken0][owner][recipient]) == val);
+}
+
+hook Sstore _ShareDebtToken0.iERC20RStorage._receiveAllowances[KEY address owner][KEY address recipient] uint256 val {
+    ghostReceiveAllowances[_ShareDebtToken0][owner][recipient] = val;
+}

@@ -22,6 +22,9 @@ methods {
 
 persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {
     init_state axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == 0;
+    // Can be silo0 or silo1
+    axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == _SiloConfig._SILO0 
+        || ghostConfigBorrowerCollateralSilo[borrower] == _SiloConfig._SILO1;
 }
 
 hook Sload address collateralSilo _SiloConfig.borrowerCollateralSilo[KEY address borrower] {

@@ -16,8 +16,12 @@ function beforeActionCVL(address _silo, uint256 _action) { }
 
 function afterActionCVL(address _silo, uint256 _action) { }
 
-persistent ghost mapping(address => uint24) ghostHooksBefore;
-persistent ghost mapping(address => uint24) ghostHooksAfter;
+persistent ghost mapping(address => uint24) ghostHooksBefore {
+    init_state axiom forall address silo. ghostHooksBefore[silo] == 0;
+}
+persistent ghost mapping(address => uint24) ghostHooksAfter {
+    init_state axiom forall address silo. ghostHooksAfter[silo] == 0;
+}
 function hookReceiverConfigCVL(address _silo) returns IHookReceiver.HookConfig {
     IHookReceiver.HookConfig config;
     require(config.hooksBefore == ghostHooksBefore[_silo]);
