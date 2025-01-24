@@ -12,4 +12,8 @@ use invariant shareTokenHooksSynchronization;
 // Silo 
 
 use invariant interestRateTimestampNotInFuture;
-use invariant silo0AssetBalanceNotBelowDaoAndDeployerRevenue;
+
+// Silo0
+
+use invariant protectedAssetsNotExceedBalance;
+use invariant totalDebtNotExceedCollateral;

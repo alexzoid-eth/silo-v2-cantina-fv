@@ -13,16 +13,23 @@ using Silo0 as _Silo0;
 // Valid state for Silo0. You only one of these functions to setup the whole Silo0 
 
 function requireValidSilo0() {
-    // Valid state for Silo0
-    requireValidSilo0();
+    // Common for Silo0 and Silo1
+    requireValidSiloCommon();
+
+    // Valid state invariants working both for Silo0
+    requireSilo0ValidState();
 }
 
-function requireValidSilo0Env(env e) {
+function requireValidSilo0E(env e) {
+    requireValidSilo0();
 
-    // Valid state for Silo0 
-    requireValidSilo0Env(e);
+    // Common for Silo0 and Silo1
+    requireValidSiloCommonE(e);
 
-    // Silo0 specific environment
+    // Valid state invariants working both for Silo0
+    requireSilo0ValidStateE(e);
+
+    // Silo0 valid caller
     require(e.msg.sender != _CollateralShareToken0 
         && e.msg.sender != _ShareDebtToken0
         && e.msg.sender != _ShareProtectedCollateralToken0

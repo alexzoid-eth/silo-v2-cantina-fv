@@ -10,23 +10,30 @@ import "./silo1_valid_state_invariants.spec";
 
 using Silo1 as _Silo1;
 
-// Valid state for Silo1. You only one of these functions to setup the whole Silo1
+// Valid state for Silo1. You only one of these functions to setup the whole Silo1 
 
 function requireValidSilo1() {
-    // Valid state for Silo1
-    requireValidSilo1();
+    // Common for Silo1 and Silo1
+    requireValidSiloCommon();
+
+    // Valid state invariants working both for Silo1
+    requireSilo1ValidState();
 }
 
-function requireValidSilo1Env(env e) {
+function requireValidSilo1E(env e) {
+    requireValidSilo1();
 
-    // Valid state for Silo1
-    requireValidSilo1Env(e);
+    // Common for Silo1 and Silo1
+    requireValidSiloCommonE(e);
 
-    // Silo0 specific environment
-    require(e.msg.sender != _CollateralShareToken1
-        && e.msg.sender != _ShareDebtToken1
-        && e.msg.sender != _ShareProtectedCollateralToken1
-        && e.msg.sender != _Token1
+    // Valid state invariants working both for Silo1
+    requireSilo1ValidStateE(e);
+
+    // Silo1 valid caller
+    require(e.msg.sender != _CollateralShareToken0 
+        && e.msg.sender != _ShareDebtToken0
+        && e.msg.sender != _ShareProtectedCollateralToken0
+        && e.msg.sender != _Token0
         );
 }
 

@@ -50,19 +50,33 @@ methods {
 }
 
 //
+// Silo constants
+//
+
+definition ASSET_TYPE_PROTECTED() returns mathint = to_mathint(ISilo.AssetType.Protected);
+definition ASSET_TYPE_COLLATERAL() returns mathint = to_mathint(ISilo.AssetType.Collateral);
+definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
+
+//
 // Valid state common for Silo and Silo1
 //
 
-function requireValidSiloEnv(env e) {
+function requireValidSiloCommon() {
+    // Common valid state invariants working both for Silo0 and Silo1
+    requireSiloValidStateCommon();
+}
+
+function requireValidSiloCommonE(env e) {
+    requireValidSiloCommon();
 
     // Common environment for all tested contracts
     requireValidEnv(e);
 
+    // Common valid state invariants working both for Silo0 and Silo1
+    requireSiloValidStateCommonE(e);
+
     // Common environment both Silo0 and Silo1
     require(e.msg.sender != _SiloConfig);
-
-    // Common valid state invariants working both for Silo0 and Silo1
-    requireSiloValidStateEnv(e);
 }
 
 //
@@ -123,5 +137,5 @@ persistent ghost mapping(address => mapping(mathint => mathint)) ghostTotalAsset
         ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= max_uint256;
     // Support only 3 types of accounting 
     axiom forall address contract. forall mathint assetType. 
-        assetType > 2 => ghostTotalAssets[contract][assetType] == 0; 
+        assetType > ASSET_TYPE_DEBT() => ghostTotalAssets[contract][assetType] == 0; 
 }

@@ -1,6 +1,3 @@
 import "setup/silo_full.spec";
 
-// Valid state
-
-use invariant crossReentrancyGuardOpenedOnExit;
-use invariant crossReentrancyProtectionNoDoubleCall;
+// @todo copy all from `silo_single_valid_state.spec`

@@ -1,15 +1,17 @@
 // Silo config valid state invariants working both for Silo0 and Silo1
 
-function requireSiloValidState() {
+function requireSiloValidStateCommon() {
+
+    requireErc20ValidState();
+
     requireInvariant crossReentrancyGuardOpenedOnExit;
     requireInvariant crossReentrancyProtectionNoDoubleCall;
     requireInvariant shareTokenHooksSynchronization;
 }
 
-function requireSiloValidStateEnv(env e) {
-    requireSiloValidState();
-    requireErc20ValidState();
-
+function requireSiloValidStateCommonE(env e) {
+    requireSiloValidStateCommon();
+    
     requireInvariant interestRateTimestampNotInFuture(e);
 }
 
@@ -30,9 +32,8 @@ strong invariant shareTokenHooksSynchronization()
     forall address contract. ghostShareTokenHooksBefore[contract] == ghostHooksBefore[_Silo0]
         && ghostShareTokenHooksAfter[contract] == ghostHooksAfter[_Silo0] {
             preserved synchronizeHooks(uint24 hooksBefore, uint24 hooksAfter) with (env e) {
-                // Only silo executes this function with parameters from IHookReceiver.hookReceiverConfig
-                require(hooksBefore == ghostHooksBefore[_Silo0]);
-                require(hooksAfter == ghostHooksAfter[_Silo0]);
+                // SAFE: Only silo executes this function with parameters from IHookReceiver.hookReceiverConfig()
+                require(hooksBefore == ghostHooksBefore[_Silo0] && hooksAfter == ghostHooksAfter[_Silo0]);
             }   
         }
 
@@ -42,7 +43,7 @@ strong invariant shareTokenHooksSynchronization()
 strong invariant interestRateTimestampNotInFuture(env e)
     forall address silo. ghostInterestRateTimestamp[silo] <= e.block.timestamp {
         preserved with (env eInv) {
-            // Same environment inside a function call
+            // SAFE: Same environment inside a function and invariant
             require(e.block.timestamp == eInv.block.timestamp);
         }
     }

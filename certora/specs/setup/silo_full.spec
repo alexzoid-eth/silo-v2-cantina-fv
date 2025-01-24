@@ -9,6 +9,6 @@ function requireValidSiloFull() {
 }
 
 function requireValidSiloFullEnv(env e) {
-    requireValidSilo0Env(e);    
-    requireValidSilo1Env(e);    
+    requireValidSilo0E(e);    
+    requireValidSilo1E(e);    
 }

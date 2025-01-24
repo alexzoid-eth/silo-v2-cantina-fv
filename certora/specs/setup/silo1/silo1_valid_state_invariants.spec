@@ -1,25 +1,22 @@
-// Silo config valid state invariants working both for Silo0
+// Silo config valid state invariants working for Silo1
 
 import "../silo/silo_valid_state_invariants.spec";
 
 // Use it when env is not needed
-function requireSilo0ValidState() {
+function requireSilo1ValidState() {
 
     // Valid state invariants both for silo0 and silo1
-    requireSiloValidState();
+    requireValidSiloCommon();
 
-    // @todo add all invariants
 }
 
 // Use it when env matters
-function requireSilo0ValidStateEnv(env e) {
-
-    requireSilo0ValidState();
+function requireSilo1ValidStateE(env e) {
+    requireSilo1ValidState();
 
     // Valid state invariants both for silo0 and silo1
-    requireSiloValidStateEnv(e);
+    requireValidSiloCommonE(e);
 
-    // @todo add all invariants
 }
 
 // @todo copy everything from `silo0_valid_state_invariants` changing silo0 to silo1

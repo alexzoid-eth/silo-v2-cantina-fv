@@ -13,7 +13,7 @@ using Token0 as _Asset;
 rule assetIntegrity(env e) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     address asset = _ERC4626.asset(e);
 
@@ -24,7 +24,7 @@ rule assetIntegrity(env e) {
 rule assetMustNotRevert(env e) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.asset@withrevert(e);
     
@@ -39,7 +39,7 @@ rule assetMustNotRevert(env e) {
 rule totalAssetsIntegrity(env e) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint totalAssets = _ERC4626.totalAssets(e);
 
@@ -50,7 +50,7 @@ rule totalAssetsIntegrity(env e) {
 rule totalAssetsMustNotRevert(env e) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.totalAssets@withrevert(e);
     
@@ -65,7 +65,7 @@ rule totalAssetsMustNotRevert(env e) {
 rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
@@ -81,7 +81,7 @@ rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
@@ -97,8 +97,8 @@ rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
 rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -116,8 +116,8 @@ rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 rule convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Another way: if totalAssets and totalSupply remain the same between two calls, convertToShares 
     //  MUST return the same value
@@ -147,7 +147,7 @@ rule convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
 rule convertToSharesMustNotRevert(env e, uint256 assets) {
     
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
@@ -162,7 +162,7 @@ rule convertToSharesMustNotRevert(env e, uint256 assets) {
 rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64);
@@ -186,7 +186,7 @@ rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
@@ -201,7 +201,7 @@ rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
@@ -216,8 +216,8 @@ rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -235,8 +235,8 @@ rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Snapshot totalAssets() and totalSupply() before first call
     mathint totalAssets1  = _ERC4626.totalAssets(e1);
@@ -266,7 +266,7 @@ rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
 rule convertToAssetsMustNotRevert(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
@@ -279,7 +279,7 @@ rule convertToAssetsMustNotRevert(env e, uint256 shares) {
 rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
@@ -305,7 +305,7 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 rule maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Query the reported limit
     mathint limit = _ERC4626.maxDeposit(e, receiver);
@@ -322,8 +322,8 @@ rule maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
 rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     mathint limit1 = _ERC4626.maxDeposit(e1, receiver);
 
@@ -343,7 +343,7 @@ rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 rule maxDepositZeroIfDisabled(env e, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxDeposit(e, receiver);
 
@@ -361,7 +361,7 @@ rule maxDepositZeroIfDisabled(env e, address receiver) {
 rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
     
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxDeposit(e, receiver);
 
@@ -381,7 +381,7 @@ rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
 rule maxDepositMustNotRevert(env e, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.maxDeposit@withrevert(e, receiver);
 
@@ -397,7 +397,7 @@ rule maxDepositMustNotRevert(env e, address receiver) {
 rule previewDepositNoMoreThanActualShares(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint previewedShares = _ERC4626.previewDeposit(e, assets);
     mathint sharesDeposited = _ERC4626.deposit(e, assets, receiver);
@@ -413,7 +413,7 @@ rule previewDepositNoMoreThanActualShares(env e, uint256 assets, address receive
 rule previewDepositMustIgnoreLimits(env e, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     bool enoughAllowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract] >= assets;
     mathint limit = _ERC4626.maxDeposit(e, ghostCaller);
@@ -431,7 +431,7 @@ rule previewDepositMustIgnoreLimits(env e, uint256 assets) {
 rule previewDepositMustIncludeFees(env e, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(assets < max_uint64); 
@@ -448,8 +448,8 @@ rule previewDepositMustIncludeFees(env e, uint256 assets) {
 rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -467,7 +467,7 @@ rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 rule previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Save current storage 
     storage init = lastStorage;
@@ -490,7 +490,7 @@ rule previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address
 rule depositIntegrity(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Pre-state checks
     mathint vaultAssetsPrev    = ghostERC20Balances[_Asset][currentContract];
@@ -523,7 +523,7 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
 rule depositToSelfIntegrity(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Attempt deposit
     mathint shares = _ERC4626.deposit(e, assets, receiver);
@@ -536,7 +536,7 @@ rule depositToSelfIntegrity(env e, uint256 assets, address receiver) {
 rule depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint allowanceBefore = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
 
@@ -552,7 +552,7 @@ rule depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
 
@@ -571,7 +571,7 @@ rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 rule depositPossibility(env e, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
 
@@ -592,7 +592,7 @@ rule depositPossibility(env e, uint256 assets, address receiver) {
 rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Query the reported limit
     mathint limit = _ERC4626.maxMint(e, receiver);
@@ -609,8 +609,8 @@ rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 rule maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     mathint limit1 = _ERC4626.maxMint(e1, receiver);
 
@@ -629,7 +629,7 @@ rule maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxMint(e, receiver);
 
@@ -645,7 +645,7 @@ rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 rule maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxMint(e, receiver);
 
@@ -662,7 +662,7 @@ rule maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
 rule maxMintMustNotRevert(env e, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.maxMint@withrevert(e, receiver);
     bool reverted = lastReverted;
@@ -679,7 +679,7 @@ rule maxMintMustNotRevert(env e, address receiver) {
 rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver) {
     
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint previewedAssets = _ERC4626.previewMint(e, shares);
 
@@ -696,7 +696,7 @@ rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver)
 rule previewMintMustIgnoreLimits(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint allowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
     mathint sharesLimit = _ERC4626.maxMint(e, ghostCaller);
@@ -714,7 +714,7 @@ rule previewMintMustIgnoreLimits(env e, uint256 shares) {
 rule previewMintMustIncludeFees(env e, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64); 
@@ -733,8 +733,8 @@ rule previewMintMustIncludeFees(env e, uint256 shares) {
 rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -752,7 +752,7 @@ rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 rule previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Save current storage
     storage init = lastStorage;
@@ -777,7 +777,7 @@ rule previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address recei
 rule mintIntegrity(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Capture pre-state
     mathint vaultAssetsPrev         = ghostERC20Balances[_Asset][currentContract];
@@ -810,7 +810,7 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
 rule mintToSelfIntegrity(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Perform the mint
     _ERC4626.mint(e, shares, receiver);
@@ -823,7 +823,7 @@ rule mintToSelfIntegrity(env e, uint256 shares, address receiver) {
 rule mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Snapshot the caller’s allowance and needed assets prior to calling mint
     mathint allowanceBefore = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
@@ -844,7 +844,7 @@ rule mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
 
@@ -864,7 +864,7 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 rule mintPossibility(env e, uint256 shares, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
 
@@ -884,7 +884,7 @@ rule mintPossibility(env e, uint256 shares, address receiver) {
 rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Query the reported limit
     mathint limit = _ERC4626.maxWithdraw(e, owner);
@@ -900,7 +900,7 @@ rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, addr
 rule withdrawPossibilityUnderMaxWithdraw(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Query the reported limit
     mathint assetsLimit = _ERC4626.maxWithdraw(e, owner);
@@ -916,8 +916,8 @@ rule withdrawPossibilityUnderMaxWithdraw(env e, uint256 assets, address receiver
 rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Query the limit first time
     mathint limit1 = _ERC4626.maxWithdraw(e1, owner);
@@ -937,7 +937,7 @@ rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 rule maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address receiver) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxWithdraw(e, owner);
 
@@ -953,7 +953,7 @@ rule maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address rec
 rule maxWithdrawMustNotRevert(env e, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.maxWithdraw@withrevert(e, owner);
     bool reverted = lastReverted;
@@ -970,7 +970,7 @@ rule maxWithdrawMustNotRevert(env e, address owner) {
 rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Compare the previewed shares vs. the actual shares burned by withdraw.
     mathint previewedShares = _ERC4626.previewWithdraw(e, assets);
@@ -988,7 +988,7 @@ rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address recei
 rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint assetsLimit = _ERC4626.maxWithdraw(e, ghostCaller);
     mathint userShares = ghostERC20Balances[currentContract][ghostCaller];
@@ -1010,8 +1010,8 @@ rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, ad
 rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -1029,7 +1029,7 @@ rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Save current storage so that the same state is tested for both calls
     storage init = lastStorage;
@@ -1054,7 +1054,7 @@ rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, addre
 rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Pre-state snapshots
     mathint ownerSharesBefore    = ghostERC20Balances[currentContract][owner];                       // The owner's share balance
@@ -1101,7 +1101,7 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
 rule withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Perform the withdraw
     mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
@@ -1113,7 +1113,7 @@ rule withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address
 rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
@@ -1124,7 +1124,7 @@ rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address 
 rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint vaultAssetsBefore = ghostERC20Balances[_Asset][currentContract];
     mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];
@@ -1152,7 +1152,7 @@ rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver,
 rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address receiver) {
 
     // Avoid reverting for non-zero msg.value and invalid msg.sender
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Query the reported limit
     mathint maxShares = _ERC4626.maxRedeem(e, owner);
@@ -1170,7 +1170,7 @@ rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address r
 rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address receiver) {
 
     // Avoid reverting for non-zero msg.value and invalid msg.sender
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint maxShares = _ERC4626.maxRedeem(e, owner);
 
@@ -1185,7 +1185,7 @@ rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address recei
 rule maxRedeemMustNotRevert(env e, address owner) {
 
     // Avoid reverting for non-zero msg.value and invalid msg.sender
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     _ERC4626.maxRedeem@withrevert(e, owner);
     bool reverted = lastReverted;
@@ -1202,7 +1202,7 @@ rule maxRedeemMustNotRevert(env e, address owner) {
 rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver, address owner) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Compute the “previewed” assets
     mathint previewedAssets = _ERC4626.previewRedeem(e, shares);
@@ -1220,7 +1220,7 @@ rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver
 rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, address owner) {
 
     // Set ghost caller
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint sharesLimit = _ERC4626.maxRedeem(e, ghostCaller);
     mathint userShares = ghostERC20Balances[currentContract][ghostCaller];
@@ -1243,8 +1243,8 @@ rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, addr
 rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e1);
-    requireValidSilo0Env(e2);
+    requireValidSilo0E(e1);
+    requireValidSilo0E(e2);
 
     // Same timestamp, but different callers
     require(e1.block.timestamp == e2.block.timestamp);
@@ -1262,7 +1262,7 @@ rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address receiver, address owner) {
 
     // Avoid reverting for non-zero msg.value and invalid msg.sender
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Save the state
     storage init = lastStorage;
@@ -1287,7 +1287,7 @@ rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address r
 rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
 
     // Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Pre-state snapshots
     mathint ownerSharesBefore       = ghostERC20Balances[currentContract][owner];                       
@@ -1339,7 +1339,7 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
 rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address owner) {
 
     // Set ghost caller
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
@@ -1351,7 +1351,7 @@ rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address o
 rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address owner) {
 
     // Set ghost caller
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
@@ -1363,7 +1363,7 @@ rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address ow
 rule redeemMustRevertIfCannotRedeem(env e, uint256 shares, address receiver, address owner) {
 
     // Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     mathint vaultAssetsBefore    = ghostERC20Balances[_Asset][currentContract];
     mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];

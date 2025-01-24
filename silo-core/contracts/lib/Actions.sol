@@ -391,7 +391,7 @@ library Actions {
         uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
         uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
-
+        // @audit totalAssets invariant:
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
         unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
 

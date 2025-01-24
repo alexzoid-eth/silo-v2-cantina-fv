@@ -10,7 +10,7 @@ using Silo0 as _ERC20;
 rule totalSupplyIntegrity(env e) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     assert(_ERC20.totalSupply(e) == ghostERC20TotalSupply[currentContract]);
 }
@@ -19,7 +19,7 @@ rule totalSupplyIntegrity(env e) {
 rule balanceOfIntegrity(env e, address account) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     assert(_ERC20.balanceOf(e, account) == ghostERC20Balances[currentContract][account]);
 }
@@ -28,7 +28,7 @@ rule balanceOfIntegrity(env e, address account) {
 rule allowanceIntegrity(env e, address owner, address spender) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     assert(_ERC20.allowance(e, owner, spender) == ghostERC20Allowances[currentContract][owner][spender]);
 }
@@ -39,7 +39,7 @@ rule allowanceIntegrity(env e, address owner, address spender) {
 rule transferIntegrity(env e, address to, uint256 amount) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     address other; 
     address any1;
@@ -74,7 +74,7 @@ rule transferIntegrity(env e, address to, uint256 amount) {
 rule transferMustRevert(env e, address to, uint256 amount) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Snapshot the 'from' balance
     mathint fromBalancePrev = ghostERC20Balances[currentContract][ghostCaller];
@@ -99,7 +99,7 @@ rule transferMustRevert(env e, address to, uint256 amount) {
 rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     address other; 
     address any1;
@@ -142,7 +142,7 @@ rule transferFromIntegrity(env e, address from, address to, uint256 amount) {
 rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Snapshot the 'from' balance and allowance
     mathint fromBalancePrev = ghostERC20Balances[currentContract][from];
@@ -171,7 +171,7 @@ rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
 rule approveIntegrity(env e, address spender, uint256 value) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     address other;
     address any1;
@@ -208,7 +208,7 @@ rule approveIntegrity(env e, address spender, uint256 value) {
 rule approveMustRevert(env e, address spender, uint256 value) {
 
     // Assume valid Silo0 state
-    requireValidSilo0Env(e);
+    requireValidSilo0E(e);
 
     // Attempt the approve with revert path
     _ERC20.approve@withrevert(e, spender, value);
