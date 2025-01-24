@@ -1,7 +1,7 @@
 // Silo core, CVL storage ghosts and hooks
 
 import "./silo_config.spec";
-import "./hook_receiver_cvl.spec";
+import "./hook_receiver.spec";
 import "./silo_valid_state_invariants.spec";
 
 import "../erc20.spec";
@@ -35,6 +35,21 @@ methods {
     function _.getCollateralAndProtectedTotalsStorage() external
         => DISPATCHER(true);
     
+    function _.getLiquidity() external 
+        => DISPATCHER(true);
+
+    function _.accrueInterest() external
+        => DISPATCHER(true);
+
+    function _.repay(uint256 _assets, address _borrower) external
+        => DISPATCHER(true);
+
+    function _.redeem(uint256 _shares, address _receiver, address _owner) external
+        => DISPATCHER(true);
+
+    function _.previewRedeem(uint256 _shares) external
+        => DISPATCHER(true);
+
     // Resolve external call in `IERC3156FlashBorrower`
 
     function _.onFlashLoan(address, address, uint256, uint256, bytes) external
@@ -46,6 +61,9 @@ methods {
         => NONDET DELETE;
 
     function _.accrueInterestForBothSilos() external 
+        => NONDET DELETE;
+
+    function _.initialize(address _config) external
         => NONDET DELETE;
 }
 

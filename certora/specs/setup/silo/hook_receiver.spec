@@ -1,6 +1,8 @@
-// CVL implementation of `IHookReceiver`
+// `IHookReceiver`
 
 methods {
+
+    // Summarize some external methods to CVL
 
     function _.beforeAction(address _silo, uint256 _action, bytes _input) external
         => beforeActionCVL(_silo, _action) expect void;
@@ -10,6 +12,11 @@ methods {
 
     function _.hookReceiverConfig(address _silo) external
         => hookReceiverConfigCVL(_silo) expect IHookReceiver.HookConfig;
+
+    // Remove from the scene 
+
+    function _.initialize(address _siloConfig, bytes) external
+        => NONDET DELETE;
 }
 
 function beforeActionCVL(address _silo, uint256 _action) { }
