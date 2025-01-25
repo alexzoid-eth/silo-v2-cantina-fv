@@ -2,7 +2,7 @@
 
 import "./silo_config.spec";
 import "./hook_receiver.spec";
-import "./silo_valid_state_invariants.spec";
+import "../../valid_state/silo_valid_state_invariants.spec";
 
 import "../erc20.spec";
 import "../env.spec";
@@ -47,7 +47,13 @@ methods {
     function _.redeem(uint256 _shares, address _receiver, address _owner) external
         => DISPATCHER(true);
 
+    function _.redeem(uint256 _shares, address _receiver, address _owner, ISilo.CollateralType _collateralType) external
+        => DISPATCHER(true);
+
     function _.previewRedeem(uint256 _shares) external
+        => DISPATCHER(true);
+
+    function _.previewRedeem(uint256 _shares, ISilo.CollateralType _collateralType) external
         => DISPATCHER(true);
 
     // Resolve external call in `IERC3156FlashBorrower`

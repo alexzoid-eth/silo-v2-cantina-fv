@@ -1,6 +1,6 @@
 // Silo config valid state invariants working for Silo1
 
-import "../silo/silo_valid_state_invariants.spec";
+import "./silo_valid_state_invariants.spec";
 
 // Use it when env is not needed
 function requireSilo1ValidState() {

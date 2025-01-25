@@ -6,7 +6,7 @@ import "./collateral_share_token_0.spec";
 import "./share_debt_token_0.spec";
 import "./share_protected_collateral_token_0.spec";
 import "./token_0.spec";
-import "./silo0_valid_state_invariants.spec";
+import "../../valid_state/silo0_valid_state_invariants.spec";
 
 using Silo0 as _Silo0;
 

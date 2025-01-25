@@ -13,3 +13,10 @@ function requireValidEnv(env e) {
     require(e.msg.sender != 0 && e.msg.sender != currentContract);
     require(ghostCaller == e.msg.sender);
 }
+
+function requireSameEnv(env e1, env e2) {
+    require(e1.block.number == e2.block.number);
+    require(e1.block.timestamp == e2.block.timestamp);
+    require(e1.msg.sender == e2.msg.sender);
+    require(e1.msg.value == e2.msg.value);
+}
