@@ -2,7 +2,7 @@ import "setup/silo0/silo_0.spec";
 
 // ERC20
 
-use invariant erc20TotalSupplySolvency; // filtered { f -> f.selector == sig:transfer(address, uint256).selector }
+use invariant erc20TotalSupplySolvency;
 
 // Silo config
 
@@ -13,11 +13,14 @@ use invariant crossReentrancyProtectionNoDoubleCall;
 
 use invariant shareTokenHooksSynchronization;
 
-// Silo 
+// Silo
 
 use invariant interestRateTimestampNotInFuture;
+use invariant zeroCollateralMeansZeroDebt;
 
 // Silo0
 
 use invariant silo0ProtectedCollateralAlwaysLiquid;
-use invariant silo0TotalDebtNotExceedCollateral;
+use invariant silo0LiquiditySolvency;
+use invariant silo0NetDebtNotExceedCollateral; // @todo 
+use invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply; // @todo 

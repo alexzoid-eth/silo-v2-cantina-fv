@@ -8,7 +8,6 @@ import "../erc20.spec";
 import "../env.spec";
 
 // From initial contest's setup
-import "./initial/SiloMathLib_SAFE.spec";
 import "./initial/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 import "./initial/priceOracle_UNSAFE.spec";
 
@@ -58,8 +57,8 @@ methods {
 
     // Resolve external call in `IERC3156FlashBorrower`
 
-    function _.onFlashLoan(address, address, uint256, uint256, bytes) external
-        => NONDET;
+    function _.onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes _data) external
+        => onFlashLoanCVL(calledContract) expect bytes32;
 
     // Remove from the scene 
     
@@ -88,6 +87,10 @@ definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
 function requireValidSiloCommon() {
     // Common valid state invariants working both for Silo0 and Silo1
     requireSiloValidStateCommon();
+
+    // To make further computations in the Silo secure require DAO and deployer 
+    //  fees to be less than 100% (from SiloConfig's constructor)
+    require(ghostConfigDaoFee + ghostConfigDeployerFee < 10^18);
 }
 
 function requireValidSiloCommonE(env e) {
@@ -133,6 +136,16 @@ function getFeeReceiversCVL(address _silo) returns (address, address) {
     return (ghostDaoFeeReceiver[_silo], ghostDeployerFeeReceiver[_silo]);
 }
 
+// `IERC3156FlashBorrower`
+
+function onFlashLoanCVL(address _receiver) returns bytes32 {
+    // SAFE: Receiver cannot be Silo due revert in `onFlashLoan()` call
+    require(_receiver != ghostConfigSilo0 && _receiver != ghostConfigSilo1);
+
+    bytes32 result;
+    return result;
+}
+
 //
 // Storage ghosts
 //
@@ -157,8 +170,9 @@ persistent ghost mapping(address => mathint) ghostInterestRateTimestamp {
 
 persistent ghost mapping(address => mapping(mathint => mathint)) ghostTotalAssets {
     init_state axiom forall address contract. forall mathint assetType. ghostTotalAssets[contract][assetType] == 0;
+    // Assume realistic assets amount to void overflow in unchecked blocks
     axiom forall address contract. forall mathint assetType. 
-        ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= max_uint256;
+        ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= max_uint128;
     // Support only 3 types of accounting 
     axiom forall address contract. forall mathint assetType. 
         assetType > ASSET_TYPE_DEBT() => ghostTotalAssets[contract][assetType] == 0; 

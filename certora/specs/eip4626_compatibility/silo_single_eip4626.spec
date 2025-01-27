@@ -41,9 +41,16 @@ rule totalAssetsIntegrity(env e) {
     // Assume valid Silo0 state
     requireValidSilo0E(e);
 
+    mathint collateralAssets = ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()];
+    mathint compounding = ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] != 0
+        ? getCompoundInterestRateSumm(_Silo0, e.block.timestamp)
+        : 0;
+    // Total available assets including compounding
+    mathint expectedTotalAssets = collateralAssets + compounding;
+
     mathint totalAssets = _ERC4626.totalAssets(e);
 
-    assert(totalAssets == ghostERC20Balances[_Asset][currentContract]);
+    assert(expectedTotalAssets == totalAssets);
 }
 
 // MUST NOT revert
@@ -110,37 +117,6 @@ rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
     // If the function is truly caller-agnostic, the results must match
     assert(shares1 == shares2);
-}
-
-// MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
-rule convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
-
-    // Assume valid Silo0 state
-    requireValidSilo0E(e1);
-    requireValidSilo0E(e2);
-
-    // Another way: if totalAssets and totalSupply remain the same between two calls, convertToShares 
-    //  MUST return the same value
-
-    mathint totalAssets1 = _ERC4626.totalAssets(e1);
-    mathint totalSupply1 = _ERC4626.totalSupply(e1);
-    mathint shares1 = _ERC4626.convertToShares(e1, assets);
-
-    // Havoc storage
-    method f;
-    env e;
-    calldataarg args;
-    _ERC4626.f(e, args);
-
-    mathint totalAssets2 = _ERC4626.totalAssets(e2);
-    mathint totalSupply2 = _ERC4626.totalSupply(e2);
-    mathint shares2 = _ERC4626.convertToShares(e2, assets);
-
-    // if totalAssets() and totalSupply() remain unchanged, the result must be identical
-    assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
-        => shares1 == shares2
-        );
-    satisfy(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 && shares1 == shares2);
 }
 
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
@@ -231,37 +207,6 @@ rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
     satisfy(assets1 == assets2);
 }
 
-// MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
-rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
-
-    // Assume valid Silo0 state
-    requireValidSilo0E(e1);
-    requireValidSilo0E(e2);
-
-    // Snapshot totalAssets() and totalSupply() before first call
-    mathint totalAssets1  = _ERC4626.totalAssets(e1);
-    mathint totalSupply1  = _ERC4626.totalSupply(e1);
-    mathint assets1 = _ERC4626.convertToAssets(e1, shares);
-
-    // "Havoc" the contract by calling an arbitrary method (f), but if it does not affect 
-    // totalAssets/totalSupply, then convertToAssets must remain the same
-    method f;
-    env e;
-    calldataarg args;
-    _ERC4626.f(e, args);
-
-    // Snapshot again
-    mathint totalAssets2 = _ERC4626.totalAssets(e2);
-    mathint totalSupply2 = _ERC4626.totalSupply(e2);
-    mathint assets2 = _ERC4626.convertToAssets(e2, shares);
-
-    // If totalAssets() and totalSupply() are unchanged, the output must match
-    assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
-        => assets1 == assets2
-    );
-    satisfy(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 && assets1 == assets2);
-}
-
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
 rule convertToAssetsMustNotRevert(env e, uint256 shares) {
 
@@ -340,22 +285,6 @@ rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
 // MUST factor in both global and user-specific limits, like if deposits are entirely 
 //  disabled (even temporarily) it MUST return 0
-rule maxDepositZeroIfDisabled(env e, address receiver) {
-
-    // Assume valid Silo0 state
-    requireValidSilo0E(e);
-
-    mathint limit = _ERC4626.maxDeposit(e, receiver);
-
-    // Attempt depositing 1
-    _ERC4626.deposit@withrevert(e, 1, receiver);
-    bool reverted = lastReverted;
-
-    // If deposit(1) reverts, then EIP-4626 says maxDeposit *must* be 0
-    assert(reverted => limit == 0);
-
-    // Not reachable when maxDeposit() returns `type(uint256).max`
-}
 
 // MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be deposited
 rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {

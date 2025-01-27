@@ -55,8 +55,9 @@ definition ERC20_ACCOUNT_BOUNDS(address token, address account) returns bool =
 persistent ghost mapping(address => mapping(address => mathint)) ghostERC20Balances {
     init_state axiom forall address token. forall address account. 
         ghostERC20Balances[token][account] == 0;
-    axiom forall address token. forall address account. 
-        ghostERC20Balances[token][account] >= 0 && ghostERC20Balances[token][account] <= max_uint128;
+    axiom forall address token. forall address account. ERC20_ACCOUNT_BOUNDS(token, account)
+        ? ghostERC20Balances[token][account] >= 0 && ghostERC20Balances[token][account] <= max_uint128
+        : ghostERC20Balances[token][account] == 0;
 }
 
 // Allowances ghost  
@@ -64,7 +65,9 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
     init_state axiom forall address token. forall address owner. forall address spender. 
         ghostERC20Allowances[token][owner][spender] == 0;
     axiom forall address token. forall address owner. forall address spender. 
-        ghostERC20Allowances[token][owner][spender] >= 0 && ghostERC20Allowances[token][owner][spender] <= max_uint128;
+        ERC20_ACCOUNT_BOUNDS(token, owner) || ERC20_ACCOUNT_BOUNDS(token, spender)
+        ? ghostERC20Allowances[token][owner][spender] >= 0 && ghostERC20Allowances[token][owner][spender] <= max_uint128
+        : ghostERC20Allowances[token][owner][spender] == 0;
 }
 
 // Total supply ghost

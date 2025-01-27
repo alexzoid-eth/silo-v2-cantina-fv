@@ -17,27 +17,64 @@ function requireSilo0ValidStateE(env e) {
     requireValidSiloCommonE(e);
 
     requireInvariant silo0ProtectedCollateralAlwaysLiquid(e);
-    requireInvariant silo0TotalDebtNotExceedCollateral(e);
+    requireInvariant silo0LiquiditySolvency(e);
+    requireInvariant silo0NetDebtNotExceedCollateral(e);
+    requireInvariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(e);
 }
 
-// Protected collateral must remain fully available for withdrawal
+// VS- Protected collateral must remain fully available for withdrawal
 strong invariant silo0ProtectedCollateralAlwaysLiquid(env e)
-    ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] <= ghostERC20Balances[_Token0][_Silo0] {
+    ghostERC20Balances[_Token0][_Silo0] >= ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] {
         preserved with (env eInv) {
-            // SAFE: Valid state and environment 
-            requireValidSilo0E(e);
             // SAFE: Same environment inside a function and invariant
             requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
         }
     }
 
-// VS- The Silo's total debt must never exceed its total collateral
-strong invariant silo0TotalDebtNotExceedCollateral(env e)
-    ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] <= ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] {
+// VS- The Silo's liquidity must cover its protected collateral, collateral, 
+//  and fees minus any outstanding debt
+strong invariant silo0LiquiditySolvency(env e)
+    ghostERC20Balances[_Token0][_Silo0] >= 
+        ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] 
+        + ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] 
+        + ghostDaoAndDeployerRevenue[_Silo0]
+        - ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] {
         preserved with (env eInv) {
-            // SAFE: Valid state and environment 
-            requireValidSilo0E(e);
             // SAFE: Same environment inside a function and invariant
             requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
+        }
+    }
+
+// VS- The Silo's net debt (debt minus accrued fees) must never exceed its collateral
+strong invariant silo0NetDebtNotExceedCollateral(env e)
+    ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()]
+        >= require_uint256(
+            ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] - ghostDaoAndDeployerRevenue[_Silo0]
+            ) {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
+        }
+    }
+
+// VS- The Silo's total tracked assets must not exceed the token's total supply
+strong invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(env e)
+    ghostERC20TotalSupply[_Token0] >= 
+        ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] 
+        + ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] 
+        + ghostDaoAndDeployerRevenue[_Silo0] {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
+            // SAFE: Don't check interest increase, assume it cannot overflow ERC20 supply
+            require(e.block.timestamp == ghostInterestRateTimestamp[_Silo0]);
         }
     }

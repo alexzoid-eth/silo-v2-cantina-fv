@@ -12,6 +12,10 @@ function requireValidEnv(env e) {
     // Valid msg.sender
     require(e.msg.sender != 0 && e.msg.sender != currentContract);
     require(ghostCaller == e.msg.sender);
+
+    // Valid time
+    require(e.block.timestamp != 0);
+    require(e.block.number != 0);
 }
 
 function requireSameEnv(env e1, env e2) {

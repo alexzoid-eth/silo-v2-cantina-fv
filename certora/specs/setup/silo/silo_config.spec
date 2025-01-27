@@ -18,6 +18,24 @@ methods {
         => DISPATCHER(true);
 }
 
+// Immutables
+
+persistent ghost address ghostConfigSilo0 {
+    axiom ghostConfigSilo0 == _SiloConfig._SILO0;
+}
+
+persistent ghost address ghostConfigSilo1 {
+    axiom ghostConfigSilo1 == _SiloConfig._SILO1;
+}
+
+persistent ghost mathint ghostConfigDaoFee {
+    axiom ghostConfigDaoFee == _SiloConfig._DAO_FEE;
+}
+
+persistent ghost mathint ghostConfigDeployerFee {
+    axiom ghostConfigDeployerFee == _SiloConfig._DEPLOYER_FEE;
+}
+
 // Storage hooks
 
 persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {

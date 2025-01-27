@@ -4,6 +4,10 @@ function requireSiloValidStateCommon() {
 
     requireErc20ValidState();
 
+    // SAFE: assume realistic initial amount of accumulated fee to avoid overflow in
+    //  `unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }`
+    require(forall address silo. ghostDaoAndDeployerRevenue[silo] < max_uint96);
+
     requireInvariant crossReentrancyGuardOpenedOnExit;
     requireInvariant crossReentrancyProtectionNoDoubleCall;
     requireInvariant shareTokenHooksSynchronization;
@@ -13,6 +17,7 @@ function requireSiloValidStateCommonE(env e) {
     requireSiloValidStateCommon();
     
     requireInvariant interestRateTimestampNotInFuture(e);
+    requireInvariant zeroCollateralMeansZeroDebt(e);
 }
 
 // CrossReentrancyGuard
@@ -44,6 +49,18 @@ strong invariant interestRateTimestampNotInFuture(env e)
     forall address silo. ghostInterestRateTimestamp[silo] <= e.block.timestamp {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
-            require(e.block.timestamp == eInv.block.timestamp);
+            requireSameEnv(e, eInv);
+        }
+    }
+
+// VS- If the Silo's total collateral is zero, then its total debt must also be zero
+strong invariant zeroCollateralMeansZeroDebt(env e)
+    forall address silo. ghostTotalAssets[silo][ASSET_TYPE_COLLATERAL()] == 0
+        => ghostTotalAssets[silo][ASSET_TYPE_DEBT()] == 0 {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment
+            requireSiloValidStateCommonE(e);
         }
     }
