@@ -1,4 +1,4 @@
-// ERC20 ghosts for storage hooks
+// ERC20 support
 
 methods {
 
@@ -10,6 +10,12 @@ methods {
     function _.approve(address,uint256) external => DISPATCHER(true);
     function _.transfer(address,uint256) external => DISPATCHER(true);
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
+
+    // SafeERC20 summaries
+    function SafeERC20.safeTransfer(address token, address to, uint256 value) internal with (env e)
+        => safeTransferCVL(e, token, to, value);
+    function SafeERC20.safeTransferFrom(address token, address from, address to, uint256 value) internal with (env e)
+        => safeTransferFromCVL(e, token, from, to, value);
 
     // Remove from the scene
     function _.name() external => NONDET DELETE;
@@ -76,6 +82,18 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
     axiom forall address token. 
         ghostERC20TotalSupply[token] >= 0 && ghostERC20TotalSupply[token] <= max_uint128;
 }
+
+// Safe transfer lib summaries
+
+function safeTransferCVL(env e, address token, address to, uint256 value) {
+    ASSERT(token.transfer(e, to, value));
+}
+
+function safeTransferFromCVL(env e, address token, address from, address to, uint256 value) {
+    ASSERT(token.transferFrom(e, from, to, value));
+}
+
+// Valid state invariant
 
 invariant erc20TotalSupplySolvency()
     forall address token. ghostERC20TotalSupply[token] 

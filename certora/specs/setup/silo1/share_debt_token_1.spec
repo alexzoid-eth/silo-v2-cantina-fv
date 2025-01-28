@@ -6,6 +6,20 @@ using ShareDebtToken1 as _ShareDebtToken1;
 // ShareTokenStorage
 //
 
+// Hooks for addresses viewers
+
+hook Sload address val _ShareDebtToken1.shareTokenStorage.silo {
+    require(ghostConfigSilo0 == val);
+}
+
+hook Sload address val _ShareDebtToken1.shareTokenStorage.siloConfig {
+    require(_SiloConfig == val);
+}
+
+hook Sload address val _ShareDebtToken1.shareTokenStorage.hookSetup.hookReceiver {
+    require(ghostConfigHookReceiver == val);
+}
+
 // Hooks for `ShareTokenStorage.hookSetup.hooksBefore`
 
 hook Sload uint24 val _ShareDebtToken1.shareTokenStorage.hookSetup.hooksBefore {

@@ -20,20 +20,129 @@ methods {
 
 // Immutables
 
-persistent ghost address ghostConfigSilo0 {
-    axiom ghostConfigSilo0 == _SiloConfig._SILO0;
-}
-
-persistent ghost address ghostConfigSilo1 {
-    axiom ghostConfigSilo1 == _SiloConfig._SILO1;
-}
-
 persistent ghost mathint ghostConfigDaoFee {
     axiom ghostConfigDaoFee == _SiloConfig._DAO_FEE;
 }
 
 persistent ghost mathint ghostConfigDeployerFee {
     axiom ghostConfigDeployerFee == _SiloConfig._DEPLOYER_FEE;
+}
+
+// Hook Receiver
+persistent ghost address ghostConfigHookReceiver {
+    axiom ghostConfigHookReceiver == _SiloConfig._HOOK_RECEIVER;
+}
+
+persistent ghost address ghostConfigSilo0 {
+    axiom ghostConfigSilo0 == _SiloConfig._SILO0;
+}
+
+persistent ghost address ghostConfigToken0 {
+    axiom ghostConfigToken0 == _SiloConfig._TOKEN0;
+}
+
+persistent ghost address ghostConfigProtectedCollateralShareToken0 {
+    axiom ghostConfigProtectedCollateralShareToken0 == _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN0;
+}
+
+persistent ghost address ghostConfigCollateralShareToken0 {
+    axiom ghostConfigCollateralShareToken0 == _SiloConfig._COLLATERAL_SHARE_TOKEN0;
+}
+
+persistent ghost address ghostConfigDebtShareToken0 {
+    axiom ghostConfigDebtShareToken0 == _SiloConfig._DEBT_SHARE_TOKEN0;
+}
+
+persistent ghost address ghostConfigSolvencyOracle0 {
+    axiom ghostConfigSolvencyOracle0 == _SiloConfig._SOLVENCY_ORACLE0;
+}
+
+persistent ghost address ghostConfigMaxLtvOracle0 {
+    axiom ghostConfigMaxLtvOracle0 == _SiloConfig._MAX_LTV_ORACLE0;
+}
+
+persistent ghost address ghostConfigInterestRateModel0 {
+    axiom ghostConfigInterestRateModel0 == _SiloConfig._INTEREST_RATE_MODEL0;
+}
+
+persistent ghost mathint ghostConfigMaxLtv0 {
+    axiom ghostConfigMaxLtv0 == _SiloConfig._MAX_LTV0;
+}
+
+persistent ghost mathint ghostConfigLt0 {
+    axiom ghostConfigLt0 == _SiloConfig._LT0;
+}
+
+persistent ghost mathint ghostConfigLiquidationTargetLtv0 {
+    axiom ghostConfigLiquidationTargetLtv0 == _SiloConfig._LIQUIDATION_TARGET_LTV0;
+}
+
+persistent ghost mathint ghostConfigLiquidationFee0 {
+    axiom ghostConfigLiquidationFee0 == _SiloConfig._LIQUIDATION_FEE0;
+}
+
+persistent ghost mathint ghostConfigFlashloanFee0 {
+    axiom ghostConfigFlashloanFee0 == _SiloConfig._FLASHLOAN_FEE0;
+}
+
+persistent ghost bool ghostConfigCallBeforeQuote0 {
+    axiom ghostConfigCallBeforeQuote0 == _SiloConfig._CALL_BEFORE_QUOTE0;
+}
+
+persistent ghost address ghostConfigSilo1 {
+    axiom ghostConfigSilo1 == _SiloConfig._SILO1;
+}
+
+persistent ghost address ghostConfigToken1 {
+    axiom ghostConfigToken1 == _SiloConfig._TOKEN1;
+}
+
+persistent ghost address ghostConfigProtectedCollateralShareToken1 {
+    axiom ghostConfigProtectedCollateralShareToken1 == _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN1;
+}
+
+persistent ghost address ghostConfigCollateralShareToken1 {
+    axiom ghostConfigCollateralShareToken1 == _SiloConfig._COLLATERAL_SHARE_TOKEN1;
+}
+
+persistent ghost address ghostConfigDebtShareToken1 {
+    axiom ghostConfigDebtShareToken1 == _SiloConfig._DEBT_SHARE_TOKEN1;
+}
+
+persistent ghost address ghostConfigSolvencyOracle1 {
+    axiom ghostConfigSolvencyOracle1 == _SiloConfig._SOLVENCY_ORACLE1;
+}
+
+persistent ghost address ghostConfigMaxLtvOracle1 {
+    axiom ghostConfigMaxLtvOracle1 == _SiloConfig._MAX_LTV_ORACLE1;
+}
+
+persistent ghost address ghostConfigInterestRateModel1 {
+    axiom ghostConfigInterestRateModel1 == _SiloConfig._INTEREST_RATE_MODEL1;
+}
+
+persistent ghost mathint ghostConfigMaxLtv1 {
+    axiom ghostConfigMaxLtv1 == _SiloConfig._MAX_LTV1;
+}
+
+persistent ghost mathint ghostConfigLt1 {
+    axiom ghostConfigLt1 == _SiloConfig._LT1;
+}
+
+persistent ghost mathint ghostConfigLiquidationTargetLtv1 {
+    axiom ghostConfigLiquidationTargetLtv1 == _SiloConfig._LIQUIDATION_TARGET_LTV1;
+}
+
+persistent ghost mathint ghostConfigLiquidationFee1 {
+    axiom ghostConfigLiquidationFee1 == _SiloConfig._LIQUIDATION_FEE1;
+}
+
+persistent ghost mathint ghostConfigFlashloanFee1 {
+    axiom ghostConfigFlashloanFee1 == _SiloConfig._FLASHLOAN_FEE1;
+}
+
+persistent ghost bool ghostConfigCallBeforeQuote1 {
+    axiom ghostConfigCallBeforeQuote1 == _SiloConfig._CALL_BEFORE_QUOTE1;
 }
 
 // Storage hooks

@@ -1,6 +1,5 @@
 // Common environment for all tested contracts
 
-import "./helper_cvl.spec";
 import "./math_cvl.spec";
 
 persistent ghost address ghostCaller;

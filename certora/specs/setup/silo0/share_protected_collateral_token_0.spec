@@ -6,6 +6,20 @@ using ShareProtectedCollateralToken0 as _ShareProtectedCollateralToken0;
 // Storage hooks
 //
 
+// Hooks for addresses viewers
+
+hook Sload address val _ShareProtectedCollateralToken0.shareTokenStorage.silo {
+    require(ghostConfigSilo0 == val);
+}
+
+hook Sload address val _ShareProtectedCollateralToken0.shareTokenStorage.siloConfig {
+    require(_SiloConfig == val);
+}
+
+hook Sload address val _ShareProtectedCollateralToken0.shareTokenStorage.hookSetup.hookReceiver {
+    require(ghostConfigHookReceiver == val);
+}
+
 // Hooks for `ShareTokenStorage.hookSetup.hooksBefore`
 
 hook Sload uint24 val _ShareProtectedCollateralToken0.shareTokenStorage.hookSetup.hooksBefore {

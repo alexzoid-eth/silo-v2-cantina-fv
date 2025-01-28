@@ -1,9 +1,35 @@
 // Prove contract is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
-import "../setup/silo0/silo_0.spec";
+import "./setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC4626;
 using Token0 as _Asset;
+
+/*
+    @todo
+
+    Violated:
+    - convertToAssetsRoundTripDoesNotExceed
+    - previewMintNoFewerThanActualAssets
+    - previewMintNoFewerThanActualAssets
+    - mintRespectsApproveTransfer
+    - previewWithdrawNoFewerThanActualShares
+    - withdrawFromSelfIntegrity
+    - withdrawMustRevertIfCannotWithdraw
+    - redeemIntegrity
+    - redeemMustRevertIfCannotRedeem
+    - maxRedeemNoHigherThanActual
+    - maxRedeemZeroIfDisabled
+
+    Halted:
+    - maxWithdrawNoHigherThanActual
+    - maxWithdrawDoesNotDependOnUserShares
+    - maxWithdrawZeroIfDisabled
+
+    Issues:
+    - maxWithdrawMustNotRevert
+    - maxRedeemMustNotRevert
+*/
 
 //
 // _Asset
@@ -12,7 +38,7 @@ using Token0 as _Asset;
 // MUST be an EIP-20 token contract
 rule assetIntegrity(env e) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     address asset = _ERC4626.asset(e);
@@ -23,7 +49,7 @@ rule assetIntegrity(env e) {
 // MUST NOT revert
 rule assetMustNotRevert(env e) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     _ERC4626.asset@withrevert(e);
@@ -38,15 +64,11 @@ rule assetMustNotRevert(env e) {
 // SHOULD include any compounding that occurs from yield
 rule totalAssetsIntegrity(env e) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
-
-    mathint collateralAssets = ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()];
-    mathint compounding = ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] != 0
-        ? getCompoundInterestRateSumm(_Silo0, e.block.timestamp)
-        : 0;
+    
     // Total available assets including compounding
-    mathint expectedTotalAssets = collateralAssets + compounding;
+    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, _Silo0);
 
     mathint totalAssets = _ERC4626.totalAssets(e);
 
@@ -56,7 +78,7 @@ rule totalAssetsIntegrity(env e) {
 // MUST NOT revert
 rule totalAssetsMustNotRevert(env e) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     _ERC4626.totalAssets@withrevert(e);
@@ -71,7 +93,7 @@ rule totalAssetsMustNotRevert(env e) {
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check deposit)
 rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -87,7 +109,7 @@ rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check withdrawal)
 rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -103,7 +125,7 @@ rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
 // MUST NOT show any variations depending on the caller
 rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -122,7 +144,7 @@ rule convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
 rule convertToSharesMustNotRevert(env e, uint256 assets) {
     
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -137,7 +159,7 @@ rule convertToSharesMustNotRevert(env e, uint256 assets) {
 // MUST round down towards 0
 rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -154,6 +176,36 @@ rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
     satisfy(assets2 <= assets);
 }
 
+// MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
+rule convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
+
+    // Assume valid Silo0 state
+    requireValidSilo0E(e1);
+
+    // Another way: if totalAssets and totalSupply remain the same between two calls, convertToShares 
+    //  MUST return the same value
+
+    mathint totalAssets1 = _ERC4626.totalAssets(e1);
+    mathint totalSupply1 = _ERC4626.totalSupply(e1);
+    mathint shares1 = _ERC4626.convertToShares(e1, assets);
+
+    // Havoc storage
+    _HelperCVL.makeUnresolvedCall(e1);
+
+    // Assume valid Silo0 state with another environment
+    requireValidSilo0E(e2);
+
+    mathint totalAssets2 = _ERC4626.totalAssets(e2);
+    mathint totalSupply2 = _ERC4626.totalSupply(e2);
+    mathint shares2 = _ERC4626.convertToShares(e2, assets);
+
+    // if totalAssets() and totalSupply() remain unchanged, the result must be identical
+    assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
+        => shares1 == shares2
+        );
+    satisfy(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2);
+}
+
 //
 // convertToAssets()
 //
@@ -161,7 +213,7 @@ rule convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check redeem)
 rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -176,7 +228,7 @@ rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check mint)
 rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -191,7 +243,7 @@ rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 // MUST NOT show any variations depending on the caller
 rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -210,7 +262,7 @@ rule convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
 rule convertToAssetsMustNotRevert(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -223,7 +275,7 @@ rule convertToAssetsMustNotRevert(env e, uint256 shares) {
 // MUST round down towards 0
 rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -240,6 +292,35 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
     satisfy(shares2 <= shares);
 }
 
+// MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
+rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
+
+    // Assume valid Silo0 state
+    requireValidSilo0E(e1);
+
+    // Snapshot totalAssets() and totalSupply() before first call
+    mathint totalAssets1  = _ERC4626.totalAssets(e1);
+    mathint totalSupply1  = _ERC4626.totalSupply(e1);
+    mathint assets1 = _ERC4626.convertToAssets(e1, shares);
+
+    // Havoc storage
+    _HelperCVL.makeUnresolvedCall(e1);
+
+    // Assume valid Silo0 state with another environment
+    requireValidSilo0E(e2);
+
+    // Snapshot again
+    mathint totalAssets2 = _ERC4626.totalAssets(e2);
+    mathint totalSupply2 = _ERC4626.totalSupply(e2);
+    mathint assets2 = _ERC4626.convertToAssets(e2, shares);
+
+    // If totalAssets() and totalSupply() are unchanged, the output must match
+    assert(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2 
+        => assets1 == assets2
+    );
+    satisfy(totalAssets1 == totalAssets2 && totalSupply1 == totalSupply2);
+}
+
 //
 // maxDeposit()
 // 
@@ -249,7 +330,7 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 // MUST NOT be higher than the actual maximum that would be accepted
 rule maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Query the reported limit
@@ -266,7 +347,7 @@ rule maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
 // MUST NOT rely on balanceOf of asset
 rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -289,7 +370,7 @@ rule maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 // MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be deposited
 rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
     
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxDeposit(e, receiver);
@@ -309,7 +390,7 @@ rule maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
 // MUST NOT revert
 rule maxDepositMustNotRevert(env e, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     _ERC4626.maxDeposit@withrevert(e, receiver);
@@ -325,7 +406,7 @@ rule maxDepositMustNotRevert(env e, address receiver) {
 //  be minted in a deposit call in the same transaction
 rule previewDepositNoMoreThanActualShares(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint previewedShares = _ERC4626.previewDeposit(e, assets);
@@ -341,7 +422,7 @@ rule previewDepositNoMoreThanActualShares(env e, uint256 assets, address receive
 //  tokens approved, etc.
 rule previewDepositMustIgnoreLimits(env e, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     bool enoughAllowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract] >= assets;
@@ -359,7 +440,7 @@ rule previewDepositMustIgnoreLimits(env e, uint256 assets) {
 // MUST be inclusive of deposit fees. Integrators should be aware of the existence of deposit fees.
 rule previewDepositMustIncludeFees(env e, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -376,7 +457,7 @@ rule previewDepositMustIncludeFees(env e, uint256 assets) {
 // MUST NOT revert due to vault specific user/global limits
 rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -395,7 +476,7 @@ rule previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 // MAY revert due to other conditions that would also cause deposit to revert
 rule previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Save current storage 
@@ -418,7 +499,7 @@ rule previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address
 // Mints shares Vault shares to receiver by depositing exactly assets of underlying tokens
 rule depositIntegrity(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Pre-state checks
@@ -451,7 +532,7 @@ rule depositIntegrity(env e, uint256 assets, address receiver) {
 
 rule depositToSelfIntegrity(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Attempt deposit
@@ -464,7 +545,7 @@ rule depositToSelfIntegrity(env e, uint256 assets, address receiver) {
 // MUST support EIP-20 approve / transferFrom on asset as a deposit flow
 rule depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint allowanceBefore = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
@@ -480,7 +561,7 @@ rule depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 //  user not approving enough underlying tokens to the Vault contract, etc).
 rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
@@ -499,7 +580,7 @@ rule depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
 rule depositPossibility(env e, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
@@ -520,7 +601,7 @@ rule depositPossibility(env e, uint256 assets, address receiver) {
 //  and not cause a revert, which MUST NOT be higher than the actual maximum that would be accepted
 rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Query the reported limit
@@ -537,7 +618,7 @@ rule maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 // MUST NOT rely on balanceOf of asset
 rule maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -557,7 +638,7 @@ rule maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 // MUST return 0 if mints are entirely disabled (even temporarily)
 rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxMint(e, receiver);
@@ -573,7 +654,7 @@ rule maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 // MUST return `2 ** 256 - 1` if there is no limit on the maximum amount of shares that may be minted
 rule maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxMint(e, receiver);
@@ -590,7 +671,7 @@ rule maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
 // MUST NOT revert
 rule maxMintMustNotRevert(env e, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     _ERC4626.maxMint@withrevert(e, receiver);
@@ -607,7 +688,7 @@ rule maxMintMustNotRevert(env e, address receiver) {
 //  deposited in a mint call in the same transaction
 rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver) {
     
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint previewedAssets = _ERC4626.previewMint(e, shares);
@@ -624,7 +705,7 @@ rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver)
 //  always act as though the mint would be accepted
 rule previewMintMustIgnoreLimits(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint allowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
@@ -642,7 +723,7 @@ rule previewMintMustIgnoreLimits(env e, uint256 shares) {
 // MUST be inclusive of deposit fees. Integrators should be aware of the existence of deposit fees
 rule previewMintMustIncludeFees(env e, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -661,7 +742,7 @@ rule previewMintMustIncludeFees(env e, uint256 shares) {
 //  (i.e. MUST NOT show any variations depending on the caller)
 rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -680,7 +761,7 @@ rule previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 // MAY revert due to other conditions that would also cause `mint` to revert
 rule previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Save current storage
@@ -705,7 +786,7 @@ rule previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address recei
 // Mints exactly `shares` Vault shares to `receiver` by depositing assets of underlying tokens
 rule mintIntegrity(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Capture pre-state
@@ -738,7 +819,7 @@ rule mintIntegrity(env e, uint256 shares, address receiver) {
 
 rule mintToSelfIntegrity(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Perform the mint
@@ -751,7 +832,7 @@ rule mintToSelfIntegrity(env e, uint256 shares, address receiver) {
 // MUST support EIP-20 approve / transferFrom on asset as a mint flow
 rule mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Snapshot the caller’s allowance and needed assets prior to calling mint
@@ -772,7 +853,7 @@ rule mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 // MUST revert if all of `shares` cannot be minted (due to limit reached, user not approving enough tokens, etc.)
 rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
@@ -792,7 +873,7 @@ rule mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 
 rule mintPossibility(env e, uint256 shares, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
@@ -812,7 +893,7 @@ rule mintPossibility(env e, uint256 shares, address receiver) {
 // MUST NOT be higher than the actual maximum that would be accepted 
 rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Query the reported limit
@@ -826,9 +907,9 @@ rule maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, addr
     assert(assets > limit => reverted);
 }
 
-rule withdrawPossibilityUnderMaxWithdraw(env e, uint256 assets, address receiver, address owner) {
+rule maxWithdrawWithdrawPossibility(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Query the reported limit
@@ -844,7 +925,7 @@ rule withdrawPossibilityUnderMaxWithdraw(env e, uint256 assets, address receiver
 // MUST factor in both global and user-specific limits
 rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -865,7 +946,7 @@ rule maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
 // MUST return 0 if withdrawals are entirely disabled
 rule maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address receiver) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint limit = _ERC4626.maxWithdraw(e, owner);
@@ -881,7 +962,7 @@ rule maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address rec
 // MUST NOT revert
 rule maxWithdrawMustNotRevert(env e, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     _ERC4626.maxWithdraw@withrevert(e, owner);
@@ -898,7 +979,7 @@ rule maxWithdrawMustNotRevert(env e, address owner) {
 //  burned in a `withdraw` call in the same transaction
 rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Compare the previewed shares vs. the actual shares burned by withdraw.
@@ -916,7 +997,7 @@ rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address recei
 //  though the withdrawal would be accepted, regardless if the user has enough shares, etc.
 rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint assetsLimit = _ERC4626.maxWithdraw(e, ghostCaller);
@@ -938,7 +1019,7 @@ rule previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, ad
 //  (i.e. MUST NOT vary by the caller if the state is the same).
 rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 
@@ -957,7 +1038,7 @@ rule previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 // MAY revert due to other conditions that would also cause `withdraw` to revert
 rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Save current storage so that the same state is tested for both calls
@@ -982,7 +1063,7 @@ rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, addre
 // Burns shares from owner and sends exactly assets of underlying tokens to receiver
 rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Pre-state snapshots
@@ -1029,7 +1110,7 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
 //  EIP-20 approval over the shares of owner
 rule withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Perform the withdraw
@@ -1041,7 +1122,7 @@ rule withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address
 // MUST support a `withdraw` flow where the shares are burned from owner directly where owner is msg.sender
 rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
@@ -1052,7 +1133,7 @@ rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address 
 // MUST revert if all of assets cannot be withdrawn
 rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint vaultAssetsBefore = ghostERC20Balances[_Asset][currentContract];
@@ -1130,7 +1211,7 @@ rule maxRedeemMustNotRevert(env e, address owner) {
 //  be withdrawn in a `redeem` call in the same transaction.
 rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver, address owner) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     // Compute the “previewed” assets
@@ -1171,7 +1252,7 @@ rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, addr
 //  (i.e. MUST NOT vary by the caller if the state is unchanged).
 rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
     requireValidSilo0E(e2);
 

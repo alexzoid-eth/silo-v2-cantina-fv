@@ -1,5 +1,6 @@
 // Silo core, CVL storage ghosts and hooks
 
+import "./helper_cvl.spec";
 import "./silo_config.spec";
 import "./hook_receiver.spec";
 import "../../valid_state/silo_valid_state_invariants.spec";
@@ -130,7 +131,13 @@ function shareTokenLibDecimalsCVL(address token) returns uint8 {
 
 // `SiloFactory`
 
-persistent ghost mapping(address => address) ghostDaoFeeReceiver; 
+persistent ghost mapping(address => address) ghostDaoFeeReceiver {
+    axiom forall address silo. 
+        ghostDaoFeeReceiver[silo] != ghostDeployerFeeReceiver[silo]
+        ghostDaoFeeReceiver[silo]
+        ;
+
+}
 persistent ghost mapping(address => address) ghostDeployerFeeReceiver;
 function getFeeReceiversCVL(address _silo) returns (address, address) {
     return (ghostDaoFeeReceiver[_silo], ghostDeployerFeeReceiver[_silo]);

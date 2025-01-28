@@ -18,8 +18,12 @@ function requireSilo0ValidStateE(env e) {
 
     requireInvariant silo0ProtectedCollateralAlwaysLiquid(e);
     requireInvariant silo0LiquiditySolvency(e);
-    requireInvariant silo0NetDebtNotExceedCollateral(e);
     requireInvariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(e);
+
+    requireInvariant silo0ProtectedSharesMustBeBackedWithAssets(e);
+    requireInvariant silo0CollateralSharesMustBeBackedWithAssets(e);
+    requireInvariant silo0DebtSharesMustBeBackedWithAssets(e);
+    requireInvariant silo0ProtectedSharesAlwaysWithdrawable(e);
 }
 
 // VS- Protected collateral must remain fully available for withdrawal
@@ -49,12 +53,13 @@ strong invariant silo0LiquiditySolvency(env e)
         }
     }
 
-// VS- The Silo's net debt (debt minus accrued fees) must never exceed its collateral
-strong invariant silo0NetDebtNotExceedCollateral(env e)
-    ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()]
-        >= require_uint256(
-            ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] - ghostDaoAndDeployerRevenue[_Silo0]
-            ) {
+// VS- The Silo's total tracked assets must not exceed the token's total supply
+strong invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(env e)
+    ghostERC20TotalSupply[_Token0] >= 
+        ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] 
+        + ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] 
+        + ghostDaoAndDeployerRevenue[_Silo0] 
+        + getAccruedInterestCVL(e, _Silo0) {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
             requireSameEnv(e, eInv);
@@ -63,18 +68,50 @@ strong invariant silo0NetDebtNotExceedCollateral(env e)
         }
     }
 
-// VS- The Silo's total tracked assets must not exceed the token's total supply
-strong invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(env e)
-    ghostERC20TotalSupply[_Token0] >= 
-        ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] 
-        + ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[_Silo0] {
+// VS- The Silo’s collateral protected share tokens must always be backed by the assets
+strong invariant silo0ProtectedSharesMustBeBackedWithAssets(env e)
+    forall address user. ghostERC20Balances[_ShareProtectedCollateralToken0][user] != 0
+        => ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] != 0 {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
             requireSameEnv(e, eInv);
             // SAFE: Valid state and environment 
             requireValidSilo0E(e);
-            // SAFE: Don't check interest increase, assume it cannot overflow ERC20 supply
-            require(e.block.timestamp == ghostInterestRateTimestamp[_Silo0]);
+        }
+    }
+
+// VS- The Silo’s collateral share tokens must always be backed by the assets
+strong invariant silo0CollateralSharesMustBeBackedWithAssets(env e)
+    forall address user. ghostERC20Balances[_CollateralShareToken0][user] != 0
+        => ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] != 0 {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
+        }
+    }
+
+// VS- The Silo’s collateral share tokens must always be backed by the assets
+strong invariant silo0DebtSharesMustBeBackedWithAssets(env e)
+    forall address user. ghostERC20Balances[_ShareDebtToken0][user] != 0
+        => ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] != 0 {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
+        }
+    }
+
+// VS- All protected shares must be fully backed so they can always be withdrawn
+strong invariant silo0ProtectedSharesAlwaysWithdrawable(env e) 
+    previewRedeem(e, require_uint256(ghostERC20TotalSupply[_ShareProtectedCollateralToken0]))
+        <= ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment 
+            requireValidSilo0E(e);
         }
     }

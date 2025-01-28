@@ -1,6 +1,6 @@
 // Prove contract is compatible with EIP20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "../setup/silo0/silo_0.spec";
+import "./setup/silo0/silo_0.spec";
 
 using Silo0 as _ERC20;
 
@@ -93,6 +93,16 @@ rule transferMustRevert(env e, address to, uint256 amount) {
     assert(fromBalancePrev < amount => reverted);
 }
 
+// Transfers of 0 values MUST be treated as normal transfers
+rule transferSupportZeroAmount(env e, address to, uint256 amount) {
+
+    // Perform transfer
+    _ERC20.transfer(e, to, amount);
+
+    // Transfers of 0 values MUST be treated as normal transfers
+    satisfy(amount == 0);
+}
+
 // ERC20 transferFrom() integrity
 
 // Transfers `amount` of tokens from address `from` to address `to`
@@ -163,6 +173,16 @@ rule transferFromMustRevert(env e, address from, address to, uint256 amount) {
 
     // Must revert if `ghostCaller` does not have enough allowance
     assert(allowancePrev < amount => reverted);
+}
+
+// Transfers of 0 values MUST be treated as normal transfers
+rule transferFromSupportZeroAmount(env e, address to, address from, uint256 amount) {
+
+    // Perform the transferFrom
+    _ERC20.transferFrom(e, from, to, amount);
+
+    // Transfers of 0 values MUST be treated as normal transfers
+    satisfy(amount == 0);
 }
 
 // ERC20 approve() integrity

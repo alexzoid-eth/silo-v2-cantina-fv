@@ -12,7 +12,7 @@ methods {
     function _.getCompoundInterestRate(
         address _silo,
         uint256 _blockTimestamp
-    ) external => getCompoundInterestRateSumm(_silo, _blockTimestamp) expect uint256;
+    ) external => getCompoundInterestRateCVL(_silo, _blockTimestamp) expect uint256;
 }
 
 
@@ -33,7 +33,7 @@ ghost compoundInterestRate(uint256) returns uint256 {
 
 
 /// @title Implementation of `getCompoundInterestRate` in CVL
-function getCompoundInterestRateSumm(address _silo, uint256 _blockTimestamp) returns uint256 {
+function getCompoundInterestRateCVL(address _silo, uint256 _blockTimestamp) returns uint256 {
     require(_blockTimestamp >= ghostInterestRateTimestamp[_silo]);
     mathint timestampDiff = _blockTimestamp - ghostInterestRateTimestamp[_silo];
     return compoundInterestRate(require_uint256(timestampDiff));

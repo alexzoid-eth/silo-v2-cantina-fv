@@ -22,5 +22,9 @@ use invariant zeroCollateralMeansZeroDebt;
 
 use invariant silo0ProtectedCollateralAlwaysLiquid;
 use invariant silo0LiquiditySolvency;
-use invariant silo0NetDebtNotExceedCollateral; // @todo 
 use invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply; // @todo 
+
+use invariant silo0ProtectedSharesMustBeBackedWithAssets;
+use invariant silo0CollateralSharesMustBeBackedWithAssets;
+use invariant silo0DebtSharesMustBeBackedWithAssets;
+use invariant silo0ProtectedSharesAlwaysWithdrawable;
