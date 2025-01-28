@@ -28,13 +28,6 @@ function requireValidSilo0E(env e) {
 
     // Valid state invariants working both for Silo0
     requireSilo0ValidStateE(e);
-
-    // Silo0 valid caller
-    require(e.msg.sender != _CollateralShareToken0 
-        && e.msg.sender != _ShareDebtToken0
-        && e.msg.sender != _ShareProtectedCollateralToken0
-        && e.msg.sender != _Token0
-        );
 }
 
 // SiloStorage

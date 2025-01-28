@@ -22,7 +22,7 @@ methods {
     // Resolve external calls to `SiloFactory`
 
     function _.getFeeReceivers(address _silo) external
-        => getFeeReceiversCVL(_silo) expect (address, address);
+        => getFeeReceiversCVL() expect (address, address);
 
     // Resolve external calls to `Silo`
 
@@ -104,8 +104,28 @@ function requireValidSiloCommonE(env e) {
     requireSiloValidStateCommonE(e);
 
     // Common environment both Silo0 and Silo1
-    require(e.msg.sender != _SiloConfig);
+    require(ADDRESS_NOT_CONTRACT_IN_SCENE(e.msg.sender));
 }
+
+definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool 
+    = a != ghostSiloConfig
+        && a != ghostConfigSilo0
+        && a != ghostConfigToken0
+        && a != ghostConfigProtectedCollateralShareToken0
+        && a != ghostConfigCollateralShareToken0
+        && a != ghostConfigDebtShareToken0
+        && a != ghostConfigSolvencyOracle0
+        && a != ghostConfigMaxLtvOracle0
+        && a != ghostConfigInterestRateModel0
+        && a != ghostConfigSilo1
+        && a != ghostConfigToken1
+        && a != ghostConfigProtectedCollateralShareToken1
+        && a != ghostConfigCollateralShareToken1
+        && a != ghostConfigDebtShareToken1
+        && a != ghostConfigSolvencyOracle1
+        && a != ghostConfigMaxLtvOracle1
+        && a != ghostConfigInterestRateModel1
+        && a != ghostConfigHookReceiver;
 
 //
 // Methods summarizes
@@ -131,16 +151,17 @@ function shareTokenLibDecimalsCVL(address token) returns uint8 {
 
 // `SiloFactory`
 
-persistent ghost mapping(address => address) ghostDaoFeeReceiver {
-    axiom forall address silo. 
-        ghostDaoFeeReceiver[silo] != ghostDeployerFeeReceiver[silo]
-        ghostDaoFeeReceiver[silo]
-        ;
-
+persistent ghost address ghostDaoFeeReceiver {
+    axiom ghostDaoFeeReceiver != ghostDeployerFeeReceiver
+        && ghostDaoFeeReceiver != 0
+        && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDaoFeeReceiver);
 }
-persistent ghost mapping(address => address) ghostDeployerFeeReceiver;
-function getFeeReceiversCVL(address _silo) returns (address, address) {
-    return (ghostDaoFeeReceiver[_silo], ghostDeployerFeeReceiver[_silo]);
+persistent ghost address ghostDeployerFeeReceiver {
+    axiom ghostDeployerFeeReceiver != ghostDaoFeeReceiver
+        && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDeployerFeeReceiver);
+}
+function getFeeReceiversCVL() returns (address, address) {
+    return (ghostDaoFeeReceiver, ghostDeployerFeeReceiver);
 }
 
 // `IERC3156FlashBorrower`

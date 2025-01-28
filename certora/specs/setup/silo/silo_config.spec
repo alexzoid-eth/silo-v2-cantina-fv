@@ -20,12 +20,17 @@ methods {
 
 // Immutables
 
+persistent ghost address ghostSiloConfig {
+    axiom ghostSiloConfig == _SiloConfig;
+}
+
 persistent ghost mathint ghostConfigDaoFee {
     axiom ghostConfigDaoFee == _SiloConfig._DAO_FEE;
 }
 
 persistent ghost mathint ghostConfigDeployerFee {
     axiom ghostConfigDeployerFee == _SiloConfig._DEPLOYER_FEE;
+    axiom ghostConfigDeployerFee != 0 <=> ghostDeployerFeeReceiver != 0;
 }
 
 // Hook Receiver

@@ -113,5 +113,7 @@ strong invariant silo0ProtectedSharesAlwaysWithdrawable(env e)
             requireSameEnv(e, eInv);
             // SAFE: Valid state and environment 
             requireValidSilo0E(e);
+            // SAFE: Assume no interest accrues as it must not affect protected shares
+            require(e.block.timestamp == ghostInterestRateTimestamp[_Silo0]);
         }
     }

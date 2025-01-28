@@ -13,7 +13,7 @@ hook Sload address val _ShareDebtToken0.shareTokenStorage.silo {
 }
 
 hook Sload address val _ShareDebtToken0.shareTokenStorage.siloConfig {
-    require(_SiloConfig == val);
+    require(ghostSiloConfig == val);
 }
 
 hook Sload address val _ShareDebtToken0.shareTokenStorage.hookSetup.hookReceiver {

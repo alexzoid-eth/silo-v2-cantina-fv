@@ -10,13 +10,14 @@ using Token0 as _Asset;
 
     Violated:
     - convertToAssetsRoundTripDoesNotExceed
+    - depositRespectsApproveTransfer
     - previewMintNoFewerThanActualAssets
-    - previewMintNoFewerThanActualAssets
+    - redeemIntegrity
+
     - mintRespectsApproveTransfer
     - previewWithdrawNoFewerThanActualShares
     - withdrawFromSelfIntegrity
     - withdrawMustRevertIfCannotWithdraw
-    - redeemIntegrity
     - redeemMustRevertIfCannotRedeem
     - maxRedeemNoHigherThanActual
     - maxRedeemZeroIfDisabled
@@ -295,7 +296,7 @@ rule convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 // MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
 rule convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
 
-    // Assume valid Silo0 state
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e1);
 
     // Snapshot totalAssets() and totalSupply() before first call
@@ -1161,7 +1162,7 @@ rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver,
 // MUST return the maximum amount of shares that could be transferred from owner through `redeem`
 rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address receiver) {
 
-    // Avoid reverting for non-zero msg.value and invalid msg.sender
+    // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidSilo0E(e);
 
     // Query the reported limit
@@ -1179,7 +1180,7 @@ rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address r
 // MUST return 0 if redemption is entirely disabled
 rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address receiver) {
 
-    // Avoid reverting for non-zero msg.value and invalid msg.sender
+    // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidSilo0E(e);
 
     mathint maxShares = _ERC4626.maxRedeem(e, owner);
@@ -1194,7 +1195,7 @@ rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address recei
 // MUST NOT revert
 rule maxRedeemMustNotRevert(env e, address owner) {
 
-    // Avoid reverting for non-zero msg.value and invalid msg.sender
+    // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidSilo0E(e);
 
     _ERC4626.maxRedeem@withrevert(e, owner);
@@ -1229,7 +1230,7 @@ rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver
 //  act as though the redemption would be accepted, regardless if the user has enough shares, etc.
 rule previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, address owner) {
 
-    // Set ghost caller
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint sharesLimit = _ERC4626.maxRedeem(e, ghostCaller);
@@ -1271,7 +1272,7 @@ rule previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 // MAY revert due to other conditions that would also cause `redeem` to revert
 rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address receiver, address owner) {
 
-    // Avoid reverting for non-zero msg.value and invalid msg.sender
+    // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidSilo0E(e);
 
     // Save the state
@@ -1296,7 +1297,7 @@ rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address r
 // Burns exactly shares from owner and sends assets of underlying tokens to receiver
 rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
 
-    // Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
+    // SAFE: Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
     requireValidSilo0E(e);
 
     // Pre-state snapshots
@@ -1348,7 +1349,7 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
 // MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
 rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address owner) {
 
-    // Set ghost caller
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
@@ -1360,7 +1361,7 @@ rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address o
 // MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
 rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address owner) {
 
-    // Set ghost caller
+    // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
@@ -1372,7 +1373,7 @@ rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address ow
 // MUST revert if all of shares cannot be redeemed
 rule redeemMustRevertIfCannotRedeem(env e, uint256 shares, address receiver, address owner) {
 
-    // Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
+    // SAFE: Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
     requireValidSilo0E(e);
 
     mathint vaultAssetsBefore    = ghostERC20Balances[_Asset][currentContract];
