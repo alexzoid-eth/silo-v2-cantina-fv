@@ -35,13 +35,13 @@ use invariant silo0AllProtectedSharesAlwaysWithdrawable; // @todo
 
 // Sanity 
 
-rule sanitySilo0ValidState(method f, env e, calldataarg args) {
-
-    // SAFE: Assume valid Silo0 state
-    requireValidSilo0E(e);
-    
+rule sanitySilo0ValidState_part1(method f, env e, calldataarg args) 
+    filtered { f ->  
+        f.selector == sig:accrueInterestForConfig(address,uint256,uint256).selector
+        || f.selector == sig:withdraw(uint256,address,address,uint8).selector
+        || ...
+    } {
+    requireValidSilo0E(e);    
     f(e, args);
-    
-    // Check all external methods are reachable with valid state
     satisfy(true);
 }   

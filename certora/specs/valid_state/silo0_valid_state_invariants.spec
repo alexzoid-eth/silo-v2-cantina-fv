@@ -1,4 +1,4 @@
-// Silo config valid state invariants working both for Silo0
+// Silo0 valid state invariants
 
 import "./silo_valid_state_invariants.spec";
 
