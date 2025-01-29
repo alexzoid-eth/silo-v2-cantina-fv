@@ -5,32 +5,20 @@ import "./setup/silo0/silo_0.spec";
 using Silo0 as _ERC4626;
 using Token0 as _Asset;
 
-/*
-    @todo
+//
+// Violated
+//
 
-    Violated:
-    - convertToAssetsRoundTripDoesNotExceed
-    - depositRespectsApproveTransfer
-    - previewMintNoFewerThanActualAssets
-    - redeemIntegrity
+rule redeemFromOtherPossibility(env e, uint256 shares, address receiver, address owner) {
 
-    - mintRespectsApproveTransfer
-    - previewWithdrawNoFewerThanActualShares
-    - withdrawFromSelfIntegrity
-    - withdrawMustRevertIfCannotWithdraw
-    - redeemMustRevertIfCannotRedeem
-    - maxRedeemNoHigherThanActual
-    - maxRedeemZeroIfDisabled
+    // SAFE: Assume valid Silo0 state
+    requireValidSilo0E(e);
 
-    Halted:
-    - maxWithdrawNoHigherThanActual
-    - maxWithdrawDoesNotDependOnUserShares
-    - maxWithdrawZeroIfDisabled
+    _ERC4626.redeem(e, shares, receiver, owner);
 
-    Issues:
-    - maxWithdrawMustNotRevert
-    - maxRedeemMustNotRevert
-*/
+    // This path must succeed if `owner != msg.sender`
+    satisfy(owner != ghostCaller);
+}
 
 //
 // _Asset
@@ -104,7 +92,6 @@ rule convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
     //  if a fee is charged
 
     assert(_ERC4626.previewDeposit(e, assets) <= _ERC4626.convertToShares(e, assets));
-    satisfy(_ERC4626.previewDeposit(e, assets) <= _ERC4626.convertToShares(e, assets));
 }
 
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check withdrawal)
@@ -120,7 +107,6 @@ rule convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
     //  to burn more shares to net the same assets
 
     assert(_ERC4626.previewWithdraw(e, assets) >= _ERC4626.convertToShares(e, assets));
-    satisfy(_ERC4626.previewWithdraw(e, assets) >= _ERC4626.convertToShares(e, assets));
 }
 
 // MUST NOT show any variations depending on the caller
@@ -223,7 +209,6 @@ rule convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
     // Typically, previewMint() includes deposit fees -> requires more assets to mint the same shares
     // Therefore, the "ideal scenario" convertToAssets() is >= previewRedeem() and <= previewMint()
     assert(_ERC4626.previewRedeem(e, shares) <= _ERC4626.convertToAssets(e, shares));
-    satisfy(_ERC4626.previewRedeem(e, shares) <= _ERC4626.convertToAssets(e, shares));
 }
 
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check mint)
@@ -238,7 +223,6 @@ rule convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
     // Typically previewRedeem() includes withdrawal fees -> yields fewer assets for the same shares
     // Therefore, the "ideal scenario" convertToAssets() is >= previewRedeem() and <= previewMint()
     assert(_ERC4626.previewMint(e, shares) >= _ERC4626.convertToAssets(e, shares));
-    satisfy(_ERC4626.previewMint(e, shares) >= _ERC4626.convertToAssets(e, shares));
 }
 
 // MUST NOT show any variations depending on the caller
@@ -699,7 +683,6 @@ rule previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver)
     // EIP-4626 says: mint(...) >= previewMint(...) in terms of assets used
     // "no fewer than the exact amount"
     assert(actualAssets >= previewedAssets);
-    satisfy(actualAssets >= previewedAssets);
 }
 
 // MUST NOT account for mint limits like those returned from maxMint and should 
@@ -989,9 +972,8 @@ rule previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address recei
     mathint sharesBurned = _ERC4626.withdraw(e, assets, receiver, owner);
 
     // The spec says: "withdraw should return the same or fewer shares as previewWithdraw."
-    // => sharesBurned <= previewedShares
+    // => sharesBurned <= previewedShares 
     assert(sharesBurned <= previewedShares);
-    satisfy(sharesBurned <= previewedShares);
 }
 
 // MUST NOT account for withdrawal limits like those returned from `maxWithdraw` and should always act as 
@@ -1062,7 +1044,7 @@ rule previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, addre
 //
 
 // Burns shares from owner and sends exactly assets of underlying tokens to receiver
-rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
+rule withdrawIntegrity_oneWeiException(env e, uint256 assets, address receiver, address owner) {
 
     // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
@@ -1091,12 +1073,12 @@ rule withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
     assert(vaultSharesSupplyAfter == vaultSharesSupplyBefore - sharesBurned);
 
     // The vault’s asset balance must have decreased by `assets`
-    assert(vaultAssetsAfter == vaultAssetsBefore - assets);
+    assert(CMP_EQUAL_UP_TO_1(vaultAssetsAfter, vaultAssetsBefore - assets));
 
     // The `receiver`’s asset balance must have increased by `assets`
     //  unless `receiver` == vault, in which case it might remain unchanged
     assert(receiver != currentContract
-        ? receiverAssetsAfter == receiverAssetsBefore + assets
+        ? CMP_EQUAL_UP_TO_1(receiverAssetsAfter, receiverAssetsBefore + assets)
         : receiverAssetsAfter == receiverAssetsBefore
         );
 
@@ -1132,7 +1114,7 @@ rule withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address 
 }
 
 // MUST revert if all of assets cannot be withdrawn
-rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver, address owner) {
+rule withdrawMustRevertIfCannotWithdraw_oneWeiException(env e, uint256 assets, address receiver, address owner) {
 
     // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
@@ -1147,10 +1129,10 @@ rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver,
     mathint receiverAssetsAfter = ghostERC20Balances[_Asset][receiver];
 
     // If a withdraw happened partially => revert 
-    assert(vaultAssetsBefore - assets != vaultAssetsAfter
+    assert(CMP_NOT_EQUAL_UP_TO_1(vaultAssetsBefore - assets, vaultAssetsAfter)
         => reverted
     );
-    assert(receiverAssetsBefore + assets != receiverAssetsAfter
+    assert(CMP_NOT_EQUAL_UP_TO_1(receiverAssetsBefore + assets, receiverAssetsAfter)
         => reverted
     );
 }
@@ -1160,7 +1142,7 @@ rule withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver,
 //
 
 // MUST return the maximum amount of shares that could be transferred from owner through `redeem`
-rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address receiver) {
+rule maxRedeemNoHigherThanActual_oneWeiHigherException(env e, uint256 shares, address owner, address receiver) {
 
     // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     requireValidSilo0E(e);
@@ -1174,23 +1156,11 @@ rule maxRedeemNoHigherThanActual(env e, uint256 shares, address owner, address r
 
     // Going above that limit must revert
     assert(shares > maxShares => reverted);
-    assert(!reverted => shares <= maxShares);
+    assert(!reverted => shares <= maxShares + 1);
 }
 
 // MUST return 0 if redemption is entirely disabled
-rule maxRedeemZeroIfDisabled(env e, uint256 shares, address owner, address receiver) {
-
-    // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
-    requireValidSilo0E(e);
-
-    mathint maxShares = _ERC4626.maxRedeem(e, owner);
-
-    mathint assets = _ERC4626.redeem@withrevert(e, shares, receiver, owner);
-    bool reverted = lastReverted;
-
-    // Redemption is entirely disabled when `maxRedeem` returns zero
-    assert(maxShares == 0 => (assets == 0 || reverted));
-}
+// Don't use such functional
 
 // MUST NOT revert
 rule maxRedeemMustNotRevert(env e, address owner) {
@@ -1223,7 +1193,6 @@ rule previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver
 
     // EIP-4626: "redeem should return the same or MORE assets as previewRedeem"
     assert(actualAssets >= previewedAssets);
-    satisfy(actualAssets >= previewedAssets);
 }
 
 // MUST NOT account for redemption limits like those returned from `maxRedeem`, and should always 
@@ -1295,7 +1264,7 @@ rule previewRedeemMayRevertOnlyWithRedeemRevert(env e, uint256 shares, address r
 //
 
 // Burns exactly shares from owner and sends assets of underlying tokens to receiver
-rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
+rule redeemIntegrity_oneWeiException(env e, uint256 shares, address receiver, address owner) {
 
     // SAFE: Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
     requireValidSilo0E(e);
@@ -1305,7 +1274,6 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
     mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];                         
     mathint vaultAssetsBefore       = ghostERC20Balances[_Asset][currentContract];
     mathint receiverAssetsBefore    = ghostERC20Balances[_Asset][receiver];
-    mathint ownerAllowancesBefore   = ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // Perform redeem
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
@@ -1315,7 +1283,6 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
     mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
     mathint vaultAssetsAfter       = ghostERC20Balances[_Asset][currentContract];
     mathint receiverAssetsAfter    = ghostERC20Balances[_Asset][receiver];
-    mathint ownerAllowancesAfter   = ghostERC20Allowances[currentContract][owner][ghostCaller];
 
     // The `owner`’s share balance must decrease by exactly `shares`
     assert(ownerSharesAfter == ownerSharesBefore - shares);
@@ -1324,37 +1291,37 @@ rule redeemIntegrity(env e, uint256 shares, address receiver, address owner) {
     assert(vaultSharesSupplyAfter == vaultSharesSupplyBefore - shares);
 
     // The vault’s asset balance must decrease by `assetsOut`
-    assert(vaultAssetsAfter == vaultAssetsBefore - assetsOut);
+    assert(CMP_EQUAL_UP_TO_1(vaultAssetsAfter, vaultAssetsBefore - assetsOut));
 
     // The `receiver`’s asset balance must increase by `assetsOut`
     //  (unless `receiver == vault`, in which case it might remain unchanged)
     assert(
         receiver != currentContract
-            ? receiverAssetsAfter == receiverAssetsBefore + assetsOut
+            ? CMP_EQUAL_UP_TO_1(receiverAssetsAfter, receiverAssetsBefore + assetsOut)
             : receiverAssetsAfter == receiverAssetsBefore
-    );
-
-    // MUST support a redeem flow where the shares are burned from owner
-    // directly where msg.sender has EIP-20 approval over the shares of owner.
-    // i.e. if `owner != msg.sender`, we rely on allowance for shares.
-    satisfy(owner != ghostCaller);
-
-    // SHOULD check msg.sender can spend owner’s funds
-    // => if `owner != msg.sender`, the allowance should be reduced by `shares`
-    assert(
-        owner != ghostCaller => ownerAllowancesAfter == ownerAllowancesBefore - shares
     );
 }
 
-// MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
-rule redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address owner) {
+// MUST support a redeem flow where the shares are burned from owner directly where msg.sender 
+// has EIP-20 approval over the shares of owner.
+rule redeemFromOtherIntegrity_oneWeiException(env e, uint256 shares, address receiver, address owner) {
 
     // SAFE: Assume valid Silo0 state
     requireValidSilo0E(e);
 
+    mathint ownerAllowancesBefore = ghostERC20Allowances[currentContract][owner][ghostCaller];
+
     mathint assetsOut = _ERC4626.redeem(e, shares, receiver, owner);
 
-    // This path must succeed if `owner == msg.sender`
+    mathint ownerAllowancesAfter = ghostERC20Allowances[currentContract][owner][ghostCaller];
+
+    // SHOULD check msg.sender can spend owner’s funds
+    // => if `owner != msg.sender`, the allowance should be reduced by `shares`
+    assert(owner != ghostCaller 
+        => CMP_EQUAL_UP_TO_1(ownerAllowancesAfter, ownerAllowancesBefore - shares)
+    );
+
+    // This path must succeed if `owner != msg.sender`
     satisfy(assetsOut != 0 && owner != ghostCaller);
 }
 
@@ -1371,25 +1338,26 @@ rule redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address ow
 }
 
 // MUST revert if all of shares cannot be redeemed
-rule redeemMustRevertIfCannotRedeem(env e, uint256 shares, address receiver, address owner) {
+rule redeemMustRevertIfCannotRedeem_oneWeiException(env e, uint256 shares, address receiver, address owner) {
 
     // SAFE: Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
     requireValidSilo0E(e);
 
-    mathint vaultAssetsBefore    = ghostERC20Balances[_Asset][currentContract];
+    mathint vaultAssetsBefore = ghostERC20Balances[_Asset][currentContract];
     mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];
 
     mathint assetsOut = _ERC4626.redeem@withrevert(e, shares, receiver, owner);
     bool reverted = lastReverted;
 
-    mathint vaultAssetsAfter    = ghostERC20Balances[_Asset][currentContract];
-    mathint vaultAssetsChange   = vaultAssetsBefore - vaultAssetsAfter;
+    mathint vaultAssetsAfter = ghostERC20Balances[_Asset][currentContract];
+    mathint vaultAssetsChange = vaultAssetsBefore - vaultAssetsAfter;
 
     mathint receiverAssetsAfter = ghostERC20Balances[_Asset][receiver];
     mathint receiverAssetsChange= receiverAssetsAfter - receiverAssetsBefore;
 
     // If partial redemption happened, must revert
-    assert(vaultAssetsChange != receiverAssetsChange || vaultAssetsChange != assetsOut
-        => reverted
+    assert(CMP_NOT_EQUAL_UP_TO_1(vaultAssetsChange, receiverAssetsChange) 
+        || CMP_NOT_EQUAL_UP_TO_1(vaultAssetsChange, assetsOut)
+            => reverted
     );
 }

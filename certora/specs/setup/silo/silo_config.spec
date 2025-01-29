@@ -6,6 +6,12 @@ using SiloConfigHarness as _SiloConfig;
 
 methods {
 
+    // Summarize getDebtSilo() internal call in SiloConfig to avoid unlinked `_DEBT_SHARE_TOKEN1` call 
+    //  in single silo configuration
+
+    function _SiloConfig.getDebtSilo(address _borrower) internal returns address
+        => getDebtSiloCVL(_borrower);
+
     // Resolve external calls to SiloConfig
     
     function _.getConfig(address _silo) external
@@ -18,56 +24,106 @@ methods {
         => DISPATCHER(true);
 }
 
+// Summarizes
+
+function getDebtSiloCVL(address _borrower) returns address {
+    mathint debtBal0 = ghostERC20Balances[ghostConfigDebtShareToken0][_borrower];
+    mathint debtBal1 = ghostERC20Balances[ghostConfigDebtShareToken0][_borrower];
+
+    ASSERT(debtBal0 == 0 || debtBal1 == 0);
+
+    return (debtBal0 == 0 && debtBal1 == 0) ? 0 : (debtBal0 != 0 ? ghostConfigSilo0 : ghostConfigSilo1);
+}
+
 // Immutables
+
+definition FEE_15_PERCENT() returns mathint = 15 * 10^16;
+definition FEE_30_PERCENT() returns mathint = 3 * 10^17;
+definition FEE_50_PERCENT() returns mathint = 5 * 10^17;
+
+definition silo0contractsAddress(address a) returns bool = 
+    a == ghostConfigSilo0
+    || a == ghostConfigDebtShareToken0
+    || a == ghostConfigProtectedCollateralShareToken0
+    || a == ghostConfigCollateralShareToken0
+    || a == ghostConfigToken0
+    || a == ghostConfigSolvencyOracle0
+    || a == ghostConfigMaxLtvOracle0
+    || a == ghostConfigInterestRateModel0
+    ;
+
+definition silo1contractsAddress(address a) returns bool = 
+    a == ghostConfigSilo1
+    || a == ghostConfigDebtShareToken1
+    || a == ghostConfigProtectedCollateralShareToken1
+    || a == ghostConfigCollateralShareToken1
+    || a == ghostConfigToken1
+    || a == ghostConfigSolvencyOracle1
+    || a == ghostConfigMaxLtvOracle1
+    || a == ghostConfigInterestRateModel1
+    ;
 
 persistent ghost address ghostSiloConfig {
     axiom ghostSiloConfig == _SiloConfig;
+    axiom silo0contractsAddress(ghostSiloConfig) == false;
+    axiom silo1contractsAddress(ghostSiloConfig) == false;
 }
 
 persistent ghost mathint ghostConfigDaoFee {
     axiom ghostConfigDaoFee == _SiloConfig._DAO_FEE;
+    axiom ghostConfigDaoFee <= FEE_50_PERCENT(); 
 }
 
 persistent ghost mathint ghostConfigDeployerFee {
     axiom ghostConfigDeployerFee == _SiloConfig._DEPLOYER_FEE;
-    axiom ghostConfigDeployerFee != 0 <=> ghostDeployerFeeReceiver != 0;
+    axiom ghostConfigDeployerFee <= FEE_15_PERCENT(); 
 }
 
 // Hook Receiver
 persistent ghost address ghostConfigHookReceiver {
     axiom ghostConfigHookReceiver == _SiloConfig._HOOK_RECEIVER;
+    axiom silo0contractsAddress(ghostConfigHookReceiver) == false;
+    axiom silo1contractsAddress(ghostConfigHookReceiver) == false;
 }
 
 persistent ghost address ghostConfigSilo0 {
     axiom ghostConfigSilo0 == _SiloConfig._SILO0;
+    axiom silo1contractsAddress(ghostConfigSilo0) == false;
 }
 
 persistent ghost address ghostConfigToken0 {
     axiom ghostConfigToken0 == _SiloConfig._TOKEN0;
+    axiom silo1contractsAddress(ghostConfigToken0) == false;
 }
 
 persistent ghost address ghostConfigProtectedCollateralShareToken0 {
     axiom ghostConfigProtectedCollateralShareToken0 == _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN0;
+    axiom silo1contractsAddress(ghostConfigProtectedCollateralShareToken0) == false;
 }
 
 persistent ghost address ghostConfigCollateralShareToken0 {
     axiom ghostConfigCollateralShareToken0 == _SiloConfig._COLLATERAL_SHARE_TOKEN0;
+    axiom silo1contractsAddress(ghostConfigCollateralShareToken0) == false;
 }
 
 persistent ghost address ghostConfigDebtShareToken0 {
     axiom ghostConfigDebtShareToken0 == _SiloConfig._DEBT_SHARE_TOKEN0;
+    axiom silo1contractsAddress(ghostConfigDebtShareToken0) == false;
 }
 
 persistent ghost address ghostConfigSolvencyOracle0 {
     axiom ghostConfigSolvencyOracle0 == _SiloConfig._SOLVENCY_ORACLE0;
+    axiom silo1contractsAddress(ghostConfigSolvencyOracle0) == false;
 }
 
 persistent ghost address ghostConfigMaxLtvOracle0 {
     axiom ghostConfigMaxLtvOracle0 == _SiloConfig._MAX_LTV_ORACLE0;
+    axiom silo1contractsAddress(ghostConfigMaxLtvOracle0) == false;
 }
 
 persistent ghost address ghostConfigInterestRateModel0 {
     axiom ghostConfigInterestRateModel0 == _SiloConfig._INTEREST_RATE_MODEL0;
+    axiom silo1contractsAddress(ghostConfigInterestRateModel0) == false;
 }
 
 persistent ghost mathint ghostConfigMaxLtv0 {
@@ -84,10 +140,12 @@ persistent ghost mathint ghostConfigLiquidationTargetLtv0 {
 
 persistent ghost mathint ghostConfigLiquidationFee0 {
     axiom ghostConfigLiquidationFee0 == _SiloConfig._LIQUIDATION_FEE0;
+    axiom ghostConfigLiquidationFee0 <= FEE_30_PERCENT();
 }
 
 persistent ghost mathint ghostConfigFlashloanFee0 {
     axiom ghostConfigFlashloanFee0 == _SiloConfig._FLASHLOAN_FEE0;
+    axiom ghostConfigFlashloanFee0 <= FEE_15_PERCENT();
 }
 
 persistent ghost bool ghostConfigCallBeforeQuote0 {
@@ -96,6 +154,7 @@ persistent ghost bool ghostConfigCallBeforeQuote0 {
 
 persistent ghost address ghostConfigSilo1 {
     axiom ghostConfigSilo1 == _SiloConfig._SILO1;
+    axiom ghostConfigSilo1 != 0;
 }
 
 persistent ghost address ghostConfigToken1 {
@@ -140,10 +199,12 @@ persistent ghost mathint ghostConfigLiquidationTargetLtv1 {
 
 persistent ghost mathint ghostConfigLiquidationFee1 {
     axiom ghostConfigLiquidationFee1 == _SiloConfig._LIQUIDATION_FEE1;
+    axiom ghostConfigLiquidationFee1 <= FEE_30_PERCENT();
 }
 
 persistent ghost mathint ghostConfigFlashloanFee1 {
     axiom ghostConfigFlashloanFee1 == _SiloConfig._FLASHLOAN_FEE1;
+    axiom ghostConfigFlashloanFee1 <= FEE_15_PERCENT();
 }
 
 persistent ghost bool ghostConfigCallBeforeQuote1 {
@@ -154,9 +215,6 @@ persistent ghost bool ghostConfigCallBeforeQuote1 {
 
 persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {
     init_state axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == 0;
-    // Can be silo0 or silo1
-    axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == _SiloConfig._SILO0 
-        || ghostConfigBorrowerCollateralSilo[borrower] == _SiloConfig._SILO1;
 }
 
 hook Sload address collateralSilo _SiloConfig.borrowerCollateralSilo[KEY address borrower] {

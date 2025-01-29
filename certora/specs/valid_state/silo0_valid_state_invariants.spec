@@ -15,7 +15,7 @@ function requireSilo0ValidStateE(env e) {
 
     // Valid state invariants both for silo0 and silo1
     requireValidSiloCommonE(e);
-
+    
     requireInvariant silo0ProtectedCollateralAlwaysLiquid(e);
     requireInvariant silo0LiquiditySolvency(e);
     requireInvariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(e);
@@ -23,7 +23,8 @@ function requireSilo0ValidStateE(env e) {
     requireInvariant silo0ProtectedSharesMustBeBackedWithAssets(e);
     requireInvariant silo0CollateralSharesMustBeBackedWithAssets(e);
     requireInvariant silo0DebtSharesMustBeBackedWithAssets(e);
-    requireInvariant silo0ProtectedSharesAlwaysWithdrawable(e);
+
+    requireInvariant silo0AllProtectedSharesAlwaysWithdrawable(e);
 }
 
 // VS- Protected collateral must remain fully available for withdrawal
@@ -70,7 +71,7 @@ strong invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply(env e)
 
 // VS- The Silo’s collateral protected share tokens must always be backed by the assets
 strong invariant silo0ProtectedSharesMustBeBackedWithAssets(env e)
-    forall address user. ghostERC20Balances[_ShareProtectedCollateralToken0][user] != 0
+    ghostERC20TotalSupply[_ShareProtectedCollateralToken0] != 0
         => ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] != 0 {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
@@ -82,7 +83,7 @@ strong invariant silo0ProtectedSharesMustBeBackedWithAssets(env e)
 
 // VS- The Silo’s collateral share tokens must always be backed by the assets
 strong invariant silo0CollateralSharesMustBeBackedWithAssets(env e)
-    forall address user. ghostERC20Balances[_CollateralShareToken0][user] != 0
+    ghostERC20TotalSupply[_CollateralShareToken0] != 0
         => ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] != 0 {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
@@ -94,7 +95,7 @@ strong invariant silo0CollateralSharesMustBeBackedWithAssets(env e)
 
 // VS- The Silo’s collateral share tokens must always be backed by the assets
 strong invariant silo0DebtSharesMustBeBackedWithAssets(env e)
-    forall address user. ghostERC20Balances[_ShareDebtToken0][user] != 0
+    ghostERC20TotalSupply[_ShareDebtToken0] != 0
         => ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] != 0 {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
@@ -105,7 +106,7 @@ strong invariant silo0DebtSharesMustBeBackedWithAssets(env e)
     }
 
 // VS- All protected shares must be fully backed so they can always be withdrawn
-strong invariant silo0ProtectedSharesAlwaysWithdrawable(env e) 
+strong invariant silo0AllProtectedSharesAlwaysWithdrawable(env e) 
     previewRedeem(e, require_uint256(ghostERC20TotalSupply[_ShareProtectedCollateralToken0]))
         <= ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] {
         preserved with (env eInv) {

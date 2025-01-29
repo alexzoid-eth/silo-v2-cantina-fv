@@ -18,6 +18,9 @@ function requireSiloValidStateCommonE(env e) {
     
     requireInvariant interestRateTimestampNotInFuture(e);
     requireInvariant zeroCollateralMeansZeroDebt(e);
+    requireInvariant onlyOneDebtPerBorrower(e);
+    requireInvariant borrowerCollateralSiloMustMatchDebt(e);
+    requireInvariant zeroDebtMeansNoCollateralSilo(e);
 }
 
 // CrossReentrancyGuard
@@ -57,6 +60,64 @@ strong invariant interestRateTimestampNotInFuture(env e)
 strong invariant zeroCollateralMeansZeroDebt(env e)
     forall address silo. ghostTotalAssets[silo][ASSET_TYPE_COLLATERAL()] == 0
         => ghostTotalAssets[silo][ASSET_TYPE_DEBT()] == 0 {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment
+            requireSiloValidStateCommonE(e);
+        }
+    }
+
+// VS- A borrower must never hold debt in more than one silo at the same time
+strong invariant onlyOneDebtPerBorrower(env e)
+    forall address user. (
+        ghostERC20Balances[ghostConfigDebtShareToken0][user] != 0 
+            && ghostERC20Balances[ghostConfigDebtShareToken1][user] != 0
+        ) == false {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment
+            requireSiloValidStateCommonE(e);
+        }
+    }
+
+// VS- A borrower's collateral silo must always match the silo in which they hold debt
+strong invariant borrowerCollateralSiloMustMatchDebt(env e)
+    forall address user. (
+        ghostConfigBorrowerCollateralSilo[user] == 0
+            || ghostConfigBorrowerCollateralSilo[user] == ghostConfigSilo0
+            || ghostConfigBorrowerCollateralSilo[user] == ghostConfigSilo1
+        ) && (ghostERC20Balances[ghostConfigDebtShareToken0][user] != 0
+            <=> ghostConfigBorrowerCollateralSilo[user] == ghostConfigSilo0
+        ) && (
+        ghostERC20Balances[ghostConfigDebtShareToken1][user] != 0
+            <=> ghostConfigBorrowerCollateralSilo[user] == ghostConfigSilo1
+        ) 
+    // UNSAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
+    // could be set to silo without any debt at all
+    filtered { f -> f.selector != sig:switchCollateralToThisSilo().selector } {
+        preserved with (env eInv) {
+            // SAFE: Same environment inside a function and invariant
+            requireSameEnv(e, eInv);
+            // SAFE: Valid state and environment
+            requireSiloValidStateCommonE(e);
+        }
+    }
+
+// VS- If a user has no debt in either debt share token, their collateral 
+//  silo must be unset
+strong invariant zeroDebtMeansNoCollateralSilo(env e)
+    forall address user. (
+        ghostERC20Balances[ghostConfigDebtShareToken0][user] == 0
+            <=> ghostConfigBorrowerCollateralSilo[user] == 0
+        ) && (
+            ghostERC20Balances[ghostConfigDebtShareToken1][user] == 0
+                <=> ghostConfigBorrowerCollateralSilo[user] == 0
+        )
+    // UNSAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
+    // could be set to silo without any debt at all
+    filtered { f -> f.selector != sig:switchCollateralToThisSilo().selector } {
         preserved with (env eInv) {
             // SAFE: Same environment inside a function and invariant
             requireSameEnv(e, eInv);

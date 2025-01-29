@@ -90,13 +90,13 @@ library Actions {
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
-        
+
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
         (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
-        
+
         (assets, shares) = SiloERC4626Lib.withdraw(
             depositConfig.token,
             _args.collateralType == ISilo.CollateralType.Collateral
@@ -349,7 +349,8 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        IERC20(_token).safeTransfer(address(_receiver), _amount);
+        // mutation: replace "_receiver" with "this"
+        IERC20(_token).safeTransfer(address(this), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
@@ -391,7 +392,7 @@ library Actions {
         uint256 siloBalance = IERC20(asset).balanceOf(address(this));
 
         uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
-        // @audit totalAssets invariant:
+
         // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
         unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
 

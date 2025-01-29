@@ -17,6 +17,9 @@ use invariant shareTokenHooksSynchronization;
 
 use invariant interestRateTimestampNotInFuture;
 use invariant zeroCollateralMeansZeroDebt;
+use invariant onlyOneDebtPerBorrower;
+use invariant borrowerCollateralSiloMustMatchDebt;
+use invariant zeroDebtMeansNoCollateralSilo;
 
 // Silo0
 
@@ -24,7 +27,21 @@ use invariant silo0ProtectedCollateralAlwaysLiquid;
 use invariant silo0LiquiditySolvency;
 use invariant silo0TotalTrackedAssetsNotExceedERC20TokenSupply; // @todo 
 
-use invariant silo0ProtectedSharesMustBeBackedWithAssets;
-use invariant silo0CollateralSharesMustBeBackedWithAssets;
-use invariant silo0DebtSharesMustBeBackedWithAssets;
-use invariant silo0ProtectedSharesAlwaysWithdrawable;
+use invariant silo0ProtectedSharesMustBeBackedWithAssets; // @todo 
+use invariant silo0CollateralSharesMustBeBackedWithAssets; // @todo 
+use invariant silo0DebtSharesMustBeBackedWithAssets; // @todo 
+
+use invariant silo0AllProtectedSharesAlwaysWithdrawable; // @todo 
+
+// Sanity 
+
+rule sanitySilo0ValidState(method f, env e, calldataarg args) {
+
+    // SAFE: Assume valid Silo0 state
+    requireValidSilo0E(e);
+    
+    f(e, args);
+    
+    // Check all external methods are reachable with valid state
+    satisfy(true);
+}   

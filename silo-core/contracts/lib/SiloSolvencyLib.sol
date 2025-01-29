@@ -35,7 +35,7 @@ library SiloSolvencyLib {
         ISilo.AccrueInterestInMemory _accrueInMemory
     ) internal view returns (bool) {
         if (_debtConfig.silo == address(0)) return true; // no debt, so solvent
-
+    
         uint256 ltv = getLtv(
             _collateralConfig,
             _debtConfig,

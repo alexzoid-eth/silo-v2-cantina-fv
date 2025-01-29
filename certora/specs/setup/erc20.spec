@@ -71,7 +71,7 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
     init_state axiom forall address token. forall address owner. forall address spender. 
         ghostERC20Allowances[token][owner][spender] == 0;
     axiom forall address token. forall address owner. forall address spender. 
-        ERC20_ACCOUNT_BOUNDS(token, owner) || ERC20_ACCOUNT_BOUNDS(token, spender)
+        ERC20_ACCOUNT_BOUNDS(token, owner) && ERC20_ACCOUNT_BOUNDS(token, spender)
         ? ghostERC20Allowances[token][owner][spender] >= 0 && ghostERC20Allowances[token][owner][spender] <= max_uint128
         : ghostERC20Allowances[token][owner][spender] == 0;
 }
@@ -86,10 +86,16 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
 // Safe transfer lib summaries
 
 function safeTransferCVL(env e, address token, address to, uint256 value) {
+    env eFunc;
+    require(eFunc.msg.sender == currentContract);
+    require(eFunc.block.timestamp == e.block.timestamp);
     ASSERT(token.transfer(e, to, value));
 }
 
 function safeTransferFromCVL(env e, address token, address from, address to, uint256 value) {
+    env eFunc;
+    require(eFunc.msg.sender == currentContract);
+    require(eFunc.block.timestamp == e.block.timestamp);
     ASSERT(token.transferFrom(e, from, to, value));
 }
 
