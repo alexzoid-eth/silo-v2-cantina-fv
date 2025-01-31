@@ -122,29 +122,29 @@ library Actions {
         _hookCallBeforeBorrow(_args, Hook.BORROW);
 
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
-
-        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
-
+        
+        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible()); 
+        
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForBothSilos();
+        siloConfig.accrueInterestForBothSilos(); 
         siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);
-
+        
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
 
         (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this)});
-
-        (assets, shares) = SiloLendingLib.borrow(
+        
+        (assets, shares) = SiloLendingLib.borrow( 
             debtConfig.debtShareToken,
             debtConfig.token,
             msg.sender,
             _args
         );
-
-        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);
-
+        
+        _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower); 
+        
         siloConfig.turnOffReentrancyProtection();
-
+        
         _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);
     }
 

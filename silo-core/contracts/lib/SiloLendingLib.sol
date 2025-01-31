@@ -167,7 +167,7 @@ library SiloLendingLib {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
-
+        
         (borrowedAssets, borrowedShares) = SiloMathLib.convertToAssetsOrToShares(
             _args.assets,
             _args.shares,

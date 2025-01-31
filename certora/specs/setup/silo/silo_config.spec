@@ -2,7 +2,7 @@
 
 import "./silo_config_cross_reentrancy_guard_cvl.spec";
 
-using SiloConfigHarness as _SiloConfig;
+using Config as _SiloConfig;
 
 methods {
 
@@ -11,6 +11,8 @@ methods {
 
     function _SiloConfig.getDebtSilo(address _borrower) internal returns address
         => getDebtSiloCVL(_borrower);
+
+    function _SiloConfig._LAST_SILO_ADDRESS() external returns address envfree;
 
     // Resolve external calls to SiloConfig
     
@@ -22,6 +24,12 @@ methods {
 
     function _.getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType) external
         => DISPATCHER(true);
+
+    function _.accrueInterestForBothSilos() external with (env e)
+        => accrueInterestForSingleSiloCVL(e) expect void;
+
+    function _.hasDebtInOtherSilo(address _thisSilo, address _borrower) external
+        => hasDebtInOtherSiloCVL(_thisSilo, _borrower) expect bool;
 }
 
 // Summarizes
@@ -35,8 +43,34 @@ function getDebtSiloCVL(address _borrower) returns address {
     return (debtBal0 == 0 && debtBal1 == 0) ? 0 : (debtBal0 != 0 ? ghostConfigSilo0 : ghostConfigSilo1);
 }
 
+function accrueInterestForSingleSiloCVL(env e) {
+
+    ghostConfigSilo0.accrueInterestForConfig(
+        e,
+        ghostConfigInterestRateModel0,
+        require_uint256(ghostConfigDaoFee),
+        require_uint256(ghostConfigDeployerFee)
+    );
+
+    if(IS_FULL_SILO()) {
+        ghostConfigSilo1.accrueInterestForConfig(
+            e,
+            ghostConfigInterestRateModel1,
+            require_uint256(ghostConfigDaoFee),
+            require_uint256(ghostConfigDeployerFee)
+        );
+    }
+}
+
+function hasDebtInOtherSiloCVL(address _thisSilo, address _borrower) returns bool {
+    return _thisSilo == ghostConfigSilo0 
+        ? ghostERC20Balances[ghostConfigDebtShareToken1][_borrower] != 0
+        : ghostERC20Balances[ghostConfigDebtShareToken0][_borrower] != 0;
+}
+
 // Immutables
 
+definition FEE_5_PERCENT() returns mathint = 5 * 10^16;
 definition FEE_15_PERCENT() returns mathint = 15 * 10^16;
 definition FEE_30_PERCENT() returns mathint = 3 * 10^17;
 definition FEE_50_PERCENT() returns mathint = 5 * 10^17;
@@ -65,65 +99,54 @@ definition silo1contractsAddress(address a) returns bool =
 
 persistent ghost address ghostSiloConfig {
     axiom ghostSiloConfig == _SiloConfig;
-    axiom silo0contractsAddress(ghostSiloConfig) == false;
-    axiom silo1contractsAddress(ghostSiloConfig) == false;
+    // axiom silo1contractsAddress(ghostSiloConfig) == false;
 }
 
 persistent ghost mathint ghostConfigDaoFee {
     axiom ghostConfigDaoFee == _SiloConfig._DAO_FEE;
-    axiom ghostConfigDaoFee <= FEE_50_PERCENT(); 
+    axiom ghostConfigDaoFee >= FEE_5_PERCENT() && ghostConfigDaoFee <= FEE_50_PERCENT(); 
 }
 
 persistent ghost mathint ghostConfigDeployerFee {
     axiom ghostConfigDeployerFee == _SiloConfig._DEPLOYER_FEE;
-    axiom ghostConfigDeployerFee <= FEE_15_PERCENT(); 
+    axiom ghostConfigDeployerFee >= 0 && ghostConfigDeployerFee <= FEE_15_PERCENT(); 
 }
 
 // Hook Receiver
 persistent ghost address ghostConfigHookReceiver {
     axiom ghostConfigHookReceiver == _SiloConfig._HOOK_RECEIVER;
-    axiom silo0contractsAddress(ghostConfigHookReceiver) == false;
-    axiom silo1contractsAddress(ghostConfigHookReceiver) == false;
 }
 
 persistent ghost address ghostConfigSilo0 {
     axiom ghostConfigSilo0 == _SiloConfig._SILO0;
-    axiom silo1contractsAddress(ghostConfigSilo0) == false;
 }
 
 persistent ghost address ghostConfigToken0 {
     axiom ghostConfigToken0 == _SiloConfig._TOKEN0;
-    axiom silo1contractsAddress(ghostConfigToken0) == false;
 }
 
 persistent ghost address ghostConfigProtectedCollateralShareToken0 {
     axiom ghostConfigProtectedCollateralShareToken0 == _SiloConfig._PROTECTED_COLLATERAL_SHARE_TOKEN0;
-    axiom silo1contractsAddress(ghostConfigProtectedCollateralShareToken0) == false;
 }
 
 persistent ghost address ghostConfigCollateralShareToken0 {
     axiom ghostConfigCollateralShareToken0 == _SiloConfig._COLLATERAL_SHARE_TOKEN0;
-    axiom silo1contractsAddress(ghostConfigCollateralShareToken0) == false;
 }
 
 persistent ghost address ghostConfigDebtShareToken0 {
     axiom ghostConfigDebtShareToken0 == _SiloConfig._DEBT_SHARE_TOKEN0;
-    axiom silo1contractsAddress(ghostConfigDebtShareToken0) == false;
 }
 
 persistent ghost address ghostConfigSolvencyOracle0 {
     axiom ghostConfigSolvencyOracle0 == _SiloConfig._SOLVENCY_ORACLE0;
-    axiom silo1contractsAddress(ghostConfigSolvencyOracle0) == false;
 }
 
 persistent ghost address ghostConfigMaxLtvOracle0 {
     axiom ghostConfigMaxLtvOracle0 == _SiloConfig._MAX_LTV_ORACLE0;
-    axiom silo1contractsAddress(ghostConfigMaxLtvOracle0) == false;
 }
 
 persistent ghost address ghostConfigInterestRateModel0 {
     axiom ghostConfigInterestRateModel0 == _SiloConfig._INTEREST_RATE_MODEL0;
-    axiom silo1contractsAddress(ghostConfigInterestRateModel0) == false;
 }
 
 persistent ghost mathint ghostConfigMaxLtv0 {
@@ -140,12 +163,12 @@ persistent ghost mathint ghostConfigLiquidationTargetLtv0 {
 
 persistent ghost mathint ghostConfigLiquidationFee0 {
     axiom ghostConfigLiquidationFee0 == _SiloConfig._LIQUIDATION_FEE0;
-    axiom ghostConfigLiquidationFee0 <= FEE_30_PERCENT();
+    axiom ghostConfigLiquidationFee0 >= 0 && ghostConfigLiquidationFee0 <= FEE_30_PERCENT();
 }
 
 persistent ghost mathint ghostConfigFlashloanFee0 {
     axiom ghostConfigFlashloanFee0 == _SiloConfig._FLASHLOAN_FEE0;
-    axiom ghostConfigFlashloanFee0 <= FEE_15_PERCENT();
+    axiom ghostConfigFlashloanFee0 >= 0 && ghostConfigFlashloanFee0 <= FEE_15_PERCENT();
 }
 
 persistent ghost bool ghostConfigCallBeforeQuote0 {
@@ -154,7 +177,6 @@ persistent ghost bool ghostConfigCallBeforeQuote0 {
 
 persistent ghost address ghostConfigSilo1 {
     axiom ghostConfigSilo1 == _SiloConfig._SILO1;
-    axiom ghostConfigSilo1 != 0;
 }
 
 persistent ghost address ghostConfigToken1 {
@@ -199,12 +221,12 @@ persistent ghost mathint ghostConfigLiquidationTargetLtv1 {
 
 persistent ghost mathint ghostConfigLiquidationFee1 {
     axiom ghostConfigLiquidationFee1 == _SiloConfig._LIQUIDATION_FEE1;
-    axiom ghostConfigLiquidationFee1 <= FEE_30_PERCENT();
+    axiom ghostConfigLiquidationFee1 >= 0 && ghostConfigLiquidationFee1 <= FEE_30_PERCENT();
 }
 
 persistent ghost mathint ghostConfigFlashloanFee1 {
     axiom ghostConfigFlashloanFee1 == _SiloConfig._FLASHLOAN_FEE1;
-    axiom ghostConfigFlashloanFee1 <= FEE_15_PERCENT();
+    axiom ghostConfigFlashloanFee1 >= 0 && ghostConfigFlashloanFee1 <= FEE_15_PERCENT();
 }
 
 persistent ghost bool ghostConfigCallBeforeQuote1 {

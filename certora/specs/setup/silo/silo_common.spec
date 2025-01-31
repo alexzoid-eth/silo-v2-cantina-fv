@@ -3,10 +3,10 @@
 import "./helper_cvl.spec";
 import "./silo_config.spec";
 import "./hook_receiver.spec";
-import "../../valid_state/silo_valid_state_invariants.spec";
+import "../../valid_state/valid_state.spec";
 
 import "../erc20.spec";
-import "../env.spec";
+import "../math_cvl.spec";
 
 // From initial contest's setup
 import "./initial/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
@@ -56,6 +56,9 @@ methods {
     function _.previewRedeem(uint256 _shares, ISilo.CollateralType _collateralType) external
         => DISPATCHER(true);
 
+    function _.accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee) external
+        => DISPATCHER(true);
+
     // Resolve external call in `IERC3156FlashBorrower`
 
     function _.onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes _data) external
@@ -66,46 +69,55 @@ methods {
     function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
         => NONDET DELETE;
 
-    function _.accrueInterestForBothSilos() external 
-        => NONDET DELETE;
-
     function _.initialize(address _config) external
         => NONDET DELETE;
 }
 
 //
-// Silo constants
+// Assume valid state for all Silo contracts
+//
+
+persistent ghost address ghostCaller;
+
+function setupSilo(env e) {
+
+    // SAFE: To make further computations in the Silo secure require DAO and deployer 
+    //  fees to be less than 100% (from SiloConfig's constructor)
+    require(ghostConfigDaoFee + ghostConfigDeployerFee < 10^18);
+
+    // SAFE: assume realistic initial amount of accumulated fee to avoid overflow in
+    //  `unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }`
+    require(forall address silo. ghostDaoAndDeployerRevenue[silo] < max_uint96);
+
+    // SAFE: Avoid reverting due non-zero msg.value
+    require(e.msg.value == 0);
+
+    // SAFE: Valid msg.sender
+    require(e.msg.sender != 0 && e.msg.sender != currentContract);
+    require(ghostCaller == e.msg.sender);
+
+    // SAFE: Valid time
+    require(e.block.timestamp != 0);
+    require(e.block.number != 0);
+
+    // SAFE: Common valid state invariants working both for Silo0 and Silo1
+    requireValidStateInvariants(e);
+}
+
+function requireSameEnv(env e1, env e2) {
+    require(e1.block.number == e2.block.number);
+    require(e1.block.timestamp == e2.block.timestamp);
+    require(e1.msg.sender == e2.msg.sender);
+    require(e1.msg.value == e2.msg.value);
+}
+
+//
+// Definitions
 //
 
 definition ASSET_TYPE_PROTECTED() returns mathint = to_mathint(ISilo.AssetType.Protected);
 definition ASSET_TYPE_COLLATERAL() returns mathint = to_mathint(ISilo.AssetType.Collateral);
 definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
-
-//
-// Valid state common for Silo and Silo1
-//
-
-function requireValidSiloCommon() {
-    // Common valid state invariants working both for Silo0 and Silo1
-    requireSiloValidStateCommon();
-
-    // To make further computations in the Silo secure require DAO and deployer 
-    //  fees to be less than 100% (from SiloConfig's constructor)
-    require(ghostConfigDaoFee + ghostConfigDeployerFee < 10^18);
-}
-
-function requireValidSiloCommonE(env e) {
-    requireValidSiloCommon();
-
-    // Common environment for all tested contracts
-    requireValidEnv(e);
-
-    // Common valid state invariants working both for Silo0 and Silo1
-    requireSiloValidStateCommonE(e);
-
-    // Common environment both Silo0 and Silo1
-    require(ADDRESS_NOT_CONTRACT_IN_SCENE(e.msg.sender));
-}
 
 definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool 
     = a != ghostSiloConfig
@@ -127,6 +139,9 @@ definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool
         && a != ghostConfigInterestRateModel1
         && a != ghostConfigHookReceiver;
 
+definition IS_FULL_SILO() returns bool
+    = _SiloConfig._LAST_SILO_ADDRESS() != ghostConfigSilo0;
+
 //
 // Methods summarizes
 //
@@ -141,12 +156,7 @@ persistent ghost uint8 ghostDecimals1 {
 }
 function shareTokenLibDecimalsCVL(address token) returns uint8 {
     // Different decimals for Token0 and Token1
-    bool isSilo0 = (token == _CollateralShareToken0 
-        || token == _ShareDebtToken0 
-        || token == _ShareProtectedCollateralToken0
-        || token == _Token0
-        ); 
-    return (isSilo0 ? ghostDecimals0 : ghostDecimals1);
+    return (silo0contractsAddress(token) ? ghostDecimals0 : ghostDecimals1);
 }
 
 // `SiloFactory`

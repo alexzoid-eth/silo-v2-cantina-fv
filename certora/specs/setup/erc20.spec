@@ -12,11 +12,11 @@ methods {
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
     // SafeERC20 summaries
-    function SafeERC20.safeTransfer(address token, address to, uint256 value) internal with (env e)
-        => safeTransferCVL(e, token, to, value);
-    function SafeERC20.safeTransferFrom(address token, address from, address to, uint256 value) internal with (env e)
-        => safeTransferFromCVL(e, token, from, to, value);
-
+    function SafeERC20.safeTransfer(address token, address to, uint256 value) internal
+        => safeTransferFromCVL(token, currentContract, to, value, false);
+    function SafeERC20.safeTransferFrom(address token, address from, address to, uint256 value) internal
+        => safeTransferFromCVL(token, from, to, value, true);
+    
     // Remove from the scene
     function _.name() external => NONDET DELETE;
     function _.symbol() external => NONDET DELETE;
@@ -85,36 +85,26 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
 
 // Safe transfer lib summaries
 
-function safeTransferCVL(env e, address token, address to, uint256 value) {
-    env eFunc;
-    require(eFunc.msg.sender == currentContract);
-    require(eFunc.block.timestamp == e.block.timestamp);
-    ASSERT(token.transfer(e, to, value));
+function transferFromCVL(address token, address from, address to, uint256 amount, bool transferFrom) returns bool {
+
+    require(ERC20_ACCOUNT_BOUNDS(token, from) && ERC20_ACCOUNT_BOUNDS(token, to));
+
+    assert(token == ghostConfigToken0 || token == ghostConfigToken1, "Only Token0 and Token1 can be passed here");
+
+    ASSERT(from != to);
+
+    if(transferFrom) {
+        ASSERT(ghostERC20Allowances[token][from][to] == max_uint256 || ghostERC20Allowances[token][from][to] >= amount);
+        ghostERC20Allowances[token][from][to] = assert_uint256(ghostERC20Allowances[token][from][to] - amount);
+    }
+
+    ASSERT(ghostERC20Balances[token][from] >= amount);
+    ghostERC20Balances[token][from] = assert_uint256(ghostERC20Balances[token][from] - amount);
+    ghostERC20Balances[token][to] = require_uint256(ghostERC20Balances[token][to] + amount);
+
+    return true;
 }
 
-function safeTransferFromCVL(env e, address token, address from, address to, uint256 value) {
-    env eFunc;
-    require(eFunc.msg.sender == currentContract);
-    require(eFunc.block.timestamp == e.block.timestamp);
-    ASSERT(token.transferFrom(e, from, to, value));
-}
-
-// Valid state invariant
-
-invariant erc20TotalSupplySolvency()
-    forall address token. ghostERC20TotalSupply[token] 
-        == ghostERC20Balances[token][ghostErc20AccountsValues[token][0]] 
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][1]] 
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][2]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][3]] 
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][4]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][5]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][6]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][7]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][8]]
-        + ghostERC20Balances[token][ghostErc20AccountsValues[token][9]]
-        ;
-
-function requireErc20ValidState() {
-    requireInvariant erc20TotalSupplySolvency;
+function safeTransferFromCVL(address token, address from, address to, uint256 amount, bool transferFrom) {
+    ASSERT(transferFromCVL(token, from, to, amount, transferFrom));
 }
