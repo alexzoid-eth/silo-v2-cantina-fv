@@ -61,9 +61,8 @@ definition ERC20_ACCOUNT_BOUNDS(address token, address account) returns bool =
 persistent ghost mapping(address => mapping(address => mathint)) ghostERC20Balances {
     init_state axiom forall address token. forall address account. 
         ghostERC20Balances[token][account] == 0;
-    axiom forall address token. forall address account. ERC20_ACCOUNT_BOUNDS(token, account)
-        ? ghostERC20Balances[token][account] >= 0 && ghostERC20Balances[token][account] <= max_uint128
-        : ghostERC20Balances[token][account] == 0;
+    axiom forall address token. forall address account. 
+        ghostERC20Balances[token][account] >= 0 && ghostERC20Balances[token][account] <= max_uint128;
 }
 
 // Allowances ghost  
@@ -71,9 +70,8 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
     init_state axiom forall address token. forall address owner. forall address spender. 
         ghostERC20Allowances[token][owner][spender] == 0;
     axiom forall address token. forall address owner. forall address spender. 
-        ERC20_ACCOUNT_BOUNDS(token, owner) && ERC20_ACCOUNT_BOUNDS(token, spender)
-        ? ghostERC20Allowances[token][owner][spender] >= 0 && ghostERC20Allowances[token][owner][spender] <= max_uint128
-        : ghostERC20Allowances[token][owner][spender] == 0;
+        ghostERC20Allowances[token][owner][spender] >= 0 
+            && ghostERC20Allowances[token][owner][spender] <= max_uint128;
 }
 
 // Total supply ghost
@@ -89,7 +87,8 @@ function transferFromCVL(address token, address from, address to, uint256 amount
 
     require(ERC20_ACCOUNT_BOUNDS(token, from) && ERC20_ACCOUNT_BOUNDS(token, to));
 
-    assert(token == ghostConfigToken0 || token == ghostConfigToken1, "Only Token0 and Token1 can be passed here");
+    assert(token == ghostConfigToken0 || token == ghostConfigToken1, 
+        "Only Token0 or Token1 can be passed here");
 
     ASSERT(from != to);
 

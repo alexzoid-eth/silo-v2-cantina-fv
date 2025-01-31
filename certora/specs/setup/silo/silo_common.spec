@@ -2,8 +2,7 @@
 
 import "./helper_cvl.spec";
 import "./silo_config.spec";
-import "./hook_receiver.spec";
-import "../../valid_state/valid_state.spec";
+import "../../invariants.spec";
 
 import "../erc20.spec";
 import "../math_cvl.spec";
@@ -64,12 +63,29 @@ methods {
     function _.onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes _data) external
         => onFlashLoanCVL(calledContract) expect bytes32;
 
+    // Resolve external calls in `IHookReceiver`
+
+    function _.beforeAction(address _silo, uint256 _action, bytes _input) external
+        => NONDET; // not in use
+
+    function _.afterAction(address _silo, uint256 _action, bytes _inputAndOutput) external
+        => NONDET; // not in use
+
+    function _.hookReceiverConfig(address _silo) external
+        => NONDET; // not in use
+
     // Remove from the scene 
     
     function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
         => NONDET DELETE;
 
     function _.initialize(address _config) external
+        => NONDET DELETE;
+
+    function _.DOMAIN_SEPARATOR() external
+        => NONDET DELETE;
+
+    function _.eip712Domain() external
         => NONDET DELETE;
 }
 

@@ -18,6 +18,11 @@ methods {
 
     function _.balanceOfAndTotalSupply(address _account) external with (env e)
         => balanceOfAndTotalSupplyCVL(e, calledContract, _account) expect (uint256, uint256);
+
+    // Delete from the scene
+
+    function _.callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes _input) external
+        => NONDET DELETE;
 }
 
 //

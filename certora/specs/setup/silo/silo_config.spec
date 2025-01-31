@@ -99,7 +99,6 @@ definition silo1contractsAddress(address a) returns bool =
 
 persistent ghost address ghostSiloConfig {
     axiom ghostSiloConfig == _SiloConfig;
-    // axiom silo1contractsAddress(ghostSiloConfig) == false;
 }
 
 persistent ghost mathint ghostConfigDaoFee {

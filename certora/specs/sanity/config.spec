@@ -21,12 +21,6 @@ rule sanity_getConfigsForWithdraw(env e, calldataarg args) {
     satisfy(true);
 }
 
-rule sanity_SILO_ID(env e, calldataarg args) {
-    setupSilo(e);
-    SILO_ID(e, args);
-    satisfy(true);
-}
-
 rule sanity_reentrancyGuardEntered(env e, calldataarg args) {
     setupSilo(e);
     reentrancyGuardEntered(e, args);

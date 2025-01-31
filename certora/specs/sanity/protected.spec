@@ -39,18 +39,6 @@ rule sanity_hookReceiver(env e, calldataarg args) {
     satisfy(true);
 }
 
-rule sanity_eip712Domain(env e, calldataarg args) {
-    setupSilo(e);
-    eip712Domain(e, args);
-    satisfy(true);
-}
-
-rule sanity_DOMAIN_SEPARATOR(env e, calldataarg args) {
-    setupSilo(e);
-    DOMAIN_SEPARATOR(e, args);
-    satisfy(true);
-}
-
 rule sanity_decimals(env e, calldataarg args) {
     setupSilo(e);
     decimals(e, args);
@@ -84,12 +72,6 @@ rule sanity_balanceOf(env e, calldataarg args) {
 rule sanity_balanceOfAndTotalSupply(env e, calldataarg args) {
     setupSilo(e);
     balanceOfAndTotalSupply(e, args);
-    satisfy(true);
-}
-
-rule sanity_callOnBehalfOfShareToken(env e, calldataarg args) {
-    setupSilo(e);
-    callOnBehalfOfShareToken(e, args);
     satisfy(true);
 }
 
