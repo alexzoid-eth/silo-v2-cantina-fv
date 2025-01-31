@@ -2,7 +2,6 @@
 
 import "./helper_cvl.spec";
 import "./silo_config.spec";
-import "../../invariants.spec";
 
 import "../erc20.spec";
 import "../math_cvl.spec";

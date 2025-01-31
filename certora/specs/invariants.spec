@@ -1,3 +1,6 @@
+import "./setup/silo0/silo0.spec";
+import "./setup/silo1/silo1.spec";
+
 // Silo valid state invariants working for all Silo contracts 
 
 function requireValidStateInvariants(env e) {
