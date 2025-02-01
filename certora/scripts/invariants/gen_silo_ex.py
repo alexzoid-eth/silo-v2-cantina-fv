@@ -8,7 +8,7 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'silo'))
 sys.path.append(parent_dir)
 
-from rule_names import rule_names_ex
+from rule_names import rule_names
 from silo_methods import silo_methods_hard, silo_methods_other
 
 def generate_config(rule_name, method, fn_name):
@@ -95,7 +95,7 @@ def base_function_name(method_signature: str) -> str:
 
 os.makedirs("silo", exist_ok=True)
 
-for rule in rule_names_ex:
+for rule in rule_names:
     # We will keep track of how many times each base function name appears
     # so we can append "_2", "_3", etc. for overloads
     function_count = {}

@@ -137,8 +137,3 @@ for rule in rule_names_ex:
             json.dump(config_dict, f, indent=4)
 
         print(f"Generated {full_path}")
-
-    with open(full_path_others, "w") as f:
-        json.dump(config_dict_others, f, indent=4)
-
-    print(f"Generated {full_path_others}")
