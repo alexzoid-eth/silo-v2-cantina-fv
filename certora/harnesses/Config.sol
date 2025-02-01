@@ -11,6 +11,7 @@ contract Config is SiloConfig {
         ConfigData memory _configData1
     ) SiloConfig(_siloId, _configData0, _configData1) { }   
 
-    // Set as Silo0 address in single silo configuration and Silo1 in double silo configuration
+    // Set as Silo0 address in single silo configuration, Silo1 in double silo configuration 
+    //  and Hook when testing PartialLiquidation
     address public _SILO_MODE;
 }

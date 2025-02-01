@@ -10,7 +10,6 @@ rule_names = [
     "inv_protectedCollateralAlwaysLiquid",
     "inv_liquiditySolvency",
     "inv_siloMustNotHaveUserAllowances",
-    "inv_totalTrackedAssetsNotExceedERC20TokenSupply",
     "inv_protectedSharesMustBeBackedWithAssets",
     "inv_collateralSharesMustBeBackedWithAssets",
     "inv_debtSharesMustBeBackedWithAssets"

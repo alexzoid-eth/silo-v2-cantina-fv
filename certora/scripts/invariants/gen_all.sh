@@ -17,7 +17,7 @@ python3 ./gen_config.py
 python3 ./gen_debt.py
 python3 ./gen_hook.py
 python3 ./gen_protected.py
-python3 ./gen_silo.py
+python3 ./gen_silo_ex.py
 
 # move into configs
 mv config debt hook protected silo ../../confs/invariants/

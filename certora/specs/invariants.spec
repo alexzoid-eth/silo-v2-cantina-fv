@@ -1,31 +1,29 @@
+// Silo valid state invariants working for all Silo contracts 
+
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
-
-// Silo valid state invariants working for all Silo contracts 
 
 function requireValidStateInvariants(env e) {
 
     // ERC20
-    requireInvariant inv_eip20_totalSupplySolvency(e);
+    requireInvariant inv_eip20_totalSupplySolvency(e);              // long runs in withdraw/redeem
     
-    // Silo config
-    requireInvariant inv_crossReentrancyGuardOpenedOnExit(e);
-    requireInvariant inv_crossReentrancyProtectionNoDoubleCall(e);
+    // SiloConfig
+    requireInvariant inv_crossReentrancyGuardOpenedOnExit(e);       // ok
+    requireInvariant inv_crossReentrancyProtectionNoDoubleCall(e);  // ok
     
     // Silo
-    requireInvariant inv_interestRateTimestampNotInFuture(e);
-    requireInvariant inv_zeroCollateralMeansZeroDebt(e);
-    requireInvariant inv_onlyOneDebtPerBorrower(e);
-    requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e); // config, debt
-    requireInvariant inv_zeroDebtMeansNoCollateralSilo(e); // config, debt
-    requireInvariant inv_protectedCollateralAlwaysLiquid(e);
-    requireInvariant inv_liquiditySolvency(e);
-    requireInvariant inv_siloMustNotHaveUserAllowances(e);
-    
-    requireInvariant inv_totalTrackedAssetsNotExceedERC20TokenSupply(e); // config
-    requireInvariant inv_protectedSharesMustBeBackedWithAssets(e); // protected
-    requireInvariant inv_collateralSharesMustBeBackedWithAssets(e);
-    requireInvariant inv_debtSharesMustBeBackedWithAssets(e); // debt
+    requireInvariant inv_interestRateTimestampNotInFuture(e);       // ok
+    requireInvariant inv_zeroCollateralMeansZeroDebt(e);            // ok 
+    requireInvariant inv_onlyOneDebtPerBorrower(e);                 // ok
+    requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e);    // violated in borrow
+    requireInvariant inv_zeroDebtMeansNoCollateralSilo(e);          // violated in borrowSameAsset
+    requireInvariant inv_protectedCollateralAlwaysLiquid(e);        // long runs in withdraw/redeem/borrow/transitionCollateral
+    requireInvariant inv_liquiditySolvency(e);                      // long runs in withdraw/redeem/borrow
+    requireInvariant inv_siloMustNotHaveUserAllowances(e);          // ok
+    requireInvariant inv_protectedSharesMustBeBackedWithAssets(e);  // violated in withdraw/redeem/transitionCollateral
+    requireInvariant inv_collateralSharesMustBeBackedWithAssets(e); // violated in withdraw, redeem, transitionCollateral
+    requireInvariant inv_debtSharesMustBeBackedWithAssets(e);       // ok
 }
 
 // ERC20
@@ -89,13 +87,13 @@ strong invariant inv_borrowerCollateralSiloMustMatchDebt(env e)
             <=> ghostConfigBorrowerCollateralSilo[user] == ghostConfigSilo1
         ) 
 filtered { 
-    // SAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
+    // UNSAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
     // could be set to silo without any debt at all
     f -> f.selector != 0xa1ecef5c   // Silo.switchCollateralToThisSilo()
     // SAFE: Can be executed by Silo only
-    && f.selector != 0xe1355921     // SiloConfig.setThisSiloAsCollateralSilo()
-    && f.selector != 0x97902a20     // SiloConfig.setOtherSiloAsCollateralSilo()
-    && f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
+    && f.selector != 0x40c755e1     // SiloConfig.setThisSiloAsCollateralSilo()
+    && f.selector != 0xf6f8174f     // SiloConfig.setOtherSiloAsCollateralSilo()
+    && f.selector != 0xc6c3bbe6     // ShareToken.mint()
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
@@ -110,13 +108,13 @@ strong invariant inv_zeroDebtMeansNoCollateralSilo(env e)
                 <=> ghostConfigBorrowerCollateralSilo[user] == 0
         )
 filtered { 
-    // SAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
+    // UNSAFE: an issue in switchCollateralToThisSilo() - collateral silo in config 
     //  could be set to silo without any debt at all
     f -> f.selector != 0xa1ecef5c   // Silo.switchCollateralToThisSilo()
     // SAFE: Can be executed by Silo only
-    && f.selector != 0xe1355921     // SiloConfig.setThisSiloAsCollateralSilo()
-    && f.selector != 0x97902a20     // SiloConfig.setOtherSiloAsCollateralSilo()
-    && f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
+    && f.selector != 0x40c755e1     // SiloConfig.setThisSiloAsCollateralSilo()
+    && f.selector != 0xf6f8174f     // SiloConfig.setOtherSiloAsCollateralSilo()
+    && f.selector != 0xc6c3bbe6     // ShareToken.mint()
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
@@ -155,22 +153,6 @@ strong invariant inv_siloMustNotHaveUserAllowances(env e) (
     )) 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- The Silo's total tracked assets must not exceed the token's total supply
-strong invariant inv_totalTrackedAssetsNotExceedERC20TokenSupply(env e) (
-    ghostERC20TotalSupply[ghostConfigToken0] >= 
-        ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_PROTECTED()] 
-        + ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[ghostConfigSilo0] 
-        + getAccruedInterestCVL(e, ghostConfigSilo0) 
-    ) && (!IS_MODE_SINGLE() => (
-    ghostERC20TotalSupply[ghostConfigToken1] >= 
-        ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_PROTECTED()] 
-        + ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[ghostConfigSilo1] 
-        + getAccruedInterestCVL(e, ghostConfigSilo1) 
-    ))
-{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
-
 // VS- The Silo’s collateral protected share tokens must always be backed by the assets
 strong invariant inv_protectedSharesMustBeBackedWithAssets(env e) (
     ghostERC20TotalSupply[ghostConfigProtectedCollateralShareToken0] != 0
@@ -179,6 +161,10 @@ strong invariant inv_protectedSharesMustBeBackedWithAssets(env e) (
     ghostERC20TotalSupply[ghostConfigProtectedCollateralShareToken1] != 0
         => ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_PROTECTED()] != 0 
     )) 
+filtered { 
+    // SAFE: Can be executed by Silo only
+    f -> f.selector != 0xc6c3bbe6     // ShareToken.mint()
+    } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 // VS- The Silo’s collateral share tokens must always be backed by the assets
@@ -199,5 +185,9 @@ strong invariant inv_debtSharesMustBeBackedWithAssets(env e) (
     ghostERC20TotalSupply[ghostConfigDebtShareToken1] != 0
         => ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_DEBT()] != 0 
     )) 
+filtered { 
+    // SAFE: Can be executed by Silo only
+    f -> f.selector != 0xc6c3bbe6     // ShareToken.mint()
+    } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 

@@ -17,6 +17,7 @@ def generate_config(rule_name):
             "certora/mocks/Token1.sol",
             "certora/harnesses/Hook.sol"
         ],
+        "independent_satisfy": True,
         "link": [
             "Config:_SILO0=Silo0",
             "Config:_TOKEN0=Token0",
@@ -33,6 +34,7 @@ def generate_config(rule_name):
             "Hook:siloConfig=Config"
         ],
         "msg": f"Hook_{rule_name}_verified",
+        "multi_assert_check": True,
         "mutations": {
             "manual_mutants": [
                 {

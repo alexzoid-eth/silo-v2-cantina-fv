@@ -18,6 +18,7 @@ def generate_config(rule_name):
             "certora/harnesses/silo1/Protected1.sol",
             "certora/mocks/Token1.sol",
         ],
+        "independent_satisfy": True,
         "link": [
             "Config:_SILO0=Silo0",
             "Config:_TOKEN0=Token0",
@@ -32,6 +33,7 @@ def generate_config(rule_name):
             "Config:_DEBT_SHARE_TOKEN1=Debt1",
         ],
         "msg": f"Debt1_{rule_name}_verified",
+        "multi_assert_check": True,
         "mutations": {
             "manual_mutants": [
                 {
