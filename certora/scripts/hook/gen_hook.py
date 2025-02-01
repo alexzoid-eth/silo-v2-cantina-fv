@@ -33,7 +33,9 @@ def generate_config(rule_name):
             "Config:_COLLATERAL_SHARE_TOKEN1=Silo1",
             "Config:_DEBT_SHARE_TOKEN1=Debt1",
             "Config:_HOOK_RECEIVER=Hook",
-            "Hook:siloConfig=Config"
+            "Hook:siloConfig=Config",
+            "Hook:_TOKEN0=Token0",
+            "Hook:_TOKEN1=Token1"
         ],
         "msg": f"Hook_{rule_name}_verified",
         "multi_assert_check": True, "independent_satisfy": True,

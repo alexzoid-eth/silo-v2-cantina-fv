@@ -32,8 +32,8 @@ contract Hook is PartialLiquidation {
         require(_maxDebtToCover < type(uint64).max);
 
         (withdrawCollateral, repayDebtAssets) = liquidationCall(
-            _TOKEN0,
             _TOKEN1,
+            _TOKEN0,
             _borrower,
             _maxDebtToCover,
             false
