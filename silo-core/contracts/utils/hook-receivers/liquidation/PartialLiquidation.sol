@@ -55,7 +55,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 _maxDebtToCover,
         bool _receiveSToken
     )
-        external
+        public
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {

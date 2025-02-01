@@ -1,5 +1,6 @@
 hook_methods_hard = [
-    "liquidationCall(address,address,address,uint256,bool)",
+    "liquidationCall_receiveSTokenTrue(address,uint256)",
+    "liquidationCall_receiveSTokenFalse(address,uint256)",
 ]
 
 hook_methods_other = [

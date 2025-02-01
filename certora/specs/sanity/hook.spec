@@ -4,20 +4,14 @@ import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
-rule sanity_liquidationCall(env e, calldataarg args) {
+rule sanity_liquidationCall_receiveSTokenTrue(env e, calldataarg args) {
     setupSilo(e);
-    liquidationCall(e, args);
+    liquidationCall_receiveSTokenTrue(e, args);
     satisfy(true);
 }
 
-rule sanity_beforeAction(env e, calldataarg args) {
+rule sanity_liquidationCall_receiveSTokenFalse(env e, calldataarg args) {
     setupSilo(e);
-    beforeAction(e, args);
-    satisfy(true);
-}
-
-rule sanity_afterAction(env e, calldataarg args) {
-    setupSilo(e);
-    afterAction(e, args);
+    liquidationCall_receiveSTokenTrue(e, args);
     satisfy(true);
 }

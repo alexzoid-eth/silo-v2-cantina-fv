@@ -96,7 +96,8 @@ def generate_config(rule_name):
 
 # List of rule names extracted from the provided ruleset
 rule_names = [
-    "sanity_liquidationCall"
+    "sanity_liquidationCall_receiveSTokenTrue",
+    "sanity_liquidationCall_receiveSTokenFalse"
 ]
 
 # Generate configuration files

@@ -33,7 +33,7 @@ def generate_config(rule_name):
             "Config:_DEBT_SHARE_TOKEN1=Debt1",
         ],
         "msg": f"Protected1_{rule_name}_verified",
-        "multi_assert_check": True, "independent-satisfy": True,
+        "multi_assert_check": True, "independent_satisfy": True,
         "mutations": {
             "manual_mutants": [
                 {

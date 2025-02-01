@@ -1,6 +1,7 @@
-# Execute from current directory. Update all configs.
+# Execute from current directory. Updates all configs.
 
-# Remove `confs` directory fist
+# !!! Remove `confs` directory fist !!! 
+rm -rf ../confs
 
 mkdir ../confs
 

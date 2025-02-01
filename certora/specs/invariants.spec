@@ -16,13 +16,13 @@ function requireValidStateInvariants(env e) {
     requireInvariant inv_interestRateTimestampNotInFuture(e);       // ok
     requireInvariant inv_zeroCollateralMeansZeroDebt(e);            // ok 
     requireInvariant inv_onlyOneDebtPerBorrower(e);                 // ok
-    requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e);    // violated in borrow/borrowShares/borrowSameAsset
-    requireInvariant inv_zeroDebtMeansNoCollateralSilo(e);          // ?
+    // requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e);    // violated in borrow/borrowShares/borrowSameAsset
+    // requireInvariant inv_zeroDebtMeansNoCollateralSilo(e);          // violated in borrow/borrowShares/borrowSameAsset
     requireInvariant inv_protectedCollateralAlwaysLiquid(e);        // ok
-    requireInvariant inv_liquiditySolvency(e);                      // ?
+    requireInvariant inv_liquiditySolvency(e);                      // ok
     requireInvariant inv_siloMustNotHaveUserAllowances(e);          // ok
-    requireInvariant inv_protectedSharesMustBeBackedWithAssets(e);  // violated in withdraw/redeem/transitionCollateral
-    requireInvariant inv_collateralSharesMustBeBackedWithAssets(e); // violated in withdraw/redeem/transitionCollateral
+    // requireInvariant inv_protectedSharesMustBeBackedWithAssets(e);  // violated in withdraw/redeem/transitionCollateral
+    // requireInvariant inv_collateralSharesMustBeBackedWithAssets(e); // violated in withdraw/redeem/transitionCollateral
     requireInvariant inv_debtSharesMustBeBackedWithAssets(e);       // ok
 }
 
