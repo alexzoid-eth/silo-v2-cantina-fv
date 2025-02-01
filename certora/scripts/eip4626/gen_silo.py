@@ -74,7 +74,7 @@ def generate_config(rule_name):
     }
     
     os.makedirs("eip4626", exist_ok=True)
-    filename = os.path.join("silo", f"Silo1_{rule_name}_verified.conf")
+    filename = os.path.join("eip4626", f"Silo1_{rule_name}_verified.conf")
     with open(filename, "w") as f:
         json.dump(config, f, indent=4)
     print(f"Generated {filename}")

@@ -6,7 +6,7 @@ silo_methods_hard = [
     "withdraw(uint256,address,address,uint8)",
     "borrowShares(uint256,address,address)",
     "borrow(uint256,address,address)",
-    "borrowSameAsset((uint256,uint256,address,address))"
+    "borrowSameAsset(uint256,address,address)"
 ]
 
 silo_methods_other = [
