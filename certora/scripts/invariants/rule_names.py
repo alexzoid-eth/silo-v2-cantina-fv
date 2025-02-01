@@ -1,4 +1,4 @@
-rule_names = [
+rule_names_ex = [
     "inv_eip20_totalSupplySolvency",
     "inv_crossReentrancyGuardOpenedOnExit",
     "inv_crossReentrancyProtectionNoDoubleCall",

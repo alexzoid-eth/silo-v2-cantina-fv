@@ -8,6 +8,8 @@ rule silo_test() {
     assert(true);
 }
 
+strong invariant silo_test_inv() true;
+
 /*
 // High Level
 

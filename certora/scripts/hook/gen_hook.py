@@ -1,6 +1,8 @@
 import json
 import os
 
+from rule_names import rule_names
+
 def generate_config(rule_name):
     config = {
         "build_cache": True,
@@ -34,7 +36,7 @@ def generate_config(rule_name):
             "Hook:siloConfig=Config"
         ],
         "msg": f"Hook_{rule_name}_verified",
-        "multi_assert_check": True,
+        "multi_assert_check": True, "independent-satisfy": True,
         "mutations": {
             "manual_mutants": [
                 {
@@ -95,11 +97,6 @@ def generate_config(rule_name):
     with open(filename, "w") as f:
         json.dump(config, f, indent=4)
     print(f"Generated {filename}")
-
-# List of rule names extracted from the provided ruleset
-rule_names = [
-    "hook_test"
-]
 
 # Generate configuration files
 for rule in rule_names:

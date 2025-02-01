@@ -7,3 +7,5 @@ import "./invariants.spec";
 rule hook_test() {
     assert(true);
 }
+
+strong invariant hook_test_inv() true;

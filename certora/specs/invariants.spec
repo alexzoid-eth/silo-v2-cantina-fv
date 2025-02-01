@@ -6,7 +6,7 @@ import "./setup/silo1/silo1.spec";
 function requireValidStateInvariants(env e) {
 
     // ERC20
-    requireInvariant inv_eip20_totalSupplySolvency(e);              // ? long runs in withdraw/redeem
+    requireInvariant inv_eip20_totalSupplySolvency(e);              // ok
     
     // SiloConfig
     requireInvariant inv_crossReentrancyGuardOpenedOnExit(e);       // ok
@@ -17,9 +17,9 @@ function requireValidStateInvariants(env e) {
     requireInvariant inv_zeroCollateralMeansZeroDebt(e);            // ok 
     requireInvariant inv_onlyOneDebtPerBorrower(e);                 // ok
     requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e);    // violated in borrow/borrowShares/borrowSameAsset
-    requireInvariant inv_zeroDebtMeansNoCollateralSilo(e);          // ? violated in borrowSameAsset
+    requireInvariant inv_zeroDebtMeansNoCollateralSilo(e);          // ?
     requireInvariant inv_protectedCollateralAlwaysLiquid(e);        // ok
-    requireInvariant inv_liquiditySolvency(e);                      // ? long runs in withdraw/redeem/borrow
+    requireInvariant inv_liquiditySolvency(e);                      // ?
     requireInvariant inv_siloMustNotHaveUserAllowances(e);          // ok
     requireInvariant inv_protectedSharesMustBeBackedWithAssets(e);  // violated in withdraw/redeem/transitionCollateral
     requireInvariant inv_collateralSharesMustBeBackedWithAssets(e); // violated in withdraw/redeem/transitionCollateral
