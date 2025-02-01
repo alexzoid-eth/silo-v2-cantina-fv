@@ -57,6 +57,9 @@ methods {
     function _.accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee) external
         => DISPATCHER(true);
 
+    function _.config() external
+        => DISPATCHER(true);
+
     // Resolve external call in `IERC3156FlashBorrower`
 
     function _.onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes _data) external
@@ -154,8 +157,11 @@ definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool
         && a != ghostConfigInterestRateModel1
         && a != ghostConfigHookReceiver;
 
-definition IS_FULL_SILO() returns bool
-    = _SiloConfig._LAST_SILO_ADDRESS() != ghostConfigSilo0;
+definition IS_MODE_SINGLE() returns bool
+    = _SiloConfig._SILO_MODE() == ghostConfigSilo0;
+
+definition IS_MODE_HOOK() returns bool
+    = _SiloConfig._SILO_MODE() != ghostConfigSilo0 && _SiloConfig._SILO_MODE() != ghostConfigSilo1;
 
 //
 // Methods summarizes
@@ -167,7 +173,7 @@ persistent ghost uint8 ghostDecimals0 {
     axiom ghostDecimals0 == 0 || (ghostDecimals0 >= 6 && ghostDecimals0 <= 18);
 }
 persistent ghost uint8 ghostDecimals1 {
-    axiom ghostDecimals0 == 0 || (ghostDecimals1 >= 6 && ghostDecimals1 <= 18);
+    axiom ghostDecimals1 == 0 || (ghostDecimals1 >= 6 && ghostDecimals1 <= 18);
 }
 function shareTokenLibDecimalsCVL(address token) returns uint8 {
     // Different decimals for Token0 and Token1

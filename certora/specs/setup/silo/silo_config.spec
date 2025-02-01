@@ -12,7 +12,7 @@ methods {
     function _SiloConfig.getDebtSilo(address _borrower) internal returns address
         => getDebtSiloCVL(_borrower);
 
-    function _SiloConfig._LAST_SILO_ADDRESS() external returns address envfree;
+    function _SiloConfig._SILO_MODE() external returns address envfree;
 
     // Resolve external calls to SiloConfig
     
@@ -52,7 +52,7 @@ function accrueInterestForSingleSiloCVL(env e) {
         require_uint256(ghostConfigDeployerFee)
     );
 
-    if(IS_FULL_SILO()) {
+    if(!IS_MODE_SINGLE()) {
         ghostConfigSilo1.accrueInterestForConfig(
             e,
             ghostConfigInterestRateModel1,
@@ -111,10 +111,11 @@ persistent ghost mathint ghostConfigDeployerFee {
     axiom ghostConfigDeployerFee >= 0 && ghostConfigDeployerFee <= FEE_15_PERCENT(); 
 }
 
-// Hook Receiver
 persistent ghost address ghostConfigHookReceiver {
     axiom ghostConfigHookReceiver == _SiloConfig._HOOK_RECEIVER;
 }
+
+// Silo0
 
 persistent ghost address ghostConfigSilo0 {
     axiom ghostConfigSilo0 == _SiloConfig._SILO0;
@@ -173,6 +174,8 @@ persistent ghost mathint ghostConfigFlashloanFee0 {
 persistent ghost bool ghostConfigCallBeforeQuote0 {
     axiom ghostConfigCallBeforeQuote0 == _SiloConfig._CALL_BEFORE_QUOTE0;
 }
+
+// Silo1
 
 persistent ghost address ghostConfigSilo1 {
     axiom ghostConfigSilo1 == _SiloConfig._SILO1;

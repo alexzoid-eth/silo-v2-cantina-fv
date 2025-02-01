@@ -2,12 +2,7 @@
 
 import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
-
-/*
-    Violated:
-    - transfer/transferFrom/forwardTransferFromNoChecks
-    - burn
-*/
+import "../invariants.spec";
 
 rule sanity_approve(env e, calldataarg args) {
     setupSilo(e);

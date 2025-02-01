@@ -2,15 +2,7 @@
 
 import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
-
-/*
-    Violated:
-    - withdraw / withdraw
-    - borrowSameAsset
-    - borrowShares
-    - borrow
-    - redeem / redeem
-*/
+import "../invariants.spec";
 
 rule sanity_accrueInterestForConfig(env e, calldataarg args) {
     setupSilo(e);
@@ -18,15 +10,21 @@ rule sanity_accrueInterestForConfig(env e, calldataarg args) {
     satisfy(true);
 }
 
-rule sanity_withdraw(env e, calldataarg args) {
+rule sanity_withdraw(method f, env e, calldataarg args) filtered { f -> 
+    f.selector == sig:withdraw(uint256, address, address).selector 
+        || f.selector == sig:withdraw(uint256, address, address, ISilo.CollateralType).selector 
+    }  {
     setupSilo(e);
-    withdraw(e, args);
+    f(e, args);
     satisfy(true);
 }
 
-rule sanity_redeem(env e, calldataarg args) {
+rule sanity_redeem(method f, env e, calldataarg args) filtered { f -> 
+    f.selector == sig:redeem(uint256, address, address).selector 
+        || f.selector == sig:redeem(uint256, address, address, ISilo.CollateralType).selector 
+    }  {
     setupSilo(e);
-    redeem(e, args);
+    f(e, args);
     satisfy(true);
 }
 
@@ -63,18 +61,6 @@ rule sanity_borrowSameAsset(env e, calldataarg args) {
 rule sanity_borrow(env e, calldataarg args) {
     setupSilo(e);
     borrow(e, args);
-    satisfy(true);
-}
-
-rule sanity_redeem_2(env e, calldataarg args) {
-    setupSilo(e);
-    redeem(e, args);
-    satisfy(true);
-}
-
-rule sanity_withdraw_2(env e, calldataarg args) {
-    setupSilo(e);
-    withdraw(e, args);
     satisfy(true);
 }
 

@@ -1,8 +1,8 @@
 // Mathematical simplifications
 
 methods {
-    function _.mulDiv(uint256 x, uint256 y, uint256 denominator) internal 
-        => mulDivCVL(x, y, denominator) expect uint256;
+    function Math.mulDiv(uint256 x, uint256 y, uint256 denominator) internal returns (uint256)
+        => mulDivCVL(x, y, denominator);
 }
 
 definition CMP_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool = 

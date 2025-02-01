@@ -24,7 +24,7 @@ def generate_config(rule_name):
             "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN0=Protected0",
             "Config:_COLLATERAL_SHARE_TOKEN0=Silo0",
             "Config:_DEBT_SHARE_TOKEN0=Debt0",
-            "Config:_LAST_SILO_ADDRESS=Silo1",
+            "Config:_SILO_MODE=Silo1",
             "Config:_SILO1=Silo1",
             "Config:_TOKEN1=Token1",
             "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN1=Protected1",

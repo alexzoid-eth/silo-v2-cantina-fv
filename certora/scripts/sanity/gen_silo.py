@@ -22,7 +22,7 @@ def generate_config(rule_name):
             "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN0=Protected0",
             "Config:_COLLATERAL_SHARE_TOKEN0=Silo0",
             "Config:_DEBT_SHARE_TOKEN0=Debt0",
-            "Config:_LAST_SILO_ADDRESS=Silo1",
+            "Config:_SILO_MODE=Silo1",
             "Config:_SILO1=Silo1",
             "Config:_TOKEN1=Token1",
             "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN1=Protected1",
@@ -81,7 +81,7 @@ def generate_config(rule_name):
 rule_names = [
     "sanity_accrueInterestForConfig", "sanity_withdraw", "sanity_redeem", "sanity_approve",
     "sanity_flashFee", "sanity_transfer", "sanity_allowance", "sanity_borrowSameAsset",
-    "sanity_borrow", "sanity_redeem_2", "sanity_withdraw_2", "sanity_borrowShares",
+    "sanity_borrow", "sanity_borrowShares",
     "sanity_totalAssets", "sanity_getCollateralAndProtectedTotalsStorage", "sanity_getDebtAssets",
     "sanity_silo", "sanity_siloConfig", "sanity_updateHooks", "sanity_factory", "sanity_accrueInterest",
     "sanity_getCollateralAssets", "sanity_switchCollateralToThisSilo", "sanity_utilizationData",
