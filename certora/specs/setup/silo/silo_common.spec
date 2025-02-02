@@ -1,14 +1,12 @@
 // Silo core, CVL storage ghosts and hooks
 
 import "./helper_cvl.spec";
-import "./silo_config.spec";
-
 import "../erc20.spec";
 import "../math_cvl.spec";
 
-// From initial contest's setup
-import "./initial/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
-import "./initial/priceOracle_UNSAFE.spec";
+import "./silo_config.spec";
+import "./interest_rate_model_cvl.spec";
+import "./silo_oracle_cvl.spec";
 
 methods {
 

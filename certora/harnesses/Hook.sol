@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import { PartialLiquidation } from "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import { ISilo } from "silo-core/contracts/interfaces/ISilo.sol";
 
-contract Hook is PartialLiquidation {
+contract Hook {
 
+    IPartialLiquidation internal immutable _HOOK_RECEIVER;
     address internal immutable _TOKEN0;
     address internal immutable _TOKEN1;
 
@@ -15,7 +17,7 @@ contract Hook is PartialLiquidation {
 
         require(_maxDebtToCover < type(uint64).max);
 
-        (withdrawCollateral, repayDebtAssets) = liquidationCall(
+        (withdrawCollateral, repayDebtAssets) = _HOOK_RECEIVER.liquidationCall(
             _TOKEN0,
             _TOKEN1,
             _borrower,
@@ -31,7 +33,7 @@ contract Hook is PartialLiquidation {
 
         require(_maxDebtToCover < type(uint64).max);
 
-        (withdrawCollateral, repayDebtAssets) = liquidationCall(
+        (withdrawCollateral, repayDebtAssets) = _HOOK_RECEIVER.liquidationCall(
             _TOKEN1,
             _TOKEN0,
             _borrower,

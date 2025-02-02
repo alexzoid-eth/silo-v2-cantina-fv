@@ -1,7 +1,5 @@
 // Silo config contract support
 
-import "./silo_config_cross_reentrancy_guard_cvl.spec";
-
 using Config as _SiloConfig;
 
 methods {
@@ -233,6 +231,33 @@ persistent ghost mathint ghostConfigFlashloanFee1 {
 
 persistent ghost bool ghostConfigCallBeforeQuote1 {
     axiom ghostConfigCallBeforeQuote1 == _SiloConfig._CALL_BEFORE_QUOTE1;
+}
+
+// CrossReentrancyGuard
+
+definition _NOT_ENTERED() returns mathint = 0;
+definition _ENTERED() returns mathint = 1;
+
+persistent ghost bool ghostReentrancyProtectionDoubleCall {
+    init_state axiom ghostReentrancyProtectionDoubleCall == false;
+}
+
+persistent ghost mathint ghostCrossReentrantStatus {
+    init_state axiom ghostCrossReentrantStatus == _NOT_ENTERED();
+    axiom ghostCrossReentrantStatus == _NOT_ENTERED() || ghostCrossReentrantStatus == _ENTERED();
+}
+
+hook ALL_TLOAD(uint256 addr) uint256 val {
+    if(executingContract == _SiloConfig) {
+        require(require_uint256(ghostCrossReentrantStatus) == val);
+    }
+}
+
+hook ALL_TSTORE(uint256 addr, uint256 val)  {
+    if(executingContract == _SiloConfig) {
+        ghostReentrancyProtectionDoubleCall = (val == ghostCrossReentrantStatus);
+        ghostCrossReentrantStatus = val;
+    }
 }
 
 // Storage hooks

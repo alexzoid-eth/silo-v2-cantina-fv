@@ -55,22 +55,22 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         uint256 _maxDebtToCover,
         bool _receiveSToken
     )
-        public
+        external
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = siloConfig;
-
+        
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
         require(_maxDebtToCover != 0, NoDebtToCover());
-
+        
         siloConfigCached.turnOnReentrancyProtection();
-
+        
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);
-
+        
         LiquidationCallParams memory params;
 
         (
@@ -82,17 +82,17 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             _maxDebtToCover,
             collateralConfig.liquidationFee
         );
-
+        
         RevertLib.revertIfError(params.customError);
-
+        
         // we do not allow dust so full liquidation is required
         require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
-
+        
         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
-
+        
         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
-
+        
         params.collateralShares = _callShareTokenForwardTransferNoChecks(
             collateralConfig.silo,
             _borrower,
@@ -101,7 +101,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             collateralConfig.collateralShareToken,
             ISilo.AssetType.Collateral
         );
-
+        
         params.protectedShares = _callShareTokenForwardTransferNoChecks(
             collateralConfig.silo,
             _borrower,
@@ -110,11 +110,11 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             collateralConfig.protectedShareToken,
             ISilo.AssetType.Protected
         );
-
+        
         siloConfigCached.turnOffReentrancyProtection();
-
+        
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
-
+        
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
                 withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
@@ -162,7 +162,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
                 }
             }
         }
-
+        
         emit LiquidationCall(
             msg.sender,
             debtConfig.silo,

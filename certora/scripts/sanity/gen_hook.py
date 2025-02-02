@@ -15,7 +15,8 @@ def generate_config(rule_name):
             "certora/harnesses/silo1/Debt1.sol",
             "certora/harnesses/silo1/Protected1.sol",
             "certora/mocks/Token1.sol",
-            "certora/harnesses/Hook.sol"
+            "certora/harnesses/Hook.sol",
+            "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol",
         ],
         "link": [
             "Config:_SILO0=Silo0",
@@ -29,8 +30,9 @@ def generate_config(rule_name):
             "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN1=Protected1",
             "Config:_COLLATERAL_SHARE_TOKEN1=Silo1",
             "Config:_DEBT_SHARE_TOKEN1=Debt1",
-            "Config:_HOOK_RECEIVER=Hook",
-            "Hook:siloConfig=Config",
+            "Config:_HOOK_RECEIVER=PartialLiquidation",
+            "PartialLiquidation:siloConfig=Config",
+            "Hook:_HOOK_RECEIVER=PartialLiquidation",
             "Hook:_TOKEN0=Token0",
             "Hook:_TOKEN1=Token1"
         ],
