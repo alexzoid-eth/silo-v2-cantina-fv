@@ -4,11 +4,15 @@ using Config as _SiloConfig;
 
 methods {
 
-    // Summarize getDebtSilo() internal call in SiloConfig to avoid unlinked `_DEBT_SHARE_TOKEN1` call 
-    //  in single silo configuration
+    // Use CVL versions in single Silo configuration (not used any more)
 
-    function _SiloConfig.getDebtSilo(address _borrower) internal returns address
-        => getDebtSiloCVL(_borrower);
+    // function _SiloConfig.getDebtSilo(address _borrower) internal returns address
+    //     => getDebtSiloCVL(_borrower);
+        
+    function _.hasDebtInOtherSilo(address _thisSilo, address _borrower) external
+        => DISPATCHER(true); // => hasDebtInOtherSiloCVL(_thisSilo, _borrower) expect bool;
+
+    // Let spec know the type of configuration (Silo0, Silo0+Silo1 or Silo0+Silo1+Hook)
 
     function _SiloConfig._SILO_MODE() external returns address envfree;
 
@@ -25,9 +29,6 @@ methods {
 
     function _.accrueInterestForBothSilos() external with (env e)
         => accrueInterestForSingleSiloCVL(e) expect void;
-
-    function _.hasDebtInOtherSilo(address _thisSilo, address _borrower) external
-        => hasDebtInOtherSiloCVL(_thisSilo, _borrower) expect bool;
 }
 
 // Summarizes

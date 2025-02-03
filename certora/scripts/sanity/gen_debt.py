@@ -79,15 +79,7 @@ def generate_config(rule_name):
 
 # List of rule names extracted from the provided ruleset
 rule_names = [
-    "sanity_approve", "sanity_transfer", "sanity_decreaseReceiveAllowance",
-    "sanity_increaseReceiveAllowance", "sanity_setReceiveApproval",
-    "sanity_receiveAllowance", "sanity_allowance", "sanity_silo",
-    "sanity_siloConfig", "sanity_hookReceiver", 
-    "sanity_decimals", "sanity_totalSupply",
-    "sanity_hookSetup", "sanity_synchronizeHooks", "sanity_balanceOf",
-    "sanity_balanceOfAndTotalSupply", "sanity_callOnBehalfOfShareToken",
-    "sanity_initialize", "sanity_transferFrom", "sanity_burn",
-    "sanity_forwardTransferFromNoChecks", "sanity_mint"
+    "sanity_all"
 ]
 
 # Generate configuration files

@@ -32,7 +32,10 @@ def generate_config(rule_name):
             "Config:_DEBT_SHARE_TOKEN1=Debt1",
             "Config:_HOOK_RECEIVER=PartialLiquidation",
             "PartialLiquidation:siloConfig=Config",
+            "Hook:_CONFIG=Config",
             "Hook:_HOOK_RECEIVER=PartialLiquidation",
+            "Hook:_SILO0=Silo0",
+            "Hook:_SILO1=Silo1",
             "Hook:_TOKEN0=Token0",
             "Hook:_TOKEN1=Token1"
         ],
@@ -100,8 +103,10 @@ def generate_config(rule_name):
 
 # List of rule names extracted from the provided ruleset
 rule_names = [
-    "sanity_liquidationCall_receiveSTokenTrue",
-    "sanity_liquidationCall_receiveSTokenFalse"
+    "sanity_liquidationCall_noSToken_noBypass_protectedAllowed",
+    "sanity_liquidationCall_receiveSToken_bypassInterest_protectedAllowed",
+    "sanity_liquidationCall_noSToken_bypassInterest_collateralAllowed",
+    "sanity_liquidationCall_receiveSToken_bypassInterest_collateralAllowed"
 ]
 
 # Generate configuration files

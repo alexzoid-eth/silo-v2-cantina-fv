@@ -1,7 +1,16 @@
-# Update all configs and execute
+#!/bin/bash
 
-gen_all.sh
+DIRS=(
+  "certora/confs/eip20/debt"
+  "certora/confs/eip20/silo"
+  "certora/confs/eip20/protected"
+)
 
-run_debt.sh
-run_protected.sh
-run_silo.sh
+for dir in "${DIRS[@]}"; do
+  for file in "$dir"/*.conf; do
+    if [[ -f "$file" ]]; then
+      echo "Running certoraRun on $file"
+      certoraRun "$file"
+    fi
+  done
+done

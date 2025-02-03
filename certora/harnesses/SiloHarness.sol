@@ -13,8 +13,13 @@ import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgrade
 import { EIP712Upgradeable } from "openzeppelin5-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
+
+import {Actions} from "silo-core/contracts/lib/Actions.sol";
+
 abstract contract SiloHarness is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
+
+    // Map storage 
 
     // 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200
     uint256[764520080237424869752330524124367139483859928243420876645759593088794890752] private _relativeOffset1;
@@ -42,4 +47,222 @@ abstract contract SiloHarness is Silo {
 
     // 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00
     // Don't worry about `initializableStorage` somewhere in the bottom
+
+    // Split Collateral and Protected collateral EIP-4626 functions
+
+    function convertToSharesCollateral(uint256 _assets) external view virtual returns (uint256 shares) {
+        shares = _convertToShares(_assets, AssetType.Collateral);
+    }
+
+    function convertToSharesProtected(uint256 _assets) external view virtual returns (uint256 shares) {
+        shares = _convertToShares(_assets, AssetType.Protected);
+    }
+
+    function convertToAssetsCollateral(uint256 _shares) external view virtual returns (uint256 assets) {
+        assets = _convertToAssets(_shares, AssetType.Collateral);
+    }
+
+    function convertToAssetsProtected(uint256 _shares) external view virtual returns (uint256 assets) {
+        assets = _convertToAssets(_shares, AssetType.Protected);
+    }
+
+    function previewDepositCollateral(uint256 _assets)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
+        return _previewDeposit(_assets, CollateralType.Collateral);
+    }
+
+    function previewDepositProtected(uint256 _assets)
+        external
+        view
+        virtual
+        returns (uint256 shares)
+    {
+        return _previewDeposit(_assets, CollateralType.Protected);
+    }
+
+    function depositCollateral(uint256 _assets, address _receiver)
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _deposit(_assets, 0, _receiver, CollateralType.Collateral);
+    }
+
+    function depositProtected(uint256 _assets, address _receiver)
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _deposit(_assets, 0, _receiver, CollateralType.Protected);
+    }
+
+    function previewMintCollateral(uint256 _shares) external view virtual returns (uint256 assets) {
+        return _previewMint(_shares, CollateralType.Collateral);
+    }
+
+    function previewMintProtected(uint256 _shares) external view virtual returns (uint256 assets) {
+        return _previewMint(_shares, CollateralType.Protected);
+    }
+
+    function mintCollateral(uint256 _shares, address _receiver)
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets,) = _deposit(0, _shares, _receiver, CollateralType.Collateral);
+    }
+
+    function mintProtected(uint256 _shares, address _receiver)
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets,) = _deposit(0, _shares, _receiver, CollateralType.Protected);
+    }
+
+    function maxWithdrawCollateral(address _owner) external view virtual returns (uint256 maxAssets) {
+        (maxAssets,) = _maxWithdraw(_owner, CollateralType.Collateral);
+    }
+
+    function maxWithdrawProtected(address _owner) external view virtual returns (uint256 maxAssets) {
+        (maxAssets,) = _maxWithdraw(_owner, CollateralType.Protected);
+    }
+
+    function previewWithdrawCollateral(uint256 _assets) external view virtual returns (uint256 shares) {
+        return _previewWithdraw(_assets, CollateralType.Collateral);
+    }
+
+    function previewWithdrawProtected(uint256 _assets) external view virtual returns (uint256 shares) {
+        return _previewWithdraw(_assets, CollateralType.Protected);
+    }
+
+    function withdrawCollateral(
+        uint256 _assets,
+        address _receiver,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _withdraw({
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Collateral
+        });
+    }
+
+    function withdrawProtected(
+        uint256 _assets,
+        address _receiver,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 shares)
+    {
+        (, shares) = _withdraw({
+            _assets: _assets,
+            _shares: 0,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Protected
+        });
+    }
+
+    function maxRedeemCollateral(address _owner) external view virtual returns (uint256 maxShares) {
+        (, maxShares) = _maxWithdraw(_owner, CollateralType.Collateral);
+    }
+
+    function maxRedeemProtected(address _owner) external view virtual returns (uint256 maxShares) {
+        (, maxShares) = _maxWithdraw(_owner, CollateralType.Protected);
+    }
+
+    function previewRedeemCollateral(uint256 _shares) external view virtual returns (uint256 assets) {
+        return _previewRedeem(_shares, CollateralType.Collateral);
+    }
+
+    function previewRedeemProtected(uint256 _shares) external view virtual returns (uint256 assets) {
+        return _previewRedeem(_shares, CollateralType.Protected);
+    }
+
+    function redeemCollateral(
+        uint256 _shares,
+        address _receiver,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets,) = _withdraw({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Collateral
+        });
+    }
+
+    function redeemProtected(
+        uint256 _shares,
+        address _receiver,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets,) = _withdraw({
+            _assets: 0,
+            _shares: _shares,
+            _receiver: _receiver,
+            _owner: _owner,
+            _spender: msg.sender,
+            _collateralType: CollateralType.Protected
+        });
+    }
+
+    function transitionCollateralFromCollateral(
+        uint256 _shares,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets, ) = Actions.transitionCollateral(
+            TransitionCollateralArgs({
+                shares: _shares,
+                owner: _owner,
+                transitionFrom: CollateralType.Collateral
+            })
+        );
+    }
+
+    function transitionCollateralFromProtected(
+        uint256 _shares,
+        address _owner
+    )
+        external
+        virtual
+        returns (uint256 assets)
+    {
+        (assets, ) = Actions.transitionCollateral(
+            TransitionCollateralArgs({
+                shares: _shares,
+                owner: _owner,
+                transitionFrom: CollateralType.Protected
+            })
+        );
+    }
 }

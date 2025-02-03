@@ -4,170 +4,74 @@ import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
-rule sanity_accrueInterestForConfig(env e, calldataarg args) {
+rule sanity_transitionCollateralFromCollateral(method f, env e, calldataarg args) {
     setupSilo(e);
-    accrueInterestForConfig(e, args);
+    transitionCollateralFromCollateral(e, args);
     satisfy(true);
 }
 
-rule sanity_withdraw(method f, env e, calldataarg args) filtered { f -> 
-    f.selector == sig:withdraw(uint256, address, address).selector 
-        || f.selector == sig:withdraw(uint256, address, address, ISilo.CollateralType).selector 
-    }  {
+rule sanity_transitionCollateralFromProtected(method f, env e, calldataarg args) {
     setupSilo(e);
-    f(e, args);
+    transitionCollateralFromProtected(e, args);
     satisfy(true);
 }
 
-rule sanity_redeem(method f, env e, calldataarg args) filtered { f -> 
-    f.selector == sig:redeem(uint256, address, address).selector 
-        || f.selector == sig:redeem(uint256, address, address, ISilo.CollateralType).selector 
-    }  {
+rule sanity_redeemCollateral(method f, env e, calldataarg args) {
     setupSilo(e);
-    f(e, args);
+    redeemCollateral(e, args);
     satisfy(true);
 }
 
-rule sanity_approve(env e, calldataarg args) {
+rule sanity_redeemProtected(method f, env e, calldataarg args) {
     setupSilo(e);
-    approve(e, args);
+    redeemProtected(e, args);
     satisfy(true);
 }
 
-rule sanity_flashFee(env e, calldataarg args) {
+rule sanity_withdrawCollateral(method f, env e, calldataarg args) {
     setupSilo(e);
-    flashFee(e, args);
+    withdrawCollateral(e, args);
     satisfy(true);
 }
 
-rule sanity_transfer(env e, calldataarg args) {
+rule sanity_withdrawProtected(method f, env e, calldataarg args) {
     setupSilo(e);
-    transfer(e, args);
+    withdrawProtected(e, args);
     satisfy(true);
 }
 
-rule sanity_allowance(env e, calldataarg args) {
-    setupSilo(e);
-    allowance(e, args);
-    satisfy(true);
-}
-
-rule sanity_borrowSameAsset(env e, calldataarg args) {
-    setupSilo(e);
-    borrowSameAsset(e, args);
-    satisfy(true);
-}
-
-rule sanity_borrow(env e, calldataarg args) {
-    setupSilo(e);
-    borrow(e, args);
-    satisfy(true);
-}
-
-rule sanity_borrowShares(env e, calldataarg args) {
+rule sanity_borrowShares(method f, env e, calldataarg args) {
     setupSilo(e);
     borrowShares(e, args);
     satisfy(true);
 }
 
-rule sanity_totalAssets(env e, calldataarg args) {
+rule sanity_borrow(method f, env e, calldataarg args) {
     setupSilo(e);
-    totalAssets(e, args);
+    borrow(e, args);
     satisfy(true);
 }
 
-rule sanity_getCollateralAndProtectedTotalsStorage(env e, calldataarg args) {
+rule sanity_borrowSameAsset(method f, env e, calldataarg args) {
     setupSilo(e);
-    getCollateralAndProtectedTotalsStorage(e, args);
+    borrowSameAsset(e, args);
     satisfy(true);
 }
 
-rule sanity_getDebtAssets(env e, calldataarg args) {
+rule sanity_others(method f, env e, calldataarg args) filtered { f->
+    f.selector != sig:transitionCollateralFromCollateral(uint256,address).selector
+    && f.selector != sig:transitionCollateralFromProtected(uint256,address).selector
+    && f.selector != sig:redeemCollateral(uint256,address,address).selector
+    && f.selector != sig:redeemProtected(uint256,address,address).selector
+    && f.selector != sig:withdrawCollateral(uint256,address,address).selector
+    && f.selector != sig:withdrawProtected(uint256,address,address).selector
+    && f.selector != sig:borrowShares(uint256,address,address).selector
+    && f.selector != sig:borrow(uint256,address,address).selector
+    && f.selector != sig:borrowSameAsset(uint256,address,address).selector
+    // Exclude all functions which were harnessed
+    && !SIMPLIFIED_IN_HARNESS_FUNCTIONS(f)
+} {
     setupSilo(e);
-    getDebtAssets(e, args);
-    satisfy(true);
-}
-
-rule sanity_silo(env e, calldataarg args) {
-    setupSilo(e);
-    silo(e, args);
-    satisfy(true);
-}
-
-rule sanity_siloConfig(env e, calldataarg args) {
-    setupSilo(e);
-    siloConfig(e, args);
-    satisfy(true);
-}
-
-rule sanity_updateHooks(env e, calldataarg args) {
-    setupSilo(e);
-    updateHooks(e, args);
-    satisfy(true);
-}
-
-rule sanity_factory(env e, calldataarg args) {
-    setupSilo(e);
-    factory(e, args);
-    satisfy(true);
-}
-
-rule sanity_accrueInterest(env e, calldataarg args) {
-    setupSilo(e);
-    accrueInterest(e, args);
-    satisfy(true);
-}
-
-rule sanity_getCollateralAssets(env e, calldataarg args) {
-    setupSilo(e);
-    getCollateralAssets(e, args);
-    satisfy(true);
-}
-
-rule sanity_switchCollateralToThisSilo(env e, calldataarg args) {
-    setupSilo(e);
-    switchCollateralToThisSilo(e, args);
-    satisfy(true);
-}
-
-rule sanity_utilizationData(env e, calldataarg args) {
-    setupSilo(e);
-    utilizationData(e, args);
-    satisfy(true);
-}
-
-rule sanity_getSiloStorage(env e, calldataarg args) {
-    setupSilo(e);
-    getSiloStorage(e, args);
-    satisfy(true);
-}
-
-rule sanity_hookReceiver(env e, calldataarg args) {
-    setupSilo(e);
-    hookReceiver(e, args);
-    satisfy(true);
-}
-
-rule sanity_eip712Domain(env e, calldataarg args) {
-    setupSilo(e);
-    eip712Domain(e, args);
-    satisfy(true);
-}
-
-rule sanity_config(env e, calldataarg args) {
-    setupSilo(e);
-    config(e, args);
-    satisfy(true);
-}
-
-rule sanity_withdrawFees(env e, calldataarg args) {
-    setupSilo(e);
-    withdrawFees(e, args);
-    satisfy(true);
-}
-
-rule sanity_getCollateralAndDebtTotalsStorage(env e, calldataarg args) {
-    setupSilo(e);
-    getCollateralAndDebtTotalsStorage(e, args);
+    f(e, args);
     satisfy(true);
 }

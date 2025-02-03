@@ -16,7 +16,9 @@ methods {
         => safeTransferFromCVL(token, currentContract, to, value, false);
     function SafeERC20.safeTransferFrom(address token, address from, address to, uint256 value) internal
         => safeTransferFromCVL(token, from, to, value, true);
-    
+    function SafeERC20.safeIncreaseAllowance(address token, address spender, uint256 value) internal
+        => safeIncreaseAllowanceCVL(token, currentContract, spender, value);
+
     // Remove from the scene
     function _.name() external => NONDET DELETE;
     function _.symbol() external => NONDET DELETE;
@@ -110,4 +112,25 @@ function transferFromCVL(address token, address from, address to, uint256 amount
 
 function safeTransferFromCVL(address token, address from, address to, uint256 amount, bool transferFrom) {
     ASSERT(transferFromCVL(token, from, to, amount, transferFrom));
+}
+
+// Safe increase allowance
+
+function increaseAllowanceCVL(address token, address owner, address spender, uint256 amount) returns bool {
+
+    require(ERC20_ACCOUNT_BOUNDS(token, owner) && ERC20_ACCOUNT_BOUNDS(token, spender));
+
+    assert(token == ghostConfigToken0 || token == ghostConfigToken1,
+        "Only Token0 or Token1 can be passed here"
+    );
+
+    ghostERC20Allowances[token][owner][spender] = require_uint256(
+        ghostERC20Allowances[token][owner][spender] + amount
+    );
+
+    return true;
+}
+
+function safeIncreaseAllowanceCVL(address token, address owner, address spender, uint256 amount) {
+    ASSERT(increaseAllowanceCVL(token, owner, spender, amount));
 }

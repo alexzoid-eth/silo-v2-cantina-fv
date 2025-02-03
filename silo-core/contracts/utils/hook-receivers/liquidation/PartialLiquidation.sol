@@ -72,7 +72,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);
         
         LiquidationCallParams memory params;
-
+        
         (
             params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
@@ -199,15 +199,15 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
         )
-    {
+    {   // @note reverted if user has no debt
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
-
+        
         require(debtConfig.silo != address(0), UserIsSolvent());
         require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());
         require(_debtAsset == debtConfig.token, UnexpectedDebtToken());
-
+        
         ISilo(debtConfig.silo).accrueInterest();
-
+        // @note always not equal
         if (collateralConfig.silo != debtConfig.silo) {
             ISilo(collateralConfig.silo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();

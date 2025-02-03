@@ -79,15 +79,7 @@ def generate_config(rule_name):
 
 # List of rule names extracted from the provided ruleset
 rule_names = [
-    "sanity_hasDebtInOtherSilo", "sanity_onDebtTransfer", "sanity_getConfigsForWithdraw",
-    "sanity_reentrancyGuardEntered", "sanity_getSilos",
-    "sanity_turnOnReentrancyProtection", "sanity_turnOffReentrancyProtection",
-    "sanity_getAssetForSilo", "sanity_setOtherSiloAsCollateralSilo",
-    "sanity_getConfig", "sanity_borrowerCollateralSilo", "sanity_getFeesWithAsset",
-    "sanity_getConfigsForSolvency", "sanity_getShareTokens",
-    "sanity_setThisSiloAsCollateralSilo", "sanity_getDebtShareTokenAndAsset",
-    "sanity_getConfigsForBorrow", "sanity_accrueInterestForSilo",
-    "sanity_getDebtSilo", "sanity_getCollateralShareTokenAndAsset"
+    "sanity_others"
 ]
 
 # Generate configuration files
