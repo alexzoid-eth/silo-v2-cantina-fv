@@ -109,7 +109,7 @@ function setupSilo(env e) {
     require(e.msg.value == 0);
 
     // SAFE: Valid msg.sender
-    require(e.msg.sender != 0 && e.msg.sender != currentContract);
+    require(e.msg.sender != 0);
     require(ghostCaller == e.msg.sender);
 
     // SAFE: Valid time

@@ -15,6 +15,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 
 
 import {Actions} from "silo-core/contracts/lib/Actions.sol";
+import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
 abstract contract SiloHarness is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
@@ -264,5 +265,13 @@ abstract contract SiloHarness is Silo {
                 transitionFrom: CollateralType.Protected
             })
         );
+    }
+
+    function maxDepositCollateral(address /* _receiver */) external pure virtual returns (uint256 maxAssets) {
+        maxAssets = SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
+    }
+
+    function maxDepositProtected(address /* _receiver */) external pure virtual returns (uint256 maxAssets) {
+        maxAssets = SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
 }

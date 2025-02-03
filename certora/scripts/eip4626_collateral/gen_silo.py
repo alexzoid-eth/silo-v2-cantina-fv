@@ -72,7 +72,7 @@ def generate_config(rule_name):
             "Debt1:siloConfig=Config",
             "Protected1:siloConfig=Config",
         ],
-        "verify": "Silo1:certora/specs/eip4626_collateral.spec"
+        "verify": "Silo1:certora/specs/eip4626/collateral.spec"
     }
     
     os.makedirs("eip4626_collateral", exist_ok=True)

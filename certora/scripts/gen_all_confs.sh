@@ -8,7 +8,10 @@ mkdir ../confs
 cd ./eip20
 ./gen_all.sh
 
-cd ../eip4626
+cd ../eip4626_collateral
+./gen_all.sh
+
+cd ../eip4626_protected
 ./gen_all.sh
 
 cd ../hook
