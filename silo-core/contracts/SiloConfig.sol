@@ -206,7 +206,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         address debtSilo = getDebtSilo(_borrower);
         
         if (debtSilo == address(0)) return (collateralConfig, debtConfig);
-
+        
         address collateralSilo = borrowerCollateralSilo[_borrower];
 
         collateralConfig = getConfig(collateralSilo);

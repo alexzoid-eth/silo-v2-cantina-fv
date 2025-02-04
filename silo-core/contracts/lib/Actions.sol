@@ -94,7 +94,7 @@ library Actions {
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-
+        // For Silo1: depositConfig == Silo1, collateralConfig == Silo1, debtConfig == Silo0
         (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);
         
         (assets, shares) = SiloERC4626Lib.withdraw(
@@ -463,11 +463,11 @@ library Actions {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user
     ) private {
-        if (_debtConfig.silo != _collateralConfig.silo) {
+        if (_debtConfig.silo != _collateralConfig.silo) { 
             _collateralConfig.callSolvencyOracleBeforeQuote();
             _debtConfig.callSolvencyOracleBeforeQuote();
         }
-
+        
         bool userIsSolvent = SiloSolvencyLib.isSolvent(
             _collateralConfig, _debtConfig, _user, ISilo.AccrueInterestInMemory.No
         );

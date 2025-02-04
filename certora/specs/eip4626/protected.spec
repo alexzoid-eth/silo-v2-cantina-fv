@@ -1,10 +1,34 @@
-// Prove protected vault is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
+// Prove protected collateral vault is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
 import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
 using Token1 as _Asset;
+
+/*
+    Violated:
+    - eip4626_protected_convertToAssetsRoundTripDoesNotExceed
+    - eip4626_protected_depositIntegrity
+    - eip4626_protected_maxWithdrawDoesNotDependOnUserShares
+    - eip4626_protected_maxWithdrawMustNotRevert
+    - eip4626_protected_mintIntegrity
+    - eip4626_protected_mintMustRevertIfCannotMint
+    - eip4626_protected_mintPossibility
+    - eip4626_protected_totalAssetsIntegrity
+    - eip4626_protected_withdrawFromOtherIntegrity
+    - eip4626_protected_redeemFromOtherIntegrity
+    - eip4626_protected_redeemIntegrity
+
+    Timeout:
+    - eip4626_protected_maxRedeemNoHigherThanActual
+    - eip4626_protected_maxWithdrawNoHigherThanActual
+    - eip4626_protected_maxWithdrawWithdrawPossibility
+    - eip4626_protected_maxWithdrawZeroIfDisabled
+    - eip4626_protected_withdrawFromSelfIntegrity
+    - eip4626_protected_withdrawIntegrity
+    - eip4626_protected_redeemFromSelfIntegrity
+*/
 
 //
 // _Asset

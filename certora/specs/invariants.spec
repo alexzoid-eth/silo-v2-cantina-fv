@@ -14,7 +14,7 @@ function requireValidStateInvariants(env e) {
     
     // Silo
     requireInvariant inv_interestRateTimestampNotInFuture(e);       // ok
-    requireInvariant inv_zeroCollateralMeansZeroDebt(e);            // ok - halted in transfer/transferFrom; silo.redeem/withdraw
+    requireInvariant inv_zeroCollateralMeansZeroDebt(e);            // ok timeout: dept.transfer/transferFrom; silo.redeem/withdraw (check!)
     requireInvariant inv_onlyOneDebtPerBorrower(e);                 // ok debt.mint
 
     // violated in borrowSameAsset, repay/repayShares, 
@@ -22,8 +22,8 @@ function requireValidStateInvariants(env e) {
     // config: setOtherSiloAsCollateralSilo, setThisSiloAsCollateralSilo
     // debt: transfer, transferFrom, burn, forwardTransferFromNoChecks, mint
     requireInvariant inv_borrowerCollateralSiloMustMatchDebt(e);    
-    requireInvariant inv_protectedCollateralAlwaysLiquid(e);        // ok timeout: redeem/withdraw
-    requireInvariant inv_liquiditySolvency(e);                      // ok timeout: redeem/withdraw; timeout: debt.protected.transfer/transferFrom
+    requireInvariant inv_protectedCollateralAlwaysLiquid(e);        // ok timeout: redeem/withdraw (check!)
+    requireInvariant inv_liquiditySolvency(e);                      // ok timeout: redeem/withdraw (check!); timeout: protected.transfer()/transferFrom()
     requireInvariant inv_siloMustNotHaveUserAllowances(e);          // ok
     //requireInvariant inv_protectedSharesMustBeBackedWithAssets(e);  // violated in transitionCollateral, mint; timeout: redeem/withdraw
     //requireInvariant inv_collateralSharesMustBeBackedWithAssets(e); // violated in withdraw/redeem/transitionCollateral

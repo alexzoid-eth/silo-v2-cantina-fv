@@ -274,4 +274,12 @@ abstract contract SiloHarness is Silo {
     function maxDepositProtected(address /* _receiver */) external pure virtual returns (uint256 maxAssets) {
         maxAssets = SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
     }
+
+    function maxMintCollateral(address /* _receiver */) external view virtual returns (uint256 maxShares) {
+        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
+    }
+
+    function maxMintProtected(address /* _receiver */) external view virtual returns (uint256 maxShares) {
+        return SiloERC4626Lib._VIRTUAL_DEPOSIT_LIMIT;
+    }
 }

@@ -6,6 +6,24 @@ import "../invariants.spec";
 
 using Token1 as _Asset;
 
+/*
+    Violated:
+    - eip4626_collateral_convertToAssetsRoundTripDoesNotExceed
+    - eip4626_collateral_maxWithdrawDoesNotDependOnUserShares
+    - eip4626_collateral_previewMintNoFewerThanActualAssets
+    - eip4626_collateral_previewRedeemNoMoreThanActualAssets
+    - eip4626_collateral_totalAssetsIntegrity
+    - 
+    
+    Timeout:
+    - eip4626_collateral_maxRedeemNoHigherThanActual
+    - eip4626_collateral_maxWithdrawNoHigherThanActual
+    - eip4626_collateral_maxWithdrawZeroIfDisabled
+    - eip4626_collateral_redeemFromOtherIntegrity
+    - eip4626_collateral_redeemIntegrity
+    - eip4626_collateral_withdrawIntegrity
+*/
+
 //
 // _Asset
 //

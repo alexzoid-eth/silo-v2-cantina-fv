@@ -161,7 +161,7 @@ library SiloSolvencyLib {
         uint256 _debtShareBalance
     ) internal view returns (uint256 ltvInDp) {
         if (_debtShareBalance == 0) return 0;
-
+        
         LtvData memory ltvData = getAssetsDataForLtvCalculations(
             _collateralConfig, _debtConfig, _borrower, _oracleType, _accrueInMemory, _debtShareBalance
         );

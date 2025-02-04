@@ -32,6 +32,8 @@ contract Hook {
         public
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        require(_maxDebtToCover < type(uint64).max);
+
         // Assume interest is already accrued for both SILOs this block
         if (_bypassInterest) {
             (, uint64 interestRateTimestamp0, , , ) = _SILO0.getSiloStorage();
@@ -47,7 +49,7 @@ contract Hook {
             !_ignoreProtectedShares || !_ignoreCollateralShares
         );
 
-        (ISiloConfig.ConfigData memory collateralConfig, ) = 
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = 
             _CONFIG.getConfigsForSolvency(_borrower);
 
         if (_ignoreProtectedShares) {
@@ -61,6 +63,10 @@ contract Hook {
             );
         }
 
+        // Silo0 - always collateral, Silo1 - always debt
+        require(collateralConfig.silo == address(_SILO0) && collateralConfig.token == _TOKEN0);
+        require(debtConfig.silo == address(_SILO1) && debtConfig.token == _TOKEN1);
+        
         // Actual liquidation call
         (withdrawCollateral, repayDebtAssets) = _HOOK_RECEIVER.liquidationCall(
             _TOKEN0,
