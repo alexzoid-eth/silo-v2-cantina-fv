@@ -6,7 +6,6 @@ import "../math_cvl.spec";
 
 import "./silo_config.spec";
 import "./interest_rate_model_cvl.spec";
-import "./silo_oracle_cvl.spec";
 
 methods {
 
@@ -73,6 +72,14 @@ methods {
 
     function _.hookReceiverConfig(address _silo) external
         => NONDET; // not in use
+
+    // Resolve external calls in `ISiloOracle`
+
+    function _.quote(uint256 _baseAmount, address _baseToken) external
+        => NONDET;
+
+    function _.beforeQuote(address) external 
+        => NONDET;
 
     // Remove from the scene 
     
