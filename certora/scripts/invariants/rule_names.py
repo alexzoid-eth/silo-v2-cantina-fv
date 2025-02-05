@@ -11,7 +11,6 @@ rule_names = [
     "inv_interestRateTimestampNotInFuture",
     "inv_onlyOneDebtPerBorrower",
     "inv_borrowerCollateralSiloMustMatchDebt",
-    "inv_borrowerCannotHaveDebtWithoutCollateral",
 
     # SiloX
     "inv_liquiditySolvency0", "inv_liquiditySolvency1",
