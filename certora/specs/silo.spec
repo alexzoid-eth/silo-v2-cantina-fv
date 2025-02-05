@@ -19,37 +19,37 @@ strong invariant silo_test_inv() true;
 
 // VS- The share token’s hooks must always match the hookReceiver’s configuration
 strong invariant shareTokenHooksSynchronization(env e)
-    forall address contract. ghostShareTokenHooksBefore[contract] == ghostHooksBefore[ghostConfigSilo0]
-        && ghostShareTokenHooksAfter[contract] == ghostHooksAfter[ghostConfigSilo0] {
+    forall address contract. ghostShareTokenHooksBefore[contract] == ghostHooksBefore[ghostSilo0]
+        && ghostShareTokenHooksAfter[contract] == ghostHooksAfter[ghostSilo0] {
             preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); }
             preserved synchronizeHooks(uint24 hooksBefore, uint24 hooksAfter) with (env eInv) {
                 requireSameEnv(e, eInv); setupSilo(e);
                 // SAFE: Only silo executes this function with parameters from IHookReceiver.hookReceiverConfig()
-                require(hooksBefore == ghostHooksBefore[ghostConfigSilo0] && hooksAfter == ghostHooksAfter[ghostConfigSilo0]);
+                require(hooksBefore == ghostHooksBefore[ghostSilo0] && hooksAfter == ghostHooksAfter[ghostSilo0]);
             }   
         }
 
 // VS- All protected shares must be fully backed so they can always be withdrawn
 strong invariant allProtectedSharesAlwaysWithdrawable(env e) (
-    previewRedeem(e, require_uint256(ghostERC20TotalSupply[ghostConfigProtectedCollateralShareToken0]))
-        <= ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_PROTECTED()] 
+    previewRedeem(e, require_uint256(ghostERC20TotalSupply[ghostProtectedToken0]))
+        <= ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] 
     ) && (IS_FULL_SILO() => (
-    previewRedeem(e, require_uint256(ghostERC20TotalSupply[ghostConfigProtectedCollateralShareToken1]))
-        <= ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_PROTECTED()] 
+    previewRedeem(e, require_uint256(ghostERC20TotalSupply[ghostProtectedToken1]))
+        <= ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] 
     )) {
         preserved with (env eInv) {
             requireSameEnv(e, eInv); setupSilo(e);
             // UNSAFE: Assume no interest accrues as it must not affect protected shares
-            require(e.block.timestamp == ghostInterestRateTimestamp[ghostConfigSilo0]);
-            require(e.block.timestamp == ghostInterestRateTimestamp[ghostConfigSilo1]);
+            require(e.block.timestamp == ghostInterestRateTimestamp[ghostSilo0]);
+            require(e.block.timestamp == ghostInterestRateTimestamp[ghostSilo1]);
         }
     }
 
 // SS- The Silo's debt plus accrued fees must never exceed its total collateral 
 //  plus accrued fees under normal operations
 strong invariant silo0DebtNotExceedCollateralExceptOnFeeWithdraw(env e)
-    ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_COLLATERAL()] + ghostDaoAndDeployerRevenue[ghostConfigSilo0]
-        >= ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_DEBT()] 
+    ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] + ghostDaoAndDeployerRevenue[ghostSilo0]
+        >= ghostTotalAssets[ghostSilo0][ASSET_TYPE_DEBT()] 
     filtered {
         // EXCEPTION: During withdrawFees, it's possible for debt to exceed 
         //  collateral if the fees are withdrawn
@@ -66,17 +66,17 @@ strong invariant silo0DebtNotExceedCollateralExceptOnFeeWithdraw(env e)
 // @todo when interest accrued
 // VS- The Silo's total tracked assets must not exceed the token's total supply
 strong invariant inv_totalTrackedAssetsNotExceedERC20TokenSupply(env e) (
-    ghostERC20TotalSupply[ghostConfigToken0] >= 
-        ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_PROTECTED()] 
-        + ghostTotalAssets[ghostConfigSilo0][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[ghostConfigSilo0] 
-        + getAccruedInterestCVL(e, ghostConfigSilo0) 
+    ghostERC20TotalSupply[ghostToken0] >= 
+        ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] 
+        + ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] 
+        + ghostDaoAndDeployerRevenue[ghostSilo0] 
+        + getAccruedInterestCVL(e, ghostSilo0) 
     ) && (!IS_MODE_SINGLE() => (
-    ghostERC20TotalSupply[ghostConfigToken1] >= 
-        ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_PROTECTED()] 
-        + ghostTotalAssets[ghostConfigSilo1][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[ghostConfigSilo1] 
-        + getAccruedInterestCVL(e, ghostConfigSilo1) 
+    ghostERC20TotalSupply[ghostToken1] >= 
+        ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] 
+        + ghostTotalAssets[ghostSilo1][ASSET_TYPE_COLLATERAL()] 
+        + ghostDaoAndDeployerRevenue[ghostSilo1] 
+        + getAccruedInterestCVL(e, ghostSilo1) 
     ))
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 

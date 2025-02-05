@@ -10,18 +10,13 @@ using Token1 as _Asset;
     Violated:
     - eip4626_collateral_convertToAssetsRoundTripDoesNotExceed
     - eip4626_collateral_maxWithdrawDoesNotDependOnUserShares
-    - eip4626_collateral_previewMintNoFewerThanActualAssets
-    - eip4626_collateral_previewRedeemNoMoreThanActualAssets
-    - eip4626_collateral_totalAssetsIntegrity
-    - 
-    
-    Timeout:
-    - eip4626_collateral_maxRedeemNoHigherThanActual
     - eip4626_collateral_maxWithdrawNoHigherThanActual
     - eip4626_collateral_maxWithdrawZeroIfDisabled
-    - eip4626_collateral_redeemFromOtherIntegrity
-    - eip4626_collateral_redeemIntegrity
-    - eip4626_collateral_withdrawIntegrity
+    - eip4626_collateral_totalAssetsIntegrity
+
+    - eip4626_collateral_previewMintNoFewerThanActualAssets
+    - eip4626_collateral_previewRedeemNoMoreThanActualAssets
+    - eip4626_collateral_previewWithdrawNoFewerThanActualShares
 */
 
 //
@@ -61,7 +56,7 @@ rule eip4626_collateral_totalAssetsIntegrity(env e) {
     setupSilo(e);
     
     // Total available assets including compounding
-    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, ghostConfigSilo0);
+    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, ghostSilo0);
 
     mathint totalAssets = totalAssets(e);
 

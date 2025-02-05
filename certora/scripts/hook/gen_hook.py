@@ -69,12 +69,12 @@ def generate_config(rule_name):
         "parametric_contracts": [
             "Hook"
         ],
+        "rule": [
+            rule_name
+        ],
         "prover_args": [
             "-maxDecompiledCommandCount 10000000",
             "-maxBlockCount 200000"
-        ],
-        "rule": [
-            rule_name
         ],
         "struct_link": [
             "Silo0:silo=Silo0",

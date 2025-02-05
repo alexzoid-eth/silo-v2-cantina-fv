@@ -4,12 +4,6 @@ import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
-/*
-    Halted:
-    - redeemProtected
-    - withdrawProtected
-*/
-
 // These functions are replaced in harness contract 
 definition SIMPLIFIED_IN_HARNESS_FUNCTIONS(method f) returns bool =
     // single-argument EIP-4626

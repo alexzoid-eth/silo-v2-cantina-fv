@@ -9,7 +9,7 @@ using Protected1 as _ShareProtectedCollateralToken1;
 // Hooks for addresses viewers
 
 hook Sload address val _ShareProtectedCollateralToken1.shareTokenStorage.silo {
-    require(ghostConfigSilo1 == val);
+    require(ghostSilo1 == val);
 }
 
 hook Sload address val _ShareProtectedCollateralToken1.shareTokenStorage.siloConfig {

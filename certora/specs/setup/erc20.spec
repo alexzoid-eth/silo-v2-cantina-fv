@@ -84,7 +84,7 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
     init_state axiom forall address token. ghostERC20TotalSupply[token] == 0;
     axiom forall address token. ghostERC20TotalSupply[token] >= 0 
         // UNSAFE: Reduce max amount to reduce complexity
-        && ghostERC20TotalSupply[token] <= max_uint64;
+        && ghostERC20TotalSupply[token] <= max_uint128;
 }
 
 // Safe transfer lib summaries
@@ -93,7 +93,7 @@ function transferFromCVL(address token, address from, address to, uint256 amount
 
     require(ERC20_ACCOUNT_BOUNDS(token, from) && ERC20_ACCOUNT_BOUNDS(token, to));
 
-    assert(token == ghostConfigToken0 || token == ghostConfigToken1, 
+    assert(token == ghostToken0 || token == ghostToken1, 
         "Only Token0 or Token1 can be passed here");
 
     ASSERT(from != to);
@@ -120,7 +120,7 @@ function increaseAllowanceCVL(address token, address owner, address spender, uin
 
     require(ERC20_ACCOUNT_BOUNDS(token, owner) && ERC20_ACCOUNT_BOUNDS(token, spender));
 
-    assert(token == ghostConfigToken0 || token == ghostConfigToken1,
+    assert(token == ghostToken0 || token == ghostToken1,
         "Only Token0 or Token1 can be passed here"
     );
 

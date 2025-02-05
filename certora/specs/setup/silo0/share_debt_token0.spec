@@ -9,7 +9,7 @@ using Debt0 as _ShareDebtToken0;
 // Hooks for addresses viewers
 
 hook Sload address val _ShareDebtToken0.shareTokenStorage.silo {
-    require(ghostConfigSilo0 == val);
+    require(ghostSilo0 == val);
 }
 
 hook Sload address val _ShareDebtToken0.shareTokenStorage.siloConfig {

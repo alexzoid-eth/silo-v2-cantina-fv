@@ -62,10 +62,6 @@ contract Hook {
                 IERC20(collateralConfig.collateralShareToken).balanceOf(_borrower) == 0
             );
         }
-
-        // Silo0 - always collateral, Silo1 - always debt
-        require(collateralConfig.silo == address(_SILO0) && collateralConfig.token == _TOKEN0);
-        require(debtConfig.silo == address(_SILO1) && debtConfig.token == _TOKEN1);
         
         // Actual liquidation call
         (withdrawCollateral, repayDebtAssets) = _HOOK_RECEIVER.liquidationCall(

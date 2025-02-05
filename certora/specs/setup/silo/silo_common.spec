@@ -102,6 +102,10 @@ methods {
 
 persistent ghost address ghostCaller;
 
+persistent ghost mathint ghostTokensSupply {
+    axiom ghostTokensSupply > 1000 && ghostTokensSupply < 1000000000;
+}
+
 function setupSilo(env e) {
 
     // SAFE: To make further computations in the Silo secure require DAO and deployer 
@@ -126,10 +130,38 @@ function setupSilo(env e) {
     // SAFE: Common valid state invariants working both for Silo0 and Silo1
     requireValidStateInvariants(e);
 
-    // UNSAFE: Reduce complexity via disabling oracles
+    // SAFE: Assume realistic assets total supply
+    require(ghostERC20TotalSupply[ghostToken0] == ghostTokensSupply * 10^ghostDecimals0);
+    require(ghostERC20TotalSupply[ghostToken1] == ghostTokensSupply * 10^ghostDecimals1);
+
+    // UNSAFE: Disabling oracles
     require(ghostConfigSolvencyOracle0 == 0 && ghostConfigMaxLtvOracle0 == 0);
     require(ghostConfigSolvencyOracle1 == 0 && ghostConfigMaxLtvOracle1 == 0);
-}
+
+    // UNSAFE: set `true` to use static config based on `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
+    require(ghostUseStaticConfig == IS_MODE_HOOK());
+    require(ghostUseStaticConfig => (
+        // Fees
+        ghostConfigDaoFee == 1500 * BP2DP_NORMALIZATION()
+        && ghostConfigDeployerFee == 1000 * BP2DP_NORMALIZATION()
+
+        // Silo0
+        && ghostConfigMaxLtv0 == 7500 * BP2DP_NORMALIZATION()
+        && ghostConfigLt0 == 8500 * BP2DP_NORMALIZATION()
+        && ghostConfigLiquidationTargetLtv0 == 7650 * BP2DP_NORMALIZATION()
+        && ghostConfigLiquidationFee0 == 500 * BP2DP_NORMALIZATION()
+        && ghostConfigFlashloanFee0 == 100 * BP2DP_NORMALIZATION()
+        && ghostConfigCallBeforeQuote0 == false
+
+        // Silo1
+        && ghostConfigMaxLtv1 == 8500 * BP2DP_NORMALIZATION()
+        && ghostConfigLt1 == 9500 * BP2DP_NORMALIZATION()
+        && ghostConfigLiquidationTargetLtv1 == 8550 * BP2DP_NORMALIZATION()
+        && ghostConfigLiquidationFee1 == 250 * BP2DP_NORMALIZATION()
+        && ghostConfigFlashloanFee1 == 100 * BP2DP_NORMALIZATION()
+        && ghostConfigCallBeforeQuote1 == false
+        ));
+    }
 
 function requireSameEnv(env e1, env e2) {
     require(e1.block.number == e2.block.number);
@@ -148,29 +180,29 @@ definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
 
 definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool 
     = a != ghostSiloConfig
-        && a != ghostConfigSilo0
-        && a != ghostConfigToken0
-        && a != ghostConfigProtectedCollateralShareToken0
-        && a != ghostConfigCollateralShareToken0
-        && a != ghostConfigDebtShareToken0
+        && a != ghostSilo0
+        && a != ghostToken0
+        && a != ghostProtectedToken0
+        && a != ghostCollateralToken0
+        && a != ghostDebtToken0
         && a != ghostConfigSolvencyOracle0
         && a != ghostConfigMaxLtvOracle0
         && a != ghostConfigInterestRateModel0
-        && a != ghostConfigSilo1
-        && a != ghostConfigToken1
-        && a != ghostConfigProtectedCollateralShareToken1
-        && a != ghostConfigCollateralShareToken1
-        && a != ghostConfigDebtShareToken1
+        && a != ghostSilo1
+        && a != ghostToken1
+        && a != ghostProtectedToken1
+        && a != ghostCollateralToken1
+        && a != ghostDebtToken1
         && a != ghostConfigSolvencyOracle1
         && a != ghostConfigMaxLtvOracle1
         && a != ghostConfigInterestRateModel1
         && a != ghostConfigHookReceiver;
 
 definition IS_MODE_SINGLE() returns bool
-    = _SiloConfig._SILO_MODE() == ghostConfigSilo0;
+    = _SiloConfig._SILO_MODE() == ghostSilo0;
 
 definition IS_MODE_HOOK() returns bool
-    = _SiloConfig._SILO_MODE() != ghostConfigSilo0 && _SiloConfig._SILO_MODE() != ghostConfigSilo1;
+    = _SiloConfig._SILO_MODE() != ghostSilo0 && _SiloConfig._SILO_MODE() != ghostSilo1;
 
 //
 // Methods summarizes
@@ -208,7 +240,7 @@ function getFeeReceiversCVL() returns (address, address) {
 
 function onFlashLoanCVL(address _receiver) returns bytes32 {
     // SAFE: Receiver cannot be Silo due revert in `onFlashLoan()` call
-    require(_receiver != ghostConfigSilo0 && _receiver != ghostConfigSilo1);
+    require(_receiver != ghostSilo0 && _receiver != ghostSilo1);
 
     bytes32 result;
     return result;

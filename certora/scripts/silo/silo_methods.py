@@ -5,9 +5,11 @@ silo_methods_hard = [
     "redeemProtected(uint256,address,address)",
     "withdrawCollateral(uint256,address,address)",
     "withdrawProtected(uint256,address,address)",
+    "depositCollateral(uint256,address)",
+    "depositProtected(uint256,address)",
     "borrowShares(uint256,address,address)",
     "borrow(uint256,address,address)",
-    "borrowSameAsset(uint256,address,address)"
+    "borrowSameAsset(uint256,address,address)",
 ]
 
 silo_methods_other = [
@@ -59,8 +61,6 @@ silo_methods_other = [
     "maxRedeemProtected(address)",
     "maxWithdrawCollateral(address)",
     "maxWithdrawProtected(address)",
-    "depositCollateral(uint256,address)",
-    "depositProtected(uint256,address)",
     "mintCollateral(uint256,address)",
     "mintProtected(uint256,address)",
     "previewMintCollateral(uint256)",
