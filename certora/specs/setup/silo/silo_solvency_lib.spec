@@ -5,7 +5,6 @@ methods {
         => calculateLtv(_ltvData, _collateralToken, _debtAsset);
 }
 
-definition _PRECISION_DECIMALS() returns uint256 = 10^18;
 definition _INFINITY() returns uint256 = max_uint256;
 
 function calculateLtv(SiloSolvencyLib.LtvData _ltvData, address _collateralToken, address _debtAsset) 
@@ -24,7 +23,7 @@ function calculateLtv(SiloSolvencyLib.LtvData _ltvData, address _collateralToken
         return (
             sumOfBorrowerCollateralValue, 
             totalBorrowerDebtValue, 
-            mulDivRoundingCVL(totalBorrowerDebtValue, _PRECISION_DECIMALS(), sumOfBorrowerCollateralValue, true)
+            mulDivRoundingCVL(totalBorrowerDebtValue, PRECISION_DECIMALS(), sumOfBorrowerCollateralValue, true)
             );
     }
 }

@@ -8,15 +8,25 @@ methods {
         => mulDivRoundingCVL(x, y, denominator, to_mathint(rounding) == 1 || to_mathint(rounding) == 3);
 }
 
+definition PRECISION_DECIMALS() returns uint256 = 10^18;
+
 definition CMP_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool = 
     a > b ? a - b <= tot : b - a <= tot;
 
 definition CMP_NOT_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool = 
     a > b ? a - b > tot : b - a > tot;
 
-function mulDivCVL(mathint x, mathint y, mathint denominator) returns uint {
+function mulDivCVL(
+    mathint numerator,
+    mathint multiplier,
+    mathint denominator
+) returns uint256 {
+
     require(denominator != 0);
-    return require_uint256(x * y / denominator);
+    
+    mathint product = require_uint256(numerator * multiplier);
+
+    return require_uint256(product / denominator);
 }
 
 ghost mulDivRoundingCVL(uint256, uint256, uint256, bool) returns uint256 {
