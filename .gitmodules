@@ -33,3 +33,6 @@
 [submodule "morpho-blue"]
 	path = gitmodules/morpho-blue
 	url = https://github.com/morpho-org/morpho-blue/
+[submodule "gitmodules/v3-core"]
+	path = gitmodules/v3-core
+	url = https://github.com/uniswap/v3-core

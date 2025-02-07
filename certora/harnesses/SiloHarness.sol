@@ -13,9 +13,8 @@ import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgrade
 import { EIP712Upgradeable } from "openzeppelin5-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-
-import {Actions} from "silo-core/contracts/lib/Actions.sol";
-import {SiloERC4626Lib} from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import { Actions } from "silo-core/contracts/lib/Actions.sol";
+import { SiloERC4626Lib } from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 
 abstract contract SiloHarness is Silo {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }

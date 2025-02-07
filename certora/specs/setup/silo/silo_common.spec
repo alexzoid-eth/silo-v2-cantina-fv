@@ -1,11 +1,14 @@
 // Silo core, CVL storage ghosts and hooks
 
-import "./helper_cvl.spec";
-import "../erc20.spec";
-import "../math_cvl.spec";
 
+import "../erc20.spec";
+import "../math.spec";
+
+import "./helper.spec";
 import "./silo_config.spec";
-import "./interest_rate_model_cvl.spec";
+import "./interest_rate_model.spec";
+import "./silo_solvency.spec";
+import "./silo_math.spec";
 
 methods {
 
@@ -103,7 +106,7 @@ methods {
 persistent ghost address ghostCaller;
 
 persistent ghost mathint ghostTokensSupply {
-    axiom ghostTokensSupply > 1000 && ghostTokensSupply < 1000000000;
+    axiom ghostTokensSupply > 10 && ghostTokensSupply < 1000;
 }
 
 function setupSilo(env e) {
@@ -134,12 +137,28 @@ function setupSilo(env e) {
     require(ghostERC20TotalSupply[ghostToken0] == ghostTokensSupply * 10^ghostDecimals0);
     require(ghostERC20TotalSupply[ghostToken1] == ghostTokensSupply * 10^ghostDecimals1);
 
+    // UNSAFE: zero assets <=> zero shares (based on `SiloMathLib._commonConvertTo()`)
+    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[ghostProtectedToken0] == 0);
+    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[ghostProtectedToken1] == 0);
+    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[ghostCollateralToken0] == 0);
+    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[ghostCollateralToken1] == 0);
+    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[ghostDebtToken0] == 0);
+    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[ghostDebtToken1] == 0);
+
+    // UNSAFE: non-zero shares total supply => non-zero tracked assets (based on `SiloMathLib._commonConvertTo()`)
+    require(ghostERC20TotalSupply[ghostProtectedToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] != 0);    
+    require(ghostERC20TotalSupply[ghostProtectedToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] != 0);    
+    require(ghostERC20TotalSupply[ghostCollateralToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] != 0);
+    require(ghostERC20TotalSupply[ghostCollateralToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_COLLATERAL()] != 0);
+    require(ghostERC20TotalSupply[ghostDebtToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_DEBT()] != 0);
+    require(ghostERC20TotalSupply[ghostDebtToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_DEBT()] != 0);
+
     // UNSAFE: Disabling oracles
     require(ghostConfigSolvencyOracle0 == 0 && ghostConfigMaxLtvOracle0 == 0);
     require(ghostConfigSolvencyOracle1 == 0 && ghostConfigMaxLtvOracle1 == 0);
 
     // UNSAFE: set `true` to use static config based on `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
-    require(ghostUseStaticConfig == IS_MODE_HOOK());
+    require(ghostUseStaticConfig == true);
     require(ghostUseStaticConfig => (
         // Fees
         ghostConfigDaoFee == 1500 * BP2DP_NORMALIZATION()

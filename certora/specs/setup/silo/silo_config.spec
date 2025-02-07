@@ -71,7 +71,6 @@ function hasDebtInOtherSiloCVL(address _thisSilo, address _borrower) returns boo
 
 definition BP2DP_NORMALIZATION() returns mathint = 10^14;
 definition CONFIG_100_PERCENT() returns mathint = 10^18;
-definition DECIMALS_OFFSET_POW() returns mathint = 10^3;
 
 definition FEE_5_PERCENT() returns mathint = 5 * 10^16;
 definition FEE_15_PERCENT() returns mathint = 15 * 10^16;

@@ -80,4 +80,10 @@ strong invariant inv_totalTrackedAssetsNotExceedERC20TokenSupply(env e) (
     ))
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
+// AS a rule
+// VS- No double calls to cross reentrancy protection
+invariant inv_crossReentrancyProtectionNoDoubleCall(env e)
+    ghostReentrancyProtectionDoubleCall == false
+{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
+
 */

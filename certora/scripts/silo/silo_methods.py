@@ -10,6 +10,7 @@ silo_methods_hard = [
     "borrowShares(uint256,address,address)",
     "borrow(uint256,address,address)",
     "borrowSameAsset(uint256,address,address)",
+    "switchCollateralToThisSilo()",
 ]
 
 silo_methods_other = [
@@ -24,7 +25,6 @@ silo_methods_other = [
     "updateHooks()",
     "accrueInterest()",
     "getCollateralAssets()",
-    "switchCollateralToThisSilo()",
     "utilizationData()",
     "config()",
     "withdrawFees()",
