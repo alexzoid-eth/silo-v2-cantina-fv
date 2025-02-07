@@ -10,7 +10,6 @@ import "./interest_rate_model.spec";
 
 import "./silo_solvency_lib.spec";
 import "./silo_math_lib.spec";
-import "./partial_liquidation_lib.spec";
 
 methods {
 

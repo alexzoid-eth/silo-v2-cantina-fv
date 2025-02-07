@@ -18,12 +18,20 @@ methods {
 definition _DECIMALS_OFFSET_POW() returns mathint = 10^3;
 
 function _commonConvertToCVL(uint256 _totalAssets, uint256 _totalShares, bool debt) returns (uint256, uint256) {
+    
+    uint256 totalAssets;
+    if(_totalShares == 0) {
+        totalAssets = 0;
+    } else {
+        totalAssets = _totalAssets;
+    }
+    
     if(debt) {
-        return (_totalShares, _totalShares == 0 ? 0 : _totalAssets);
+        return (_totalShares, totalAssets);
     } else {
         return (
             require_uint256(_totalShares + _DECIMALS_OFFSET_POW()), 
-            _totalShares == 0 ? 1 : require_uint256(_totalAssets + 1)
+            require_uint256(totalAssets + 1)
             );
     }
 }

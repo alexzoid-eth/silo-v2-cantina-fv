@@ -1,16 +1,10 @@
 // Silo config contract support
 
+import "./silo_config_cvl.spec";
+
 using Config as _SiloConfig;
 
 methods {
-
-    // Use CVL versions in single Silo configuration (not used any more)
-
-    // function _SiloConfig.getDebtSilo(address _borrower) internal returns address
-    //     => getDebtSiloCVL(_borrower);
-        
-    function _.hasDebtInOtherSilo(address _thisSilo, address _borrower) external
-        => DISPATCHER(true); // => hasDebtInOtherSiloCVL(_thisSilo, _borrower) expect bool;
 
     // Let spec know the type of configuration (Silo0, Silo0+Silo1 or Silo0+Silo1+Hook)
 
@@ -26,45 +20,6 @@ methods {
 
     function _.getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType) external
         => DISPATCHER(true);
-
-    function _.accrueInterestForBothSilos() external with (env e)
-        => accrueInterestForSingleSiloCVL(e) expect void;
-}
-
-// Summarizes
-
-function getDebtSiloCVL(address _borrower) returns address {
-    mathint debtBal0 = ghostERC20Balances[ghostDebtToken0][_borrower];
-    mathint debtBal1 = ghostERC20Balances[ghostDebtToken0][_borrower];
-
-    ASSERT(debtBal0 == 0 || debtBal1 == 0);
-
-    return (debtBal0 == 0 && debtBal1 == 0) ? 0 : (debtBal0 != 0 ? ghostSilo0 : ghostSilo1);
-}
-
-function accrueInterestForSingleSiloCVL(env e) {
-
-    ghostSilo0.accrueInterestForConfig(
-        e,
-        ghostConfigInterestRateModel0,
-        require_uint256(ghostConfigDaoFee),
-        require_uint256(ghostConfigDeployerFee)
-    );
-
-    if(!IS_MODE_SINGLE()) {
-        ghostSilo1.accrueInterestForConfig(
-            e,
-            ghostConfigInterestRateModel1,
-            require_uint256(ghostConfigDaoFee),
-            require_uint256(ghostConfigDeployerFee)
-        );
-    }
-}
-
-function hasDebtInOtherSiloCVL(address _thisSilo, address _borrower) returns bool {
-    return _thisSilo == ghostSilo0 
-        ? ghostERC20Balances[ghostDebtToken1][_borrower] != 0
-        : ghostERC20Balances[ghostDebtToken0][_borrower] != 0;
 }
 
 // Immutables
@@ -116,6 +71,8 @@ definition ghostTokenX(bool zero) returns address =
 
 // Set true to use static config values from `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
 persistent ghost bool ghostUseStaticConfig;
+
+persistent ghost mathint ghostSiloId;
 
 persistent ghost address ghostSiloConfig {
     axiom ghostSiloConfig == _SiloConfig;

@@ -84,7 +84,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
         
         RevertLib.revertIfError(params.customError);
-        /*
+        
         // we do not allow dust so full liquidation is required
         require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
         
@@ -110,9 +110,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             collateralConfig.protectedShareToken,
             ISilo.AssetType.Protected
         );
-        */
+        
         siloConfigCached.turnOffReentrancyProtection();
-        /*
+        
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
         
         if (_receiveSToken) {
@@ -171,7 +171,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             withdrawCollateral,
             _receiveSToken
         );
-        */
     }
 
     function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {
