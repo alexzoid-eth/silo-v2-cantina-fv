@@ -1,8 +1,6 @@
 # Update all configs. Run from current directory
 
 # generate new 
-python3 ./gen_token.py
-python3 ./gen_config.py
 python3 ./gen_debt.py
 python3 ./gen_hook_ex.py
 python3 ./gen_protected.py

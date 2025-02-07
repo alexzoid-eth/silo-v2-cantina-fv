@@ -56,7 +56,7 @@ rule eip4626_collateral_totalAssetsIntegrity(env e) {
     setupSilo(e);
     
     // Total available assets including compounding
-    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, ghostSilo0);
+    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, _Silo0);
 
     mathint totalAssets = totalAssets(e);
 

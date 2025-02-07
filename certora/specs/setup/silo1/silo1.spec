@@ -2,9 +2,9 @@
 
 import "../silo/silo_common.spec";
 
-import "./collateral_share_token1.spec";
-import "./share_debt_token1.spec";
-import "./share_protected_collateral_token1.spec";
+import "./collateral1.spec";
+import "./debt1.spec";
+import "./protected1.spec";
 import "./token1.spec";
 
 using Silo1 as _Silo1;

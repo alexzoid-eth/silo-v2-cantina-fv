@@ -3,8 +3,6 @@
 pattern="${1:-}"
 
 DIRS=(
-  "certora/confs/invariants/config"
-  #"certora/confs/invariants/token"
   "certora/confs/invariants/debt"
   "certora/confs/invariants/silo"
   "certora/confs/invariants/protected"

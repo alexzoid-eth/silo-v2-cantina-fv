@@ -10,21 +10,11 @@ methods {
 
 definition PRECISION_DECIMALS() returns uint256 = 10^18;
 
-function CMP_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool {
-    if(a > b) {
-        return (a - b <= tot);
-    } else {
-        return (b - a <= tot);
-    }
-}
+definition CMP_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool = 
+    a > b ? a - b <= tot : b - a <= tot;
 
-function CMP_NOT_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool {
-    if(a > b) {
-        return a - b > tot;
-    } else {
-        return b - a > tot;
-    }
-}
+definition CMP_NOT_EQUAL_UP_TO(mathint a, mathint b, mathint tot) returns bool = 
+    a > b ? a - b > tot : b - a > tot;
 
 function mulDivCVL(
     mathint numerator,

@@ -7,9 +7,9 @@ interface IUnresolvedCall {
     function unresolvedCall() external;
 }
 
-contract HelperCVL {
+abstract contract HelperCVL {
     
-    address public _target;
+    address private immutable _target;
 
     function makeUnresolvedCall() external {
         IUnresolvedCall(_target).unresolvedCall();

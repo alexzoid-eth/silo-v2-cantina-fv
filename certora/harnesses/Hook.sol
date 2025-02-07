@@ -32,8 +32,6 @@ contract Hook {
         public
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        require(_maxDebtToCover < type(uint64).max);
-
         // Assume interest is already accrued for both SILOs this block
         if (_bypassInterest) {
             (, uint64 interestRateTimestamp0, , , ) = _SILO0.getSiloStorage();

@@ -5,8 +5,6 @@ def generate_config(rule_name):
     config = {
         "build_cache": True,
         "files": [
-            "certora/harnesses/Config.sol",
-            "certora/mocks/HelperCVL.sol",
             "certora/harnesses/silo0/Silo0.sol",
             "certora/harnesses/silo0/Debt0.sol",
             "certora/harnesses/silo0/Protected0.sol",
@@ -15,19 +13,6 @@ def generate_config(rule_name):
             "certora/harnesses/silo1/Debt1.sol",
             "certora/harnesses/silo1/Protected1.sol",
             "certora/mocks/Token1.sol",
-        ],
-        "link": [
-            "Config:_SILO0=Silo0",
-            "Config:_TOKEN0=Token0",
-            "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN0=Protected0",
-            "Config:_COLLATERAL_SHARE_TOKEN0=Silo0",
-            "Config:_DEBT_SHARE_TOKEN0=Debt0",
-            "Config:_SILO_MODE=Silo1",
-            "Config:_SILO1=Silo1",
-            "Config:_TOKEN1=Token1",
-            "Config:_PROTECTED_COLLATERAL_SHARE_TOKEN1=Protected1",
-            "Config:_COLLATERAL_SHARE_TOKEN1=Silo1",
-            "Config:_DEBT_SHARE_TOKEN1=Debt1",
         ],
         "msg": f"Silo1_{rule_name}_verified",
         "mutations": {
@@ -58,15 +43,9 @@ def generate_config(rule_name):
             "Silo0:silo=Silo0",
             "Debt0:silo=Silo0",
             "Protected0:silo=Silo0",
-            "Silo0:siloConfig=Config",
-            "Debt0:siloConfig=Config",
-            "Protected0:siloConfig=Config",
             "Silo1:silo=Silo1",
             "Debt1:silo=Silo1",
             "Protected1:silo=Silo1",
-            "Silo1:siloConfig=Config",
-            "Debt1:siloConfig=Config",
-            "Protected1:siloConfig=Config",
         ],
         "verify": "Silo1:certora/specs/sanity/silo.spec"
     }

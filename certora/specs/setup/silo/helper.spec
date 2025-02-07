@@ -1,6 +1,4 @@
-// Separate HelperCVL.sol contract with helper functions
-
-using HelperCVL as _HelperCVL;
+using Silo0 as _HelperCVL;
 
 methods {
     // Link separate HelperCVL contract with helper solidity functions

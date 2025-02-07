@@ -21,6 +21,7 @@ definition SIMPLIFIED_IN_HARNESS_FUNCTIONS(method f) returns bool =
     || f.selector == sig:redeem(uint256,address,address).selector
     || f.selector == sig:maxDeposit(address).selector
     || f.selector == sig:maxMint(address).selector
+    || f.selector == sig:transitionCollateral(uint256,address,ISilo.CollateralType).selector
     // overloaded EIP-4626 + CollateralType/AssetType versions
     || f.selector == sig:convertToShares(uint256,ISilo.AssetType).selector
     || f.selector == sig:convertToAssets(uint256,ISilo.AssetType).selector
@@ -33,8 +34,14 @@ definition SIMPLIFIED_IN_HARNESS_FUNCTIONS(method f) returns bool =
     || f.selector == sig:withdraw(uint256,address,address,ISilo.CollateralType).selector
     || f.selector == sig:maxRedeem(address,ISilo.CollateralType).selector
     || f.selector == sig:previewRedeem(uint256,ISilo.CollateralType).selector
-    || f.selector == sig:redeem(uint256,address,address,ISilo.CollateralType).selector
-;
+    || f.selector == sig:redeem(uint256,address,address,ISilo.CollateralType).selector;
+
+definition HELPER_HARNESS_FUNCTIONS(method f) returns bool =
+    f.selector == sig:getCollateralAmountsWithInterestHarness(uint256, uint256, uint256, uint256, uint256).selector
+    || f.selector == sig:makeUnresolvedCall().selector
+    || f.selector == sig:assertOnFalse(bool).selector
+    ;
+
 
 rule sanity_transitionCollateralFromCollateral(env e, calldataarg args) {
     setupSilo(e);
@@ -102,6 +109,8 @@ rule sanity_others(method f, env e, calldataarg args) filtered { f->
     && f.selector != sig:borrowSameAsset(uint256,address,address).selector
     // Exclude all functions which were harnessed
     && !SIMPLIFIED_IN_HARNESS_FUNCTIONS(f)
+    // Exclude helper functions
+    && !HELPER_HARNESS_FUNCTIONS(f)
 } {
     setupSilo(e);
     f(e, args);

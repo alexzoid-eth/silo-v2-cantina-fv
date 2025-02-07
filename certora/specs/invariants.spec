@@ -52,7 +52,7 @@ invariant inv_eip20_totalSupplySolvency(env e)
 
 // VS- The cross reentrancy guard must remain opened on exit
 invariant inv_crossReentrancyGuardOpenedOnExit(env e)
-    ghostCrossReentrantStatus == _NOT_ENTERED()
+    ghostCrossReentrantStatus == NOT_ENTERED()
 filtered { 
     // SAFE: Ignore turning on protection function 
     f -> f.selector != 0x9dd41330   // Config.turnOnReentrancyProtection()
@@ -77,12 +77,12 @@ invariant inv_interestRateTimestampNotInFuture(env e)
 invariant inv_borrowerCannotHaveTwoDebts(env e)
     forall address user.
         // No debt at all
-        (ghostERC20Balances[ghostDebtToken0][user] == 0 
-            && ghostERC20Balances[ghostDebtToken1][user] == 0)
+        (ghostERC20Balances[_Debt0][user] == 0 
+            && ghostERC20Balances[_Debt1][user] == 0)
         || (
         // Debt in one Silo only
-        ghostERC20Balances[ghostDebtToken0][user] != 0
-            <=> ghostERC20Balances[ghostDebtToken1][user] == 0
+        ghostERC20Balances[_Debt0][user] != 0
+            <=> ghostERC20Balances[_Debt1][user] == 0
         )
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
@@ -90,9 +90,9 @@ invariant inv_borrowerCannotHaveTwoDebts(env e)
 invariant inv_borrowerCannotHaveDebtWithoutCollateralSet(env e) 
     forall address user.
         // User has a debt
-        (ghostERC20Balances[ghostDebtToken0][user] != 0 || ghostERC20Balances[ghostDebtToken1][user] != 0)
+        (ghostERC20Balances[_Debt0][user] != 0 || ghostERC20Balances[_Debt1][user] != 0)
             => (
-                ghostConfigBorrowerCollateralSilo[user] == ghostSilo0 || ghostConfigBorrowerCollateralSilo[user] == ghostSilo1
+                ghostConfigBorrowerCollateralSilo[user] == _Silo0 || ghostConfigBorrowerCollateralSilo[user] == _Silo1
             )
 filtered { 
     // SAFE: Can be executed by Silo only
@@ -106,11 +106,11 @@ filtered {
 invariant inv_borrowerCannotHaveDebtWithoutCollateralShares(env e) 
     forall address user.
         // User has a debt
-        (ghostERC20Balances[ghostDebtToken0][user] != 0 || ghostERC20Balances[ghostDebtToken1][user] != 0)
+        (ghostERC20Balances[_Debt0][user] != 0 || ghostERC20Balances[_Debt1][user] != 0)
             => (
                 // Collateral is not zero
-                ghostERC20Balances[ghostProtectedTokenX(ghostConfigBorrowerCollateralSilo[user] == ghostSilo0)][user] +
-                ghostERC20Balances[ghostCollateralTokenX(ghostConfigBorrowerCollateralSilo[user] == ghostSilo0)][user]
+                ghostERC20Balances[ghostProtectedTokenX(ghostConfigBorrowerCollateralSilo[user] == _Silo0)][user] +
+                ghostERC20Balances[ghostCollateralTokenX(ghostConfigBorrowerCollateralSilo[user] == _Silo0)][user]
                 != 0
             )
 filtered { 

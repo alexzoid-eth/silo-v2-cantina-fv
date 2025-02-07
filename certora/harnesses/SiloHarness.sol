@@ -6,7 +6,7 @@ import { ISiloFactory } from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import { IERC20R } from "silo-core/contracts/interfaces/IERC20R.sol";
 import { IShareToken } from "silo-core/contracts/interfaces/IShareToken.sol";
 import { ISilo } from "silo-core/contracts/interfaces/ISilo.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import { ERC20Upgradeable } from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgradeable.sol";
@@ -15,8 +15,11 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 
 import { Actions } from "silo-core/contracts/lib/Actions.sol";
 import { SiloERC4626Lib } from "silo-core/contracts/lib/SiloERC4626Lib.sol";
+import { SiloMathLib } from "silo-core/contracts/lib/SiloMathLib.sol";
 
-abstract contract SiloHarness is Silo {
+import { HelperCVL, IUnresolvedCall } from "./HelperCVL.sol";
+
+abstract contract SiloHarness is Silo, HelperCVL {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
 
     // Map storage 

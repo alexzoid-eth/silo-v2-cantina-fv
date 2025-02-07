@@ -4,8 +4,9 @@
 import "../erc20.spec";
 import "../math.spec";
 
+import "../config/config.spec";
+
 import "./helper.spec";
-import "./silo_config.spec";
 import "./interest_rate_model.spec";
 
 import "./silo_solvency_lib.spec";
@@ -139,20 +140,20 @@ function setupSilo(env e) {
     require(ghostERC20TotalSupply[ghostToken1] == ghostTokensSupply * 10^ghostDecimals1);
 
     // UNSAFE: zero assets <=> zero shares (based on `SiloMathLib._commonConvertTo()`)
-    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[ghostProtectedToken0] == 0);
-    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[ghostProtectedToken1] == 0);
-    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[ghostCollateralToken0] == 0);
-    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[ghostCollateralToken1] == 0);
-    require(ghostTotalAssets[ghostSilo0][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[ghostDebtToken0] == 0);
-    require(ghostTotalAssets[ghostSilo1][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[ghostDebtToken1] == 0);
+    require(ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[_Protected0] == 0);
+    require(ghostTotalAssets[_Silo1][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[_Protected1] == 0);
+    require(ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[_Silo0] == 0);
+    require(ghostTotalAssets[_Silo1][ASSET_TYPE_COLLATERAL()] == 0 <=> ghostERC20TotalSupply[_Silo1] == 0);
+    require(ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[_Debt0] == 0);
+    require(ghostTotalAssets[_Silo1][ASSET_TYPE_DEBT()] == 0 <=> ghostERC20TotalSupply[_Debt1] == 0);
 
     // UNSAFE: non-zero shares total supply => non-zero tracked assets (based on `SiloMathLib._commonConvertTo()`)
-    require(ghostERC20TotalSupply[ghostProtectedToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_PROTECTED()] != 0);    
-    require(ghostERC20TotalSupply[ghostProtectedToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_PROTECTED()] != 0);    
-    require(ghostERC20TotalSupply[ghostCollateralToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_COLLATERAL()] != 0);
-    require(ghostERC20TotalSupply[ghostCollateralToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_COLLATERAL()] != 0);
-    require(ghostERC20TotalSupply[ghostDebtToken0] != 0 => ghostTotalAssets[ghostSilo0][ASSET_TYPE_DEBT()] != 0);
-    require(ghostERC20TotalSupply[ghostDebtToken1] != 0 => ghostTotalAssets[ghostSilo1][ASSET_TYPE_DEBT()] != 0);
+    require(ghostERC20TotalSupply[_Protected0] != 0 => ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] != 0);    
+    require(ghostERC20TotalSupply[_Protected1] != 0 => ghostTotalAssets[_Silo1][ASSET_TYPE_PROTECTED()] != 0);    
+    require(ghostERC20TotalSupply[_Silo0] != 0 => ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] != 0);
+    require(ghostERC20TotalSupply[_Silo1] != 0 => ghostTotalAssets[_Silo1][ASSET_TYPE_COLLATERAL()] != 0);
+    require(ghostERC20TotalSupply[_Debt0] != 0 => ghostTotalAssets[_Silo0][ASSET_TYPE_DEBT()] != 0);
+    require(ghostERC20TotalSupply[_Debt1] != 0 => ghostTotalAssets[_Silo1][ASSET_TYPE_DEBT()] != 0);
 
     // UNSAFE: Disabling oracles
     require(ghostConfigSolvencyOracle0 == 0 && ghostConfigMaxLtvOracle0 == 0);
@@ -199,30 +200,23 @@ definition ASSET_TYPE_COLLATERAL() returns mathint = to_mathint(ISilo.AssetType.
 definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
 
 definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool 
-    = a != ghostSiloConfig
-        && a != ghostSilo0
+    = a != _Silo0
         && a != ghostToken0
-        && a != ghostProtectedToken0
-        && a != ghostCollateralToken0
-        && a != ghostDebtToken0
+        && a != _Protected0
+        && a != _Silo0
+        && a != _Debt0
         && a != ghostConfigSolvencyOracle0
         && a != ghostConfigMaxLtvOracle0
         && a != ghostConfigInterestRateModel0
-        && a != ghostSilo1
+        && a != _Silo1
         && a != ghostToken1
-        && a != ghostProtectedToken1
-        && a != ghostCollateralToken1
-        && a != ghostDebtToken1
+        && a != _Protected1
+        && a != _Silo1
+        && a != _Debt1
         && a != ghostConfigSolvencyOracle1
         && a != ghostConfigMaxLtvOracle1
         && a != ghostConfigInterestRateModel1
-        && a != ghostConfigHookReceiver;
-
-definition IS_MODE_SINGLE() returns bool
-    = _SiloConfig._SILO_MODE() == ghostSilo0;
-
-definition IS_MODE_HOOK() returns bool
-    = _SiloConfig._SILO_MODE() != ghostSilo0 && _SiloConfig._SILO_MODE() != ghostSilo1;
+        && a != ghostHookReceiver;
 
 //
 // Methods summarizes
@@ -260,7 +254,7 @@ function getFeeReceiversCVL() returns (address, address) {
 
 function onFlashLoanCVL(address _receiver) returns bytes32 {
     // SAFE: Receiver cannot be Silo due revert in `onFlashLoan()` call
-    require(_receiver != ghostSilo0 && _receiver != ghostSilo1);
+    require(_receiver != _Silo0 && _receiver != _Silo1);
 
     bytes32 result;
     return result;
