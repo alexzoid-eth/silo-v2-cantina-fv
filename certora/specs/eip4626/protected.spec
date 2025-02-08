@@ -4,8 +4,6 @@ import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
-using Token1 as _Asset;
-
 /*
     Violated:
     - eip4626_protected_convertToAssetsRoundTripDoesNotExceed
@@ -29,7 +27,7 @@ using Token1 as _Asset;
 */
 
 //
-// _Asset
+// Asset
 //
 
 // MUST be an EIP-20 token contract
@@ -40,7 +38,7 @@ rule eip4626_protected_assetIntegrity(env e) {
 
     address asset = asset(e);
 
-    assert(asset == _Asset);
+    assert(asset == ghostToken1);
 }
 
 // MUST NOT revert
@@ -346,8 +344,8 @@ rule eip4626_protected_maxDepositDoesNotDependOnUserBalance(env e1, env e2, addr
     mathint limit1 = maxDepositProtected(e1, receiver);
 
     // The vault must not factor the user's actual underlying asset balance
-    havoc ghostERC20Balances assuming ghostERC20Balances@new[_Asset][receiver] 
-        != ghostERC20Balances@old[_Asset][receiver];
+    havoc ghostERC20Balances assuming ghostERC20Balances@new[ghostToken1][receiver] 
+        != ghostERC20Balances@old[ghostToken1][receiver];
 
     mathint limit2 = maxDepositProtected(e2, receiver);
 
@@ -416,7 +414,7 @@ rule eip4626_protected_previewDepositMustIgnoreLimits(env e, uint256 assets) {
     // SAFE: Assume valid Silo0 state
     setupSilo(e);
 
-    bool enoughAllowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract] >= assets;
+    bool enoughAllowance = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract] >= assets;
     mathint limit = maxDepositProtected(e, ghostCaller);
 
     mathint shares = previewDepositProtected(e, assets);
@@ -492,8 +490,8 @@ rule eip4626_protected_depositIntegrity(env e, uint256 assets, address receiver)
     setupSilo(e);
 
     // Pre-state checks
-    mathint vaultAssetsPrev    = ghostERC20Balances[_Asset][currentContract];
-    mathint callerBalancePrev  = ghostERC20Balances[_Asset][ghostCaller];
+    mathint vaultAssetsPrev    = ghostERC20Balances[ghostToken1][currentContract];
+    mathint callerBalancePrev  = ghostERC20Balances[ghostToken1][ghostCaller];
     mathint receiverSharesPrev = ghostERC20Balances[currentContract][receiver];
     mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[currentContract];
 
@@ -503,11 +501,11 @@ rule eip4626_protected_depositIntegrity(env e, uint256 assets, address receiver)
     // Post-state checks
 
     // The vault's asset balance must have increased by exactly `assets`
-    mathint vaultAssetsPost = ghostERC20Balances[_Asset][currentContract];
+    mathint vaultAssetsPost = ghostERC20Balances[ghostToken1][currentContract];
     assert(vaultAssetsPost == vaultAssetsPrev + assets);
 
     // The caller's asset balance must have decreased by exactly `assets`
-    mathint callerBalancePost = ghostERC20Balances[_Asset][ghostCaller];
+    mathint callerBalancePost = ghostERC20Balances[ghostToken1][ghostCaller];
     assert(callerBalancePost == callerBalancePrev - assets);
 
     // The receiver's share balance must have increased by `shares`
@@ -537,7 +535,7 @@ rule eip4626_protected_depositRespectsApproveTransfer(env e, uint256 assets, add
     // SAFE: Assume valid Silo0 state
     setupSilo(e);
 
-    mathint allowanceBefore = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
+    mathint allowanceBefore = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
 
     depositProtected@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
@@ -553,12 +551,12 @@ rule eip4626_protected_depositMustRevertIfCannotDeposit(env e, uint256 assets, a
     // SAFE: Assume valid Silo0 state
     setupSilo(e);
 
-    mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
+    mathint balanceBefore = ghostERC20Balances[ghostToken1][currentContract];
 
     depositProtected@withrevert(e, assets, receiver);
     bool reverted = lastReverted;
 
-    mathint balanceAfter = ghostERC20Balances[_Asset][currentContract];
+    mathint balanceAfter = ghostERC20Balances[ghostToken1][currentContract];
 
     // Must revert if contract doesn't receive all tokens
     assert(balanceAfter != balanceBefore + assets => reverted);
@@ -569,11 +567,11 @@ rule eip4626_protected_depositPossibility(env e, uint256 assets, address receive
     // SAFE: Assume valid Silo0 state
     setupSilo(e);
 
-    mathint balanceBefore = ghostERC20Balances[_Asset][currentContract];
+    mathint balanceBefore = ghostERC20Balances[ghostToken1][currentContract];
 
     depositProtected(e, assets, receiver);
 
-    mathint balanceAfter = ghostERC20Balances[_Asset][currentContract];
+    mathint balanceAfter = ghostERC20Balances[ghostToken1][currentContract];
 
     // At least one path when balance increased correctly
     satisfy(assets != 0 && balanceAfter == balanceBefore + assets);
@@ -611,8 +609,8 @@ rule eip4626_protected_maxMintDoesNotDependOnUserBalance(env e1, env e2, address
     mathint limit1 = maxMintProtected(e1, receiver);
 
     // The vault must not factor the user's actual underlying asset balance
-    havoc ghostERC20Balances assuming ghostERC20Balances@new[_Asset][receiver] 
-        != ghostERC20Balances@old[_Asset][receiver];
+    havoc ghostERC20Balances assuming ghostERC20Balances@new[ghostToken1][receiver] 
+        != ghostERC20Balances@old[ghostToken1][receiver];
 
     mathint limit2 = maxMintProtected(e2, receiver);
 
@@ -695,7 +693,7 @@ rule eip4626_protected_previewMintMustIgnoreLimits(env e, uint256 shares) {
     // SAFE: Assume valid Silo0 state
     setupSilo(e);
 
-    mathint allowance = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
+    mathint allowance = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
     mathint sharesLimit = maxMintProtected(e, ghostCaller);
 
     mathint assets = previewMintProtected(e, shares);
@@ -773,8 +771,8 @@ rule eip4626_protected_mintIntegrity(env e, uint256 shares, address receiver) {
     setupSilo(e);
 
     // Capture pre-state
-    mathint vaultAssetsPrev         = ghostERC20Balances[_Asset][currentContract];
-    mathint callerAssetBalancePrev  = ghostERC20Balances[_Asset][ghostCaller];
+    mathint vaultAssetsPrev         = ghostERC20Balances[ghostToken1][currentContract];
+    mathint callerAssetBalancePrev  = ghostERC20Balances[ghostToken1][ghostCaller];
     mathint receiverSharesPrev      = ghostERC20Balances[currentContract][receiver];
     mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[currentContract];
 
@@ -782,8 +780,8 @@ rule eip4626_protected_mintIntegrity(env e, uint256 shares, address receiver) {
     mathint actualAssetsUsed = mintProtected(e, shares, receiver);
 
     // Capture post-state
-    mathint vaultAssetsPost         = ghostERC20Balances[_Asset][currentContract];
-    mathint callerAssetBalancePost  = ghostERC20Balances[_Asset][ghostCaller];
+    mathint vaultAssetsPost         = ghostERC20Balances[ghostToken1][currentContract];
+    mathint callerAssetBalancePost  = ghostERC20Balances[ghostToken1][ghostCaller];
     mathint receiverSharesPost      = ghostERC20Balances[currentContract][receiver];
     mathint vaultShareSupplyPost    = ghostERC20TotalSupply[currentContract];
 
@@ -819,7 +817,7 @@ rule eip4626_protected_mintRespectsApproveTransfer(env e, uint256 shares, addres
     setupSilo(e);
 
     // Snapshot the caller’s allowance and needed assets prior to calling mint
-    mathint allowanceBefore = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
+    mathint allowanceBefore = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
 
     // Select code flow where user doesn't allow unlimited allowance to the Vault
     require(allowanceBefore != max_uint256);
@@ -827,7 +825,7 @@ rule eip4626_protected_mintRespectsApproveTransfer(env e, uint256 shares, addres
     // Attempt the mint
     mathint assets = mintProtected(e, shares, receiver);
 
-    mathint allowanceAfter = ghostERC20Allowances[_Asset][ghostCaller][currentContract];
+    mathint allowanceAfter = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
 
     // Checks that the mint logic is actually pulling tokens via “approve + transferFrom.”
     assert(allowanceBefore != max_uint256
@@ -1053,8 +1051,8 @@ rule eip4626_protected_withdrawIntegrity(env e, uint256 assets, address receiver
     // Pre-state snapshots
     mathint ownerSharesBefore    = ghostERC20Balances[currentContract][owner];
     mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];
-    mathint vaultAssetsBefore    = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];    
+    mathint vaultAssetsBefore    = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsBefore = ghostERC20Balances[ghostToken1][receiver];    
     
     // Perform the withdraw
     mathint sharesBurned = withdrawProtected(e, assets, receiver, owner);
@@ -1062,8 +1060,8 @@ rule eip4626_protected_withdrawIntegrity(env e, uint256 assets, address receiver
     // Post-state snapshots
     mathint ownerSharesAfter    = ghostERC20Balances[currentContract][owner];
     mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
-    mathint vaultAssetsAfter    = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsAfter = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsAfter    = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsAfter = ghostERC20Balances[ghostToken1][receiver];
 
     // The `owner`’s share balance must have decreased by exactly `sharesBurned`
     assert(ownerSharesAfter == ownerSharesBefore - sharesBurned);
@@ -1125,14 +1123,14 @@ rule eip4626_protected_withdrawMustRevertIfCannotWithdraw(env e, uint256 assets,
     // SAFE: Assume receiver is not current contract
     require(receiver != currentContract);
 
-    mathint vaultAssetsBefore = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsBefore = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsBefore = ghostERC20Balances[ghostToken1][receiver];
 
     withdrawProtected@withrevert(e, assets, receiver, owner);
     bool reverted = lastReverted;
 
-    mathint vaultAssetsAfter = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsAfter = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsAfter = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsAfter = ghostERC20Balances[ghostToken1][receiver];
 
     // If a withdraw happened partially => revert 
     assert(vaultAssetsBefore - assets != vaultAssetsAfter
@@ -1281,8 +1279,8 @@ rule eip4626_protected_redeemIntegrity(env e, uint256 shares, address receiver, 
     // Pre-state snapshots
     mathint ownerSharesBefore       = ghostERC20Balances[currentContract][owner];                       
     mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];                         
-    mathint vaultAssetsBefore       = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsBefore    = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsBefore       = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsBefore    = ghostERC20Balances[ghostToken1][receiver];
 
     // Perform redeem
     mathint assetsOut = redeemProtected(e, shares, receiver, owner);
@@ -1290,8 +1288,8 @@ rule eip4626_protected_redeemIntegrity(env e, uint256 shares, address receiver, 
     // Post-state snapshots
     mathint ownerSharesAfter       = ghostERC20Balances[currentContract][owner];
     mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
-    mathint vaultAssetsAfter       = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsAfter    = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsAfter       = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsAfter    = ghostERC20Balances[ghostToken1][receiver];
 
     // The `owner`’s share balance must decrease by exactly `shares`
     assert(ownerSharesAfter == ownerSharesBefore - shares);
@@ -1357,16 +1355,16 @@ rule eip4626_protected_redeemMustRevertIfCannotRedeem(env e, uint256 shares, add
     // SAFE: Valid environment (no msg.value, msg.sender != 0/currentContract, etc.)
     setupSilo(e);
 
-    mathint vaultAssetsBefore = ghostERC20Balances[_Asset][currentContract];
-    mathint receiverAssetsBefore = ghostERC20Balances[_Asset][receiver];
+    mathint vaultAssetsBefore = ghostERC20Balances[ghostToken1][currentContract];
+    mathint receiverAssetsBefore = ghostERC20Balances[ghostToken1][receiver];
 
     mathint assetsOut = redeemProtected@withrevert(e, shares, receiver, owner);
     bool reverted = lastReverted;
 
-    mathint vaultAssetsAfter = ghostERC20Balances[_Asset][currentContract];
+    mathint vaultAssetsAfter = ghostERC20Balances[ghostToken1][currentContract];
     mathint vaultAssetsChange = vaultAssetsBefore - vaultAssetsAfter;
 
-    mathint receiverAssetsAfter = ghostERC20Balances[_Asset][receiver];
+    mathint receiverAssetsAfter = ghostERC20Balances[ghostToken1][receiver];
     mathint receiverAssetsChange= receiverAssetsAfter - receiverAssetsBefore;
 
     // If partial redemption happened, must revert

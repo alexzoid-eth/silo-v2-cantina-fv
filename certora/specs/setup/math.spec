@@ -25,11 +25,29 @@ function mulDivCVL(
     require(denominator != 0);
 
     mathint product = require_uint256(numerator * multiplier);
-
     return require_uint256(product / denominator);
 }
 
-ghost mulDivRoundingCVL(uint256, uint256, uint256, bool) returns uint256 {
+function mulDivRoundingCVL(
+    mathint numerator,
+    mathint multiplier,
+    mathint denominator,
+    bool roundingUp
+) returns uint256 {
+
+    require(denominator != 0);
+
+    mathint product = require_uint256(numerator * multiplier);
+    mathint result = product / denominator;
+
+    if (roundingUp && (product % denominator != 0)) {
+        return require_uint256(result + 1);
+    } else {
+        return require_uint256(result);
+    }
+}
+
+ghost mulDivRoundingApproxCVL(uint256, uint256, uint256, bool) returns uint256 {
     axiom forall uint256 X. forall uint256 Y. forall uint256 Z.
         // domain restriction: only meaningful for Z > 0
         Z > 0
@@ -37,27 +55,27 @@ ghost mulDivRoundingCVL(uint256, uint256, uint256, bool) returns uint256 {
         (
             // Rounding-up is either equal or exactly +1 from rounding-down
             (
-                mulDivRoundingCVL(X,Y,Z,true) == mulDivRoundingCVL(X,Y,Z,false)
-                || mulDivRoundingCVL(X,Y,Z,true) - mulDivRoundingCVL(X,Y,Z,false) == 1
+                mulDivRoundingApproxCVL(X,Y,Z,true) == mulDivRoundingApproxCVL(X,Y,Z,false)
+                || mulDivRoundingApproxCVL(X,Y,Z,true) - mulDivRoundingApproxCVL(X,Y,Z,false) == 1
             )
             &&
             // Multiplication symmetry:
-            mulDivRoundingCVL(X,Y,Z,false) == mulDivRoundingCVL(Y,X,Z,false)
+            mulDivRoundingApproxCVL(X,Y,Z,false) == mulDivRoundingApproxCVL(Y,X,Z,false)
             &&
-            mulDivRoundingCVL(X,Y,Z,true) == mulDivRoundingCVL(Y,X,Z,true)
+            mulDivRoundingApproxCVL(X,Y,Z,true) == mulDivRoundingApproxCVL(Y,X,Z,true)
             &&
             // For typical "shares <= totalShares" scenarios: if X <= Z, then (X * Y / Z) <= Y.
-            (X <= Z => mulDivRoundingCVL(X,Y,Z,false) <= Y)
+            (X <= Z => mulDivRoundingApproxCVL(X,Y,Z,false) <= Y)
             &&
             // Nominator-denominator cancellation (round-down):
-            ((X == Z) => mulDivRoundingCVL(X,Y,Z,false) == Y)
+            ((X == Z) => mulDivRoundingApproxCVL(X,Y,Z,false) == Y)
             &&
-            ((Y == Z) => mulDivRoundingCVL(X,Y,Z,false) == X)
+            ((Y == Z) => mulDivRoundingApproxCVL(X,Y,Z,false) == X)
             &&
             // Nominator-denominator cancellation (round-up); same exact result if no remainder
-            ((X == Z) => mulDivRoundingCVL(X,Y,Z,true) == Y)
+            ((X == Z) => mulDivRoundingApproxCVL(X,Y,Z,true) == Y)
             &&
-            ((Y == Z) => mulDivRoundingCVL(X,Y,Z,true) == X)
+            ((Y == Z) => mulDivRoundingApproxCVL(X,Y,Z,true) == X)
         );
 
     axiom forall uint256 x1. forall uint256 x2. forall uint256 Y. forall uint256 Z.
@@ -65,21 +83,21 @@ ghost mulDivRoundingCVL(uint256, uint256, uint256, bool) returns uint256 {
         (Z > 0 && x1 <= x2)
         =>
         (
-            mulDivRoundingCVL(x1,Y,Z,false) <= mulDivRoundingCVL(x2,Y,Z,false)
+            mulDivRoundingApproxCVL(x1,Y,Z,false) <= mulDivRoundingApproxCVL(x2,Y,Z,false)
             &&
-            mulDivRoundingCVL(x1,Y,Z,true)  <= mulDivRoundingCVL(x2,Y,Z,true)
+            mulDivRoundingApproxCVL(x1,Y,Z,true)  <= mulDivRoundingApproxCVL(x2,Y,Z,true)
             &&
             // With denominator in last position: if x1 <= x2 => 1/x1 >= 1/x2 => ratio is bigger
-            mulDivRoundingCVL(Z,Y,x1,false) >= mulDivRoundingCVL(Z,Y,x2,false)
+            mulDivRoundingApproxCVL(Z,Y,x1,false) >= mulDivRoundingApproxCVL(Z,Y,x2,false)
         );
 
     axiom forall uint256 X. forall uint256 Y. forall uint256 Z.
         // "cannot give zero unless product < divisor"
-        (Z > 0 && mulDivRoundingCVL(X,Y,Z,false) == 0)
+        (Z > 0 && mulDivRoundingApproxCVL(X,Y,Z,false) == 0)
         =>
         (X == 0 || Y == 0 || (X * Y < Z))
         // if rounding UP and X>=1,Y>=1 => result >=1
-        && ((X >= 1 && Y >=1 && Z >=1) => mulDivRoundingCVL(X,Y,Z,true) >= 1);
+        && ((X >= 1 && Y >=1 && Z >=1) => mulDivRoundingApproxCVL(X,Y,Z,true) >= 1);
 
     axiom forall uint256 X. forall uint256 Y1. forall uint256 Y2. forall uint256 Z. forall uint256 XQ. forall uint256 ZQ.
         // adding same difference to X and Z, and switching Y1->Y2 (with Y2>=Y1)
@@ -94,8 +112,8 @@ ghost mulDivRoundingCVL(uint256, uint256, uint256, bool) returns uint256 {
         )
         =>
         (
-            mulDivRoundingCVL(XQ,Y2,ZQ,false) >= mulDivRoundingCVL(X,Y1,Z,false)
+            mulDivRoundingApproxCVL(XQ,Y2,ZQ,false) >= mulDivRoundingApproxCVL(X,Y1,Z,false)
             &&
-            mulDivRoundingCVL(XQ,Y2,ZQ,true)  >= mulDivRoundingCVL(X,Y1,Z,true)
+            mulDivRoundingApproxCVL(XQ,Y2,ZQ,true)  >= mulDivRoundingApproxCVL(X,Y1,Z,true)
         );
 }

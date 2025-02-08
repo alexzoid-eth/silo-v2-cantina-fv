@@ -17,7 +17,7 @@ function requireValidStateInvariants(env e) {
     requireInvariant inv_interestRateTimestampNotInFuture(e);
     requireInvariant inv_borrowerCannotHaveTwoDebts(e);
     requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralSet(e); 
-    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e); 
+    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e); // @todo violated
 
     // SiloX
     requireInvariant inv_liquiditySolvency0(e); requireInvariant inv_liquiditySolvency1(e);
@@ -108,9 +108,9 @@ filtered {
 invariant inv_borrowerCannotHaveDebtWithoutCollateralShares(env e) 
     forall address borrower.
         // User has a debt
-        (ghostERC20Balances[_Debt0][borrower] != 0 || ghostERC20Balances[_Debt1][borrower] != 0) 
-            && isConfigBorrowerCollateralSiloValid(borrower)
-                // Collateral could be in any Silo, moreover configBorrowerCollateralSilo[] could be outdated
+        ghostERC20Balances[_Debt0][borrower] != 0 || ghostERC20Balances[_Debt1][borrower] != 0
+                // Collateral could be in any Silo, moreover configBorrowerCollateralSilo[] could be 
+                //  outdated (after debt transfer or repay)
             => ((
                 ghostERC20Balances[_Protected0][borrower] + ghostERC20Balances[_Collateral0][borrower] != 0
             ) || (

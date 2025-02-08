@@ -78,15 +78,7 @@ methods {
     function _.hookReceiverConfig(address _silo) external
         => NONDET; // not in use
 
-    // Resolve external calls in `ISiloOracle`
-
-    function _.quote(uint256 _baseAmount, address _baseToken) external
-        => NONDET;
-
-    function _.beforeQuote(address) external 
-        => NONDET;
-
-    // Remove from the scene 
+    // SAFE: Remove from the scene 
     
     function _.callOnBehalfOfSilo(address, uint256, ISilo.CallType, bytes) external
         => NONDET DELETE;
@@ -99,6 +91,23 @@ methods {
 
     function _.eip712Domain() external
         => NONDET DELETE;
+
+    // UNSAFE: Resolve external calls in `ISiloOracle`, assume oracles are disabled
+
+    function _.quote(uint256 _baseAmount, address _baseToken) external
+        => NONDET;
+
+    function _.beforeQuote(address) external 
+        => NONDET;
+
+    // UNSAFE: exclude solvency check from user flow
+    function SiloSolvencyLib.isSolvent(
+        ISiloConfig.ConfigData memory _collateralConfig,
+        ISiloConfig.ConfigData memory _debtConfig,
+        address _borrower,
+        ISilo.AccrueInterestInMemory _accrueInMemory
+    ) internal returns bool
+    => ghostUserSolvent[_borrower];
 }
 
 //
@@ -109,6 +118,11 @@ persistent ghost address ghostCaller;
 
 persistent ghost mathint ghostTokensSupply {
     axiom ghostTokensSupply > 10 && ghostTokensSupply < 1000;
+}
+
+// UNSAFE: limit the max users and total balance of all assets and shares 
+persistent ghost mathint ghostWeiUpperLimit {
+    axiom ghostWeiUpperLimit == max_uint32;
 }
 
 function setupSilo(env e) {
@@ -259,6 +273,12 @@ function onFlashLoanCVL(address _receiver) returns bytes32 {
     return result;
 }
 
+// `SiloSolvencyLib`
+
+persistent ghost mapping(address => bool) ghostUserSolvent {
+    init_state axiom forall address user. ghostUserSolvent[user] == false;
+}
+
 //
 // Storage ghosts
 //
@@ -285,7 +305,7 @@ persistent ghost mapping(address => mapping(mathint => mathint)) ghostTotalAsset
     init_state axiom forall address contract. forall mathint assetType. ghostTotalAssets[contract][assetType] == 0;
     // Assume realistic assets amount to void overflow in unchecked blocks
     axiom forall address contract. forall mathint assetType. 
-        ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= max_uint128;
+        ghostTotalAssets[contract][assetType] >= 0 && ghostTotalAssets[contract][assetType] <= ghostWeiUpperLimit;
     // Support only 3 types of accounting 
     axiom forall address contract. forall mathint assetType. 
         assetType > ASSET_TYPE_DEBT() => ghostTotalAssets[contract][assetType] == 0; 
