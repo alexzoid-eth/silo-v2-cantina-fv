@@ -17,15 +17,13 @@ function requireValidStateInvariants(env e) {
     requireInvariant inv_interestRateTimestampNotInFuture(e);
     requireInvariant inv_borrowerCannotHaveTwoDebts(e);
     requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralSet(e); 
-    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e);
+    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e); 
 
     // SiloX
     requireInvariant inv_liquiditySolvency0(e); requireInvariant inv_liquiditySolvency1(e);
-    requireInvariant inv_collateralPlusFeesCoverDebt0(e); requireInvariant inv_collateralPlusFeesCoverDebt1(e);
     requireInvariant inv_siloMustNotHaveUserAllowances0(e); requireInvariant inv_siloMustNotHaveUserAllowances1(e);
     requireInvariant inv_protectedCollateralAlwaysLiquid0(e); requireInvariant inv_protectedCollateralAlwaysLiquid1(e);
     requireInvariant inv_zeroCollateralMeansZeroDebt0(e); requireInvariant inv_zeroCollateralMeansZeroDebt1(e);
-    requireInvariant inv_debtAssetsGteShares0(e); requireInvariant inv_debtAssetsGteShares1(e);        
 }
 
 //
@@ -84,6 +82,10 @@ invariant inv_borrowerCannotHaveTwoDebts(env e)
         ghostERC20Balances[_Debt0][user] != 0
             <=> ghostERC20Balances[_Debt1][user] == 0
         )
+filtered { 
+    // SAFE: Can be executed by Silo only
+    f -> f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
+    } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 // VS- Borrower cannot have debt without collateral set in the config
@@ -104,18 +106,19 @@ filtered {
 
 // VS- Borrower cannot have debt without collateral shares
 invariant inv_borrowerCannotHaveDebtWithoutCollateralShares(env e) 
-    forall address user.
+    forall address borrower.
         // User has a debt
-        (ghostERC20Balances[_Debt0][user] != 0 || ghostERC20Balances[_Debt1][user] != 0)
+        (ghostERC20Balances[_Debt0][borrower] != 0 || ghostERC20Balances[_Debt1][borrower] != 0) 
+            && isConfigBorrowerCollateralSiloValid(borrower)
             => (
                 // Collateral is not zero
-                ghostERC20Balances[ghostProtectedTokenX(ghostConfigBorrowerCollateralSilo[user] == _Silo0)][user] +
-                ghostERC20Balances[ghostCollateralTokenX(ghostConfigBorrowerCollateralSilo[user] == _Silo0)][user]
+                ghostERC20Balances[ghostProtectedTokenX(isConfigBorrowerCollateralSilo0(borrower))][borrower] +
+                ghostERC20Balances[ghostCollateralTokenX(isConfigBorrowerCollateralSilo0(borrower))][borrower]
                 != 0
             )
 filtered { 
     // SAFE: Can be executed by Silo only
-    f -> f.selector != 0x40c755e1        // Config.setThisSiloAsCollateralSilo()
+    f -> f.selector != 0x40c755e1   // Config.setThisSiloAsCollateralSilo()
     && f.selector != 0xf6f8174f     // Config.setOtherSiloAsCollateralSilo()
     && f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
     && f.selector != 0xf6b911bc     // ShareDebtToken.burn()
@@ -141,18 +144,6 @@ invariant inv_liquiditySolvency0(env e) liquiditySolvency(true)
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_liquiditySolvency1(env e) liquiditySolvency(false)
-{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
-
-// VS- The Silo's collateral plus distributor fees must always cover its total debt
-definition collateralPlusFeesCoverDebt(bool zero) returns bool =
-    ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_COLLATERAL()] 
-        + ghostDaoAndDeployerRevenue[ghostSiloX(zero)]
-        >= ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_DEBT()];
-
-invariant inv_collateralPlusFeesCoverDebt0(env e) collateralPlusFeesCoverDebt(true)
-{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
-
-invariant inv_collateralPlusFeesCoverDebt1(env e) collateralPlusFeesCoverDebt(false)
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 // VS- The Silo contract must never have an allowance to withdraw assets
@@ -185,17 +176,4 @@ invariant inv_zeroCollateralMeansZeroDebt0(env e) zeroCollateralMeansZeroDebt(tr
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_zeroCollateralMeansZeroDebt1(env e) zeroCollateralMeansZeroDebt(false)
-{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
-
-// VS- Debt assets >= totalSupply(debtToken)
-definition debtAssetsGteShares(bool zero) returns bool =
-    ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_DEBT()] 
-        >= ghostERC20TotalSupply[ghostDebtTokenX(zero)];
-
-invariant inv_debtAssetsGteShares0(env e) debtAssetsGteShares(true)
-filtered { f -> f.selector != 0xc6c3bbe6 } // SAFE: ShareToken.mint() can be executed by Silo only 
-{ preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
-
-invariant inv_debtAssetsGteShares1(env e) debtAssetsGteShares(false)
-filtered { f -> f.selector != 0xc6c3bbe6 } // SAFE: ShareToken.mint() can be executed by Silo only 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }

@@ -52,6 +52,13 @@ definition ghostTokenX(bool zero) returns address =
 // Set true to use static config values from `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
 persistent ghost bool ghostUseStaticConfig;
 
+definition isConfigBorrowerCollateralSilo0(address borrower) returns bool
+    = ghostConfigBorrowerCollateralSilo[borrower] == _Silo0;
+
+definition isConfigBorrowerCollateralSiloValid(address borrower) returns bool
+    = ghostConfigBorrowerCollateralSilo[borrower] == _Silo0 
+        || ghostConfigBorrowerCollateralSilo[borrower] == _Silo1;
+
 persistent ghost mapping(address => address) ghostConfigBorrowerCollateralSilo {
     init_state axiom forall address borrower. ghostConfigBorrowerCollateralSilo[borrower] == 0;
 }
