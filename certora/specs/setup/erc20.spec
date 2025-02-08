@@ -2,16 +2,25 @@
 
 methods {
 
-    // ERC20/ERC20Upgradeable
-    function _.decimals() external => DISPATCHER(true);
-    function _.totalSupply() external => DISPATCHER(true);
-    function _.balanceOf(address) external => DISPATCHER(true);
-    function _.allowance(address,address) external => DISPATCHER(true);
-    function _.approve(address,uint256) external => DISPATCHER(true);
-    function _.transfer(address,uint256) external => DISPATCHER(true);
-    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
+    // For assets only
+    function _.decimals() external 
+        => DISPATCHER(true);
+    function _.totalSupply() external 
+        => DISPATCHER(true);
+    function _.allowance(address,address) external 
+        => DISPATCHER(true);
+    function _.approve(address,uint256) external 
+        => DISPATCHER(true);
+    function _.transfer(address,uint256) external 
+        => DISPATCHER(true);
+    function _.transferFrom(address,address,uint256) external 
+        => DISPATCHER(true);
 
-    // SafeERC20 summaries
+    // Both for shares and assets
+    function _.balanceOf(address account) external with (env e) 
+        => balanceOfCVL(e, calledContract, account) expect uint256;
+
+    // For Assets only
     function SafeERC20.safeTransfer(address token, address to, uint256 value) internal
         => safeTransferFromCVL(token, currentContract, to, value, false);
     function SafeERC20.safeTransferFrom(address token, address from, address to, uint256 value) internal
@@ -85,6 +94,17 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
     axiom forall address token. ghostERC20TotalSupply[token] >= 0 
         // UNSAFE: Reduce max amount to reduce complexity
         && ghostERC20TotalSupply[token] <= max_uint128;
+}
+
+// User balances
+
+function balanceOfCVL(env e, address token, address account) returns uint256 {
+    if(token == ghostToken0 || token == ghostToken1) {
+        require(ERC20_ACCOUNT_BOUNDS(token, account));
+        return require_uint256(ghostERC20Balances[token][account]);
+    } else {
+        return token.balanceOf(e, account);
+    }
 }
 
 // Safe transfer lib summaries

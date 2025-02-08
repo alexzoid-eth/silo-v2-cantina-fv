@@ -5,7 +5,6 @@ import "../silo/silo_common.spec";
 import "./collateral0.spec";
 import "./debt0.spec";
 import "./protected0.spec";
-import "./token0.spec";
 
 using Silo0 as _Silo0;
 

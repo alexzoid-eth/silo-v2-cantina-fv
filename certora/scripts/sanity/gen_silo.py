@@ -8,11 +8,9 @@ def generate_config(rule_name):
             "certora/harnesses/silo0/Silo0.sol",
             "certora/harnesses/silo0/Debt0.sol",
             "certora/harnesses/silo0/Protected0.sol",
-            "certora/mocks/Token0.sol",
             "certora/harnesses/silo1/Silo1.sol",
             "certora/harnesses/silo1/Debt1.sol",
             "certora/harnesses/silo1/Protected1.sol",
-            "certora/mocks/Token1.sol",
         ],
         "msg": f"Silo1_{rule_name}_verified",
         "mutations": {

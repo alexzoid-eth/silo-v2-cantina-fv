@@ -131,6 +131,7 @@ function setupSilo(env e) {
     // SAFE: Valid time
     require(e.block.timestamp != 0);
     require(e.block.number != 0);
+    require(ghostToken0 != e.msg.sender && ghostToken1 != e.msg.sender);
 
     // SAFE: Common valid state invariants working both for Silo0 and Silo1
     requireValidStateInvariants(e);
@@ -201,7 +202,6 @@ definition ASSET_TYPE_DEBT() returns mathint = to_mathint(ISilo.AssetType.Debt);
 
 definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool 
     = a != _Silo0
-        && a != ghostToken0
         && a != _Protected0
         && a != _Silo0
         && a != _Debt0
@@ -209,7 +209,6 @@ definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool
         && a != ghostConfigMaxLtvOracle0
         && a != ghostConfigInterestRateModel0
         && a != _Silo1
-        && a != ghostToken1
         && a != _Protected1
         && a != _Silo1
         && a != _Debt1

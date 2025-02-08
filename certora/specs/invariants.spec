@@ -110,12 +110,12 @@ invariant inv_borrowerCannotHaveDebtWithoutCollateralShares(env e)
         // User has a debt
         (ghostERC20Balances[_Debt0][borrower] != 0 || ghostERC20Balances[_Debt1][borrower] != 0) 
             && isConfigBorrowerCollateralSiloValid(borrower)
-            => (
-                // Collateral is not zero
-                ghostERC20Balances[ghostProtectedTokenX(isConfigBorrowerCollateralSilo0(borrower))][borrower] +
-                ghostERC20Balances[ghostCollateralTokenX(isConfigBorrowerCollateralSilo0(borrower))][borrower]
-                != 0
-            )
+                // Collateral could be in any Silo, moreover configBorrowerCollateralSilo[] could be outdated
+            => ((
+                ghostERC20Balances[_Protected0][borrower] + ghostERC20Balances[_Collateral0][borrower] != 0
+            ) || (
+                ghostERC20Balances[_Protected1][borrower] + ghostERC20Balances[_Collateral1][borrower] != 0
+            ))
 filtered { 
     // SAFE: Can be executed by Silo only
     f -> f.selector != 0x40c755e1   // Config.setThisSiloAsCollateralSilo()
