@@ -116,3 +116,9 @@ rule sanity_others(method f, env e, calldataarg args) filtered { f->
     f(e, args);
     satisfy(true);
 }
+
+rule sanity_all(method f, env e, calldataarg args) {
+    setupSilo(e);
+    f(e, args);
+    satisfy(true);
+}

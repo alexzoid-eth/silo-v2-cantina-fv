@@ -5,8 +5,6 @@ methods {
     // For assets only
     function _.decimals() external 
         => DISPATCHER(true);
-    function _.totalSupply() external 
-        => DISPATCHER(true);
     function _.allowance(address,address) external 
         => DISPATCHER(true);
     function _.approve(address,uint256) external 
@@ -17,6 +15,9 @@ methods {
         => DISPATCHER(true);
 
     // Both for shares and assets
+    function _.totalSupply() external 
+        => totalSupplyCVL(calledContract) expect uint256;
+
     function _.balanceOf(address account) external with (env e) 
         => balanceOfCVL(e, calledContract, account) expect uint256;
 
@@ -96,15 +97,17 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
         && ghostERC20TotalSupply[token] <= max_uint128;
 }
 
+// Total supply
+
+function totalSupplyCVL(address token) returns uint256 {
+    return require_uint256(ghostERC20TotalSupply[token]);
+}
+
 // User balances
 
 function balanceOfCVL(env e, address token, address account) returns uint256 {
-    if(token == ghostToken0 || token == ghostToken1) {
-        require(ERC20_ACCOUNT_BOUNDS(token, account));
-        return require_uint256(ghostERC20Balances[token][account]);
-    } else {
-        return token.balanceOf(e, account);
-    }
+    require(ERC20_ACCOUNT_BOUNDS(token, account));
+    return require_uint256(ghostERC20Balances[token][account]);
 }
 
 // Safe transfer lib summaries

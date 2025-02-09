@@ -26,5 +26,11 @@ cd ../sanity
 cd ../share_tokens
 ./gen_all.sh
 
+cd ../share_tokens_split
+./gen_all.sh
+
 cd ../silo
+./gen_all.sh
+
+cd ../silo_split
 ./gen_all.sh

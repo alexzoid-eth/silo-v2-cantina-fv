@@ -1,6 +1,5 @@
 // Silo core, CVL storage ghosts and hooks
 
-
 import "../erc20.spec";
 import "../math.spec";
 
@@ -27,7 +26,7 @@ methods {
     // Resolve external calls to `Silo`
 
     function _.getTotalAssetsStorage(ISilo.AssetType _assetType) external
-        => DISPATCHER(true);
+        => getTotalAssetsStorageCVL(calledContract, to_mathint(_assetType)) expect uint256;
 
     function _.getCollateralAndDebtTotalsStorage() external
         => DISPATCHER(true);
@@ -73,10 +72,10 @@ methods {
     // Resolve external calls in `IHookReceiver`
 
     function _.beforeAction(address _silo, uint256 _action, bytes _input) external
-        => beforeActionCVL() expect void; 
+        => beforeActionCVL(_silo, _action) expect void; 
 
     function _.afterAction(address _silo, uint256 _action, bytes _inputAndOutput) external
-        => afterActionCVL() expect void; 
+        => afterActionCVL(_silo, _action) expect void; 
 
     function _.hookReceiverConfig(address _silo) external
         => NONDET; 
@@ -108,17 +107,15 @@ methods {
 // Assume valid state for all Silo contracts
 //
 
-persistent ghost address ghostCaller;
-
-persistent ghost mathint ghostTokensSupply {
-    axiom ghostTokensSupply > 10 && ghostTokensSupply < 1000;
-}
-
-// UNSAFE: limit the max users and total balance of all assets and shares 
+// UNSAFE: limit the max balance of each user 
 persistent ghost mathint ghostWeiUpperLimit {
-    axiom ghostWeiUpperLimit == max_uint64;
+    axiom ghostWeiUpperLimit == max_uint32;
+}
+persistent ghost mathint ghostTokenSupplyRange {
+    axiom ghostTokenSupplyRange >= ghostWeiUpperLimit && ghostTokenSupplyRange <= 10 * ghostWeiUpperLimit;
 }
 
+persistent ghost address ghostCaller;
 function setupSilo(env e) {
 
     // SAFE: To make further computations in the Silo secure require DAO and deployer 
@@ -144,9 +141,9 @@ function setupSilo(env e) {
     // SAFE: Common valid state invariants working both for Silo0 and Silo1
     requireValidStateInvariants(e);
 
-    // SAFE: Assume realistic assets total supply
-    require(ghostERC20TotalSupply[ghostToken0] == ghostTokensSupply * 10^ghostDecimals0);
-    require(ghostERC20TotalSupply[ghostToken1] == ghostTokensSupply * 10^ghostDecimals1);
+    // SAFE: Assume valid assets total supply
+    require(ghostERC20TotalSupply[ghostToken0] == ghostTokenSupplyRange);
+    require(ghostERC20TotalSupply[ghostToken1] == ghostTokenSupplyRange);
 
     // UNSAFE: zero assets <=> zero shares (based on `SiloMathLib._commonConvertTo()`)
     require(ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] == 0 <=> ghostERC20TotalSupply[_Protected0] == 0);
@@ -229,6 +226,12 @@ definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
 // Methods summarizes
 //
 
+// `Silo`
+
+function getTotalAssetsStorageCVL(address silo, mathint assetType) returns uint256 {
+    return require_uint256(ghostTotalAssets[silo][assetType]);
+}
+ 
 // `ShareTokenLib.decimals`
 
 persistent ghost uint8 ghostDecimals0 {
@@ -270,19 +273,19 @@ function onFlashLoanCVL(address _receiver) returns bytes32 {
 // `IHookReceiver`
 
 persistent ghost bool ghostBeforeActionCalled;
-function beforeActionCVL() {
+persistent ghost uint256 ghostBeforeActionId;
+function beforeActionCVL(address _silo, uint256 _action) {
+    assert(_silo == _Silo0 || _silo == _Silo1);
     ghostBeforeActionCalled = true;
+    ghostBeforeActionId = _action;
 }
 
 persistent ghost bool ghostAfterActionCalled;
-function afterActionCVL() {
+persistent ghost uint256 ghostAfterActionId;
+function afterActionCVL(address _silo, uint256 _action) {
+    assert(_silo == _Silo0 || _silo == _Silo1);
     ghostAfterActionCalled = true;
-}
-
-// `SiloSolvencyLib`
-
-persistent ghost mapping(address => bool) ghostUserSolvent {
-    init_state axiom forall address user. ghostUserSolvent[user] == false;
+    ghostAfterActionId = _action;
 }
 
 //

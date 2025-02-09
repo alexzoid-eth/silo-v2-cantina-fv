@@ -36,9 +36,6 @@ def generate_config(rule_name):
         "parametric_contracts": [
             "Silo1"
         ],
-        "prover_args": [
-            "-enableStorageSplitting false"
-        ],
         "rule": [
             rule_name
         ],

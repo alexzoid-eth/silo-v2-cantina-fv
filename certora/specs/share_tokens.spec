@@ -9,6 +9,30 @@ methods {
         => matchActionCVL(_action, _expectedHook);
 }
 
+////////////////////////////////////////////////// Timestamp
+
+// @todo 
+// https://prover.certora.com/output/52567/390ec1935a5641ddac16f08e01259f26?anonymousKey=680a408586d844af3660011ad280c31eb1d9868d
+// https://prover.certora.com/output/52567/e16c382717014b739c29ded1558316d4?anonymousKey=db52ccffb136700ef604813737fa7ecce8693faf
+// https://prover.certora.com/output/52567/826d55fd284946dcab083a47a288a4cd?anonymousKey=8214c9ed815fe047b16d55c33a68ba48e45c9680
+// Block timestamp never goes backwards
+rule share_InterestTimestampAlwaysGrow(env e, method f, calldataarg args)
+    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } {
+
+    setupSilo(e);
+
+    mathint silo0InterestBefore = ghostInterestRateTimestamp[_Silo0];
+    mathint silo1InterestBefore = ghostInterestRateTimestamp[_Silo1];
+
+    f(e, args);
+
+    mathint silo0InterestAfter = ghostInterestRateTimestamp[_Silo0];
+    mathint silo1InterestAfter = ghostInterestRateTimestamp[_Silo1];
+
+    assert(silo0InterestAfter >= silo0InterestBefore);
+    assert(silo1InterestAfter >= silo1InterestBefore);
+}
+
 ////////////////////////////////////////////////// Hooks
 
 // Execute all hooks when set true
@@ -22,19 +46,6 @@ function matchActionCVL(uint256 _action, uint256 _expectedHook) returns bool {
     } else {
         return (_action & _expectedHook == _expectedHook);
     }
-}
-
-// Set true at every storage write
-persistent ghost bool ghostStorageTouched;
-// Set true at every storage write before hookBefore
-persistent ghost bool ghostStorageTouchedBeforeEntryActionHook;
-// Set true at every storage write after hookAfter
-persistent ghost bool ghostStorageTouchedAfterExitActionHook;
-
-hook ALL_SSTORE(uint256 slot, uint256 val)  {
-    ghostStorageTouchedBeforeEntryActionHook = (ghostBeforeActionCalled == false);    
-    ghostStorageTouchedAfterExitActionHook = (ghostAfterActionCalled == true);
-    ghostStorageTouched = true;
 }
 
 // Functions that must never trigger hooks
@@ -63,74 +74,30 @@ definition TRANSFER_FUNCTIONS(method f) returns bool =
     || f.selector == 0x23b872dd // transferFrom()
     ;
 
-// Ensures no storage writes happen before `hookBefore` or after `hookAfter`
-rule share_enforceHookBeforeAfterOrdering(env e, method f, calldataarg args) 
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) 
-        // `$.transferWithChecks = true` in `forwardTransferFromNoChecks()` breaks the rule
-        && !(f.selector == 0xd985616c) // forwardTransferFromNoChecks()
-    } 
-{
-    setupSilo(e);
-    require(ghostHookActionAllowAll == true);
+definition TRANSFER_ALL_FUNCTIONS(method f) returns bool = 
+    TRANSFER_FUNCTIONS(f)
+    || f.selector == 0xd985616c // forwardTransferFromNoChecks()
+    ;
 
-    // No writes or hooks at the start
-    require(
-        !ghostStorageTouchedBeforeEntryActionHook 
-        && !ghostStorageTouchedAfterExitActionHook
-        && !ghostBeforeActionCalled
-        && !ghostAfterActionCalled
-    );
-
-    f(e, args);
-
-    // For non-transfer functions, no writes should happen before `hookBefore`.
-    // For all functions, no writes should happen after `hookAfter`.
-    assert(!NO_HOOKS_FUNCTIONS(f) => (
-        (TRANSFER_FUNCTIONS(f) ? true : ghostStorageTouchedBeforeEntryActionHook == false)
-        && ghostStorageTouchedAfterExitActionHook == false
-    ));
-}
-
-// Hooks Must Execute If Storage Changes
-//  If storage was changed, then both hooks must be called.
-//  For transfers, the before hook is optional, but after hook is required.
-rule share_hooksMustExecuteIfStorageChanged(env e, method f, calldataarg args)
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f)
-        // `$.transferWithChecks = true` in `forwardTransferFromNoChecks()` breaks the rule
-        && !(f.selector == 0xd985616c) // forwardTransferFromNoChecks()
-    } 
-{
-    setupSilo(e);
-    require(ghostHookActionAllowAll == true);
-
-    // Reset flags
-    require(!ghostStorageTouched && !ghostBeforeActionCalled && !ghostAfterActionCalled);
-
-    f(e, args);
-
-    // If storage changed, both hooks must be called.
-    // Transfer-only => before hook might be skipped, but after hook must be triggered.
-    assert(!NO_HOOKS_FUNCTIONS(f) && ghostStorageTouched => (
-        (TRANSFER_FUNCTIONS(f) ? true : ghostBeforeActionCalled)
-        && ghostAfterActionCalled
-    ));
-}
-
-// Function Executes Configured Hooks
+// Check valid action ids inside hooks
 rule share_functionExecutesHooksBasedOnConfig(env e, method f, calldataarg args) 
     filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
 {
     setupSilo(e);
+
     require(ghostHookActionAllowAll == true);
+    require(ghostBeforeActionId == 0 && ghostAfterActionId == 0);
 
     f(e, args);
 
-    // Verify the function’s hooks match ghostExpectedHook
+    // Correct id inside match function and hook call 
     assert(!NO_HOOKS_FUNCTIONS(f) 
         // UNSAFE: TODO - add a support of transfer functions in `ghostSelectorHooks[]`
-        && !TRANSFER_FUNCTIONS(f) 
+        && !TRANSFER_ALL_FUNCTIONS(f) 
         => (
         ghostExpectedHook == ghostSelectorHooks[to_bytes4(f.selector)]
+        && ghostBeforeActionId == ghostExpectedHook
+        && ghostAfterActionId == ghostBeforeActionId
     ));
 }
 
@@ -170,7 +137,7 @@ invariant share_hooksShouldBeSynchronized(env e)
 definition ALLOWED_REENTER_FUNCTIONS(method f) returns bool = 
 
     // Do not touch shares
-    f.selector == 0xa6afed95 // accrueInterest()
+    f.selector == 0xa6afed95    // accrueInterest()
     || f.selector == 0x6e236614 // accrueInterestForConfig()
     || f.selector == 0x5cffe9de // flashLoan()
 
@@ -230,13 +197,11 @@ rule share_noStateChangingCallInsideReentrancyEntered(env e, method f, calldataa
     );
 }
 
-// Enforces no state-changing calls may occur while already in the ENTERED reentrancy state
-rule share_noSharesTransferringInsideReentrancyEntered(env e, method f, calldataarg args)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
-{
-    // Do not setup silo due to `inv_crossReentrancyGuardOpenedOnExit` invariant
+rule share_protectedFunctionMightChangeState(env e, method f, calldataarg args) {
 
-    mathint statusBefore = ghostCrossReentrantStatus;
+    setupSilo(e);
+
+    require(ghostReentrancyCalled == false);
 
     storage before = lastStorage;
 
@@ -244,22 +209,27 @@ rule share_noSharesTransferringInsideReentrancyEntered(env e, method f, calldata
 
     storage after = lastStorage;
 
-    // If we are currently ENTERED, then calling a second stateful function is reentrant
-    assert(statusBefore == ENTERED() && !ALLOWED_REENTER_FUNCTIONS(f)
+    satisfy(ghostReentrancyCalled == true
         => (
-            before[_Silo0] == after[_Silo0]
-            && before[_Protected0] == after[_Protected0]
-            && before[_Debt0] == after[_Debt0]
-            && before[_Silo1] == after[_Silo1]
-            && before[_Protected1] == after[_Protected1]
-            && before[_Debt1] == after[_Debt1]
+            before[_Silo0] != after[_Silo0]
+            || before[_Protected0] != after[_Protected0]
+            || before[_Debt0] != after[_Debt0]
+            || before[_Silo1] != after[_Silo1]
+            || before[_Protected1] != after[_Protected1]
+            || before[_Debt1] != after[_Debt1]
         )
     );
 }
 
 // Moving shares is not allowed inside a reentrant call
 rule share_noMovingSharesInsideReentrancyEntered(env e, method f, calldataarg args, address sharesUser)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
+    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) 
+        // SAFE: Only silo
+        && f.selector != 0xc6c3bbe6 // mint()
+        && f.selector != 0xf6b911bc // burn()
+        // SAFE: Only hook receiver
+        && f.selector != 0xd985616c // forwardTransferFromNoChecks()
+    } 
 {
     // Do not setup silo due to `inv_crossReentrancyGuardOpenedOnExit` invariant
 
@@ -294,6 +264,20 @@ rule share_noMovingSharesInsideReentrancyEntered(env e, method f, calldataarg ar
         && collateralShares1Before == collateralShares1After
         && debtShares1Before == debtShares1After
     ));
+
+    // Transferring shares requires reentrancy involving
+    assert((
+        // Silo0 group
+        protectedShares0Before != protectedShares0After
+        || collateralShares0Before != collateralShares0After
+        || debtShares0Before != debtShares0After
+        // Silo1 group
+        || protectedShares1Before != protectedShares1After
+        || collateralShares1Before != collateralShares1After
+        || debtShares1Before != debtShares1After
+        ) 
+        => ghostReentrancyCalled
+    );
 }
 
 // Allowed reentrancy function never call to CrossReentrancyGuard
@@ -309,4 +293,89 @@ rule share_allowedReenterFunctionDoNotCallCrossReentrancyGuard(env e, method f, 
     assert(ALLOWED_REENTER_FUNCTIONS(f)
         => (ghostReentrancyCalled == false)
     );
+}
+
+////////////////////////////////////////////////// Interest
+
+// @todo 
+// https://prover.certora.com/output/52567/5799ee1e7950482085ab8a8696c6b8a2?anonymousKey=7e301ee157a910ba31e5173abaafccfc70df2ea8
+// https://prover.certora.com/output/52567/4278f347c41d463280605ff2be6660e2?anonymousKey=df6a0ad029e74f8df4a805d92ece5d164c023f8d
+// https://prover.certora.com/output/52567/142a7da111ca49a0a1d54f27a0eb5a84?anonymousKey=b2b94c51937b21b1e9be580d1a9264af978157b9
+// Any change in share balances or total supply must have interest up-to-date (same block)
+rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg args, address user) 
+    filtered {
+    // SAFE: Can be executed by Silo only
+    f -> f.selector != 0xc6c3bbe6   // ShareDebtToken.mint()
+    && f.selector != 0xf6b911bc     // ShareDebtToken.burn()
+    // SAFE: Can be executed by HookReceiver only
+    && f.selector != 0xd985616c     // ShareDebtToken.forwardTransferFromNoChecks()
+    && !VIEW_OR_FALLBACK_FUNCTION(f)
+    } {
+    
+    setupSilo(e);
+
+    // --- Group0: (Debt0, Collateral0, Protected0) ---
+
+    // Record Group0 share balances for `user` before
+    mathint debt0BalBefore = ghostERC20Balances[_Debt0][user];
+    mathint coll0BalBefore = ghostERC20Balances[_Collateral0][user];
+    mathint prot0BalBefore = ghostERC20Balances[_Protected0][user];
+
+    // Record total supply for Group0 share tokens before
+    mathint debt0SupplyBefore = ghostERC20TotalSupply[_Debt0];
+    mathint coll0SupplyBefore = ghostERC20TotalSupply[_Collateral0];
+    mathint prot0SupplyBefore = ghostERC20TotalSupply[_Protected0];
+
+    // --- Group1: (Debt1, Collateral1, Protected1) ---
+
+    // Record Group1 share balances for `user` before
+    mathint debt1BalBefore = ghostERC20Balances[_Debt1][user];
+    mathint coll1BalBefore = ghostERC20Balances[_Collateral1][user];
+    mathint prot1BalBefore = ghostERC20Balances[_Protected1][user];
+
+    // Record total supply for Group1 share tokens before
+    mathint debt1SupplyBefore = ghostERC20TotalSupply[_Debt1];
+    mathint coll1SupplyBefore = ghostERC20TotalSupply[_Collateral1];
+    mathint prot1SupplyBefore = ghostERC20TotalSupply[_Protected1];
+
+    f(e, args);
+
+    // After
+    mathint debt0BalAfter = ghostERC20Balances[_Debt0][user];
+    mathint coll0BalAfter = ghostERC20Balances[_Collateral0][user];
+    mathint prot0BalAfter = ghostERC20Balances[_Protected0][user];
+    mathint debt0SupplyAfter = ghostERC20TotalSupply[_Debt0];
+    mathint coll0SupplyAfter = ghostERC20TotalSupply[_Collateral0];
+    mathint prot0SupplyAfter = ghostERC20TotalSupply[_Protected0];
+    mathint silo0InterestAfter = ghostInterestRateTimestamp[_Silo0];
+
+    mathint debt1BalAfter = ghostERC20Balances[_Debt1][user];
+    mathint coll1BalAfter = ghostERC20Balances[_Collateral1][user];
+    mathint prot1BalAfter = ghostERC20Balances[_Protected1][user];
+    mathint debt1SupplyAfter = ghostERC20TotalSupply[_Debt1];
+    mathint coll1SupplyAfter = ghostERC20TotalSupply[_Collateral1];
+    mathint prot1SupplyAfter = ghostERC20TotalSupply[_Protected1];
+    mathint silo1InterestAfter = ghostInterestRateTimestamp[_Silo1];
+
+    bool changedGroup0 = (
+        debt0BalBefore != debt0BalAfter
+     || coll0BalBefore != coll0BalAfter
+     || prot0BalBefore != prot0BalAfter
+     || debt0SupplyBefore != debt0SupplyAfter
+     || coll0SupplyBefore != coll0SupplyAfter
+     || prot0SupplyBefore != prot0SupplyAfter
+    );
+
+    bool changedGroup1 = (
+        debt1BalBefore != debt1BalAfter
+     || coll1BalBefore != coll1BalAfter
+     || prot1BalBefore != prot1BalAfter
+     || debt1SupplyBefore != debt1SupplyAfter
+     || coll1SupplyBefore != coll1SupplyAfter
+     || prot1SupplyBefore != prot1SupplyAfter
+    );
+
+    // If shares for groups changed, silo’s interest must have updated
+    assert(changedGroup0 => silo0InterestAfter == e.block.timestamp);
+    assert(changedGroup1 => silo1InterestAfter == e.block.timestamp);
 }

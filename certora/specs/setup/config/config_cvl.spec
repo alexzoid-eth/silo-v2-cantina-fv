@@ -81,12 +81,12 @@ methods {
 }
 
 function setThisSiloAsCollateralSiloCVL(env e, address _borrower) {
-    ASSERT(e.msg.sender == _Silo0 || e.msg.sender == _Silo1);
+    assert(e.msg.sender == _Silo0 || e.msg.sender == _Silo1);
     ghostConfigBorrowerCollateralSilo[_borrower] = e.msg.sender;
 }
 
 function setOtherSiloAsCollateralSiloCVL(env e, address _borrower) {
-    ASSERT(e.msg.sender == _Silo0 || e.msg.sender == _Silo1);
+    assert(e.msg.sender == _Silo0 || e.msg.sender == _Silo1);
     if(e.msg.sender == _Silo0) {
         ghostConfigBorrowerCollateralSilo[_borrower] = _Silo1;
     } else {
@@ -95,7 +95,7 @@ function setOtherSiloAsCollateralSiloCVL(env e, address _borrower) {
 }
 
 function onDebtTransferCVL(env e, address _sender, address _recipient) {
-    ASSERT(e.msg.sender == _Debt0 || e.msg.sender == _Debt1);
+    assert(e.msg.sender == _Debt0 || e.msg.sender == _Debt1);
 
     address thisSilo;
     if(e.msg.sender == _Debt0) {
@@ -112,7 +112,7 @@ function onDebtTransferCVL(env e, address _sender, address _recipient) {
 }
 
 function accrueInterestForSiloCVL(env e, address _silo) {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     address irm;
     if(_silo == _Silo0) {
@@ -168,7 +168,7 @@ function getConfigsForBorrowCVL(
     address _debtSilo
     ) returns (ISiloConfig.ConfigData, ISiloConfig.ConfigData) {
     
-    ASSERT(_debtSilo == _Silo0 || _debtSilo == _Silo1);
+    assert(_debtSilo == _Silo0 || _debtSilo == _Silo1);
 
     ISiloConfig.ConfigData ccfg;
     ISiloConfig.ConfigData dcfg = getConfigCVL(_debtSilo);
@@ -187,7 +187,7 @@ function getSilosCVL() returns (address, address) {
 }
 
 function getShareTokensCVL(address _silo) returns (address, address, address) {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
     if(_silo == _Silo0) {
         return (_Protected0, _Collateral0, _Debt0);
     } else {
@@ -196,7 +196,7 @@ function getShareTokensCVL(address _silo) returns (address, address, address) {
 }
 
 function getAssetForSiloCVL(address _silo) returns address {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
     if(_silo == _Silo0) {
         return ghostToken0;
     } else {
@@ -205,7 +205,7 @@ function getAssetForSiloCVL(address _silo) returns address {
 }
 
 function getFeesWithAssetCVL(address _silo) returns (uint256, uint256, uint256, address) {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     if(_silo == _Silo0) {
         return (
@@ -228,7 +228,7 @@ function getCollateralShareTokenAndAssetCVL(
     address _silo, ISilo.CollateralType _collateralType
     ) returns (address, address) {
 
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     if(_silo == _Silo0) {
         if(_collateralType == ISilo.CollateralType.Collateral) {
@@ -246,7 +246,7 @@ function getCollateralShareTokenAndAssetCVL(
 }
 
 function getDebtShareTokenAndAssetCVL(address _silo) returns (address, address) {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     if(_silo == _Silo0) {
         return (_Debt0, ghostToken0);
@@ -256,7 +256,7 @@ function getDebtShareTokenAndAssetCVL(address _silo) returns (address, address) 
 }
 
 function getConfigCVL(address _silo) returns ISiloConfig.ConfigData {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     if(_silo == _Silo0) {
         return _silo0ConfigDataCVL();
@@ -266,7 +266,7 @@ function getConfigCVL(address _silo) returns ISiloConfig.ConfigData {
 }
 
 function hasDebtInOtherSiloCVL(address _thisSilo, address _borrower) returns bool {
-    ASSERT(_thisSilo == _Silo0 || _thisSilo == _Silo1);
+    assert(_thisSilo == _Silo0 || _thisSilo == _Silo1);
 
     if(_thisSilo == _Silo0) {
         return (ghostERC20Balances[_Debt1][_borrower] != 0);
@@ -291,7 +291,7 @@ function getDebtSiloCVL(address _borrower) returns address {
 }
 
 function _getDepositConfigCVL(address _silo) returns ISiloConfig.DepositConfig {
-    ASSERT(_silo == _Silo0 || _silo == _Silo1);
+    assert(_silo == _Silo0 || _silo == _Silo1);
 
     if(_silo == _Silo0) {
         return _silo0DepositConfigCVL();
