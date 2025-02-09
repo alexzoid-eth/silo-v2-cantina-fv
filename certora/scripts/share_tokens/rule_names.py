@@ -1,7 +1,5 @@
 # All other regular rules
 rule_names = [
-    "share_InterestTimestampAlwaysGrow",
-
     "share_functionExecutesHooksBasedOnConfig",
     "share_noHookFunctionMustNotExecuteHook",
     "share_hooksShouldBeSynchronized",
@@ -13,4 +11,5 @@ rule_names = [
     "share_allowedReenterFunctionDoNotCallCrossReentrancyGuard",
 
     "share_groupShareChangeRequireGroupTimestamp",
+    "share_InterestTimestampAlwaysGrow",
 ]

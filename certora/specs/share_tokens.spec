@@ -9,30 +9,6 @@ methods {
         => matchActionCVL(_action, _expectedHook);
 }
 
-////////////////////////////////////////////////// Timestamp
-
-// @todo 
-// https://prover.certora.com/output/52567/390ec1935a5641ddac16f08e01259f26?anonymousKey=680a408586d844af3660011ad280c31eb1d9868d
-// https://prover.certora.com/output/52567/e16c382717014b739c29ded1558316d4?anonymousKey=db52ccffb136700ef604813737fa7ecce8693faf
-// https://prover.certora.com/output/52567/826d55fd284946dcab083a47a288a4cd?anonymousKey=8214c9ed815fe047b16d55c33a68ba48e45c9680
-// Block timestamp never goes backwards
-rule share_InterestTimestampAlwaysGrow(env e, method f, calldataarg args)
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } {
-
-    setupSilo(e);
-
-    mathint silo0InterestBefore = ghostInterestRateTimestamp[_Silo0];
-    mathint silo1InterestBefore = ghostInterestRateTimestamp[_Silo1];
-
-    f(e, args);
-
-    mathint silo0InterestAfter = ghostInterestRateTimestamp[_Silo0];
-    mathint silo1InterestAfter = ghostInterestRateTimestamp[_Silo1];
-
-    assert(silo0InterestAfter >= silo0InterestBefore);
-    assert(silo1InterestAfter >= silo1InterestBefore);
-}
-
 ////////////////////////////////////////////////// Hooks
 
 // Execute all hooks when set true
@@ -298,9 +274,9 @@ rule share_allowedReenterFunctionDoNotCallCrossReentrancyGuard(env e, method f, 
 ////////////////////////////////////////////////// Interest
 
 // @todo 
-// https://prover.certora.com/output/52567/5799ee1e7950482085ab8a8696c6b8a2?anonymousKey=7e301ee157a910ba31e5173abaafccfc70df2ea8
-// https://prover.certora.com/output/52567/4278f347c41d463280605ff2be6660e2?anonymousKey=df6a0ad029e74f8df4a805d92ece5d164c023f8d
-// https://prover.certora.com/output/52567/142a7da111ca49a0a1d54f27a0eb5a84?anonymousKey=b2b94c51937b21b1e9be580d1a9264af978157b9
+// https://prover.certora.com/output/52567/fb6a79fac0d7450e8bbd26a242dd1aa0?anonymousKey=58546f20dc4c5c968988e246b979bc782839079a
+// https://prover.certora.com/output/52567/dc958ca9ec844f4187eb028e8c4368f8?anonymousKey=d4afea12e5868c51330d696ac5e3790086647d1f
+// https://prover.certora.com/output/52567/60312ea50de34b0a9ce7e65251965239?anonymousKey=04f933fd7312bc7b1e0eebfd096e58d511508dff
 // Any change in share balances or total supply must have interest up-to-date (same block)
 rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg args, address user) 
     filtered {
@@ -378,4 +354,23 @@ rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg ar
     // If shares for groups changed, silo’s interest must have updated
     assert(changedGroup0 => silo0InterestAfter == e.block.timestamp);
     assert(changedGroup1 => silo1InterestAfter == e.block.timestamp);
+}
+
+// @todo https://prover.certora.com/output/52567/bb6a9bf9c1aa405895711f54be412391?anonymousKey=7d4771c823f11afa1d649492f03a1915b3343f34
+// Block timestamp never goes backwards
+rule share_InterestTimestampAlwaysGrow(env e, method f, calldataarg args)
+    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } {
+
+    setupSilo(e);
+
+    mathint silo0InterestBefore = ghostInterestRateTimestamp[_Silo0];
+    mathint silo1InterestBefore = ghostInterestRateTimestamp[_Silo1];
+
+    f(e, args);
+
+    mathint silo0InterestAfter = ghostInterestRateTimestamp[_Silo0];
+    mathint silo1InterestAfter = ghostInterestRateTimestamp[_Silo1];
+
+    assert(silo0InterestAfter >= silo0InterestBefore);
+    assert(silo1InterestAfter >= silo1InterestBefore);
 }

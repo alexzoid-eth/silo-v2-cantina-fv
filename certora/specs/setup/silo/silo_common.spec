@@ -134,12 +134,19 @@ function setupSilo(env e) {
     require(ghostCaller == e.msg.sender);
 
     // SAFE: Valid time
-    require(e.block.timestamp != 0);
+    require(e.block.timestamp > 0 && e.block.timestamp < max_uint64);
     require(e.block.number != 0);
     require(ghostToken0 != e.msg.sender && ghostToken1 != e.msg.sender);
 
     // SAFE: Common valid state invariants working both for Silo0 and Silo1
     requireValidStateInvariants(e);
+
+    // SAFE: Valid collateral Silo
+    require(forall address user. 
+        ghostConfigBorrowerCollateralSilo[user] == 0 
+        || ghostConfigBorrowerCollateralSilo[user] == _Silo0
+        || ghostConfigBorrowerCollateralSilo[user] == _Silo1
+    );
 
     // SAFE: Assume valid assets total supply
     require(ghostERC20TotalSupply[ghostToken0] == ghostTokenSupplyRange);

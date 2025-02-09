@@ -83,7 +83,6 @@ rule silo_accrueInterestNoSharesChanged(env e, address user) {
     );
 }
 
-// OK https://prover.certora.com/output/52567/196a1672ff9c4513b3eef42f8ea8068f?anonymousKey=613e6ebc525b37a5abc97846935117dee867952f
 // Possible that a user holds deposits in both silo0 and silo1 after deposit
 rule silo_possibilityOfCollateralsInTwoSilos(env e, uint256 assets, address receiver) {
 
@@ -101,9 +100,6 @@ rule silo_possibilityOfCollateralsInTwoSilos(env e, uint256 assets, address rece
     );
 }
 
-// NO HelperCVL https://prover.certora.com/output/52567/0cb89ebefe854fb9bdc07f8cdbc8f447?anonymousKey=1c355690d0326c7a8d592ce5b8d39208815f8a1b
-// No Storage https://prover.certora.com/output/52567/9ee178cd06284294badaa564e957f16d?anonymousKey=a848557d277c1ae6c5969e63656a18f27536688f
-// OK https://prover.certora.com/output/52567/787a723e234046e1b0fdfd3a9187ffa2?anonymousKey=cfd2239d5c9d4adf59607c454b37b73830ec83cf
 // Possible that a user holds deposits in both silo0 and silo1 after deposit
 rule silo_possibilityOfProtectedInTwoSilos(env e, uint256 assets, address receiver) {
 

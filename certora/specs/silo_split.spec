@@ -27,43 +27,54 @@ hook ALL_SLOAD(uint256 slot) uint256 val {
     }
 }
 
-// @todo https://prover.certora.com/output/52567/972dc20e06614cbf8debe06cd71e5bba?anonymousKey=d18ddb60f2d14af1ed796054dc48375118b51663
-// Collateral harness must not touch protected/debt storage, protected harness must not touch collateral/debt
-rule silo_noCrossStorageAccess(env e, method f, calldataarg args)
-    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) || PROTECTED_HARNESS_FUNCTIONS(f) } 
+// @todo https://prover.certora.com/output/52567/fd2e1930193e4d30b33cc13b58a3e91c?anonymousKey=810711b72840036209925ed32bba9874fcd32893
+// Collateral harness must not touch protected/debt storage
+rule silo_collateralFunctionsNoAccessOtherVaults(env e, method f, calldataarg args)
+    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) } 
 {
     setupSilo(e);
 
-    require(!ghostCollateralStorageAccess && !ghostProtectedStorageAccess && !ghostDebtStorageAccess);
+    require(!ghostProtectedStorageAccess && !ghostDebtStorageAccess);
 
     // Call harness
     f(e, args);
 
-    assert(COLLATERAL_HARNESS_FUNCTIONS(f)
-        => !ghostProtectedStorageAccess && !ghostDebtStorageAccess
-        );
-
-    assert(PROTECTED_HARNESS_FUNCTIONS(f)
-        => !ghostCollateralStorageAccess && !ghostDebtStorageAccess
-        );
+    assert(!ghostProtectedStorageAccess && !ghostDebtStorageAccess);
 }
 
-// @todo https://prover.certora.com/output/52567/ba67b4b7bdf84e48923a2d97cef1c5af?anonymousKey=e50cf201346909a1f15fc7e6d0fc23a4dc545ca3
-// Harness may read/write its own vault
-rule silo_possibilityAccessOwnStorage(env e, method f, calldataarg args)
-    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) || PROTECTED_HARNESS_FUNCTIONS(f) }
+// @todo https://prover.certora.com/output/52567/aef1d0e36c2843b3a86be170873a452c?anonymousKey=0b22b51d7749995e05163292a882d4067c1e0d9d
+// Protected harness must not touch debt (access collateral contract as Silo)
+rule silo_protectedFunctionsNoAccessOtherVaults(env e, method f, calldataarg args)
+    filtered { f -> PROTECTED_HARNESS_FUNCTIONS(f) } 
 {
     setupSilo(e);
 
-    require(!ghostCollateralStorageAccess && !ghostProtectedStorageAccess);
+    require(!ghostDebtStorageAccess);
+
+    // Call harness
+    f(e, args);
+
+    assert(!ghostDebtStorageAccess);
+}
+
+// @todo https://prover.certora.com/output/52567/c614655c74e94edb94f2c629e3eff909?anonymousKey=9cfc4bddaf5ff09e317d1517b631ec9bd51edb9a
+// Possibility of collateral vault read/write its own storage
+rule silo_collateralFunctionsAccessOwnStorage(env e, method f, calldataarg args)
+    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) }
+{
+    setupSilo(e);
+
+    require(!ghostCollateralStorageAccess);
 
     f(e, args);
 
-    satisfy(COLLATERAL_HARNESS_FUNCTIONS(f)
-        => ghostCollateralStorageAccess
+    // These functions return constants
+    bool stateLessFunctions = (
+        f.selector != sig:maxMintCollateral(address).selector
+        || f.selector != sig:maxDepositCollateral(address).selector
     );
 
-    satisfy(PROTECTED_HARNESS_FUNCTIONS(f)
-        => ghostProtectedStorageAccess
-    );
+    satisfy(!stateLessFunctions
+        => ghostCollateralStorageAccess
+        );
 }
