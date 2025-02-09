@@ -85,7 +85,7 @@ persistent ghost mapping(address => mapping(address => mapping(address => mathin
     axiom forall address token. forall address owner. forall address spender. 
         ghostERC20Allowances[token][owner][spender] >= 0 
         // UNSAFE: Reduce max amount to reduce complexity
-        && ghostERC20Allowances[token][owner][spender] <= ghostWeiUpperLimit;
+        && ghostERC20Allowances[token][owner][spender] <= max_uint128;
 }
 
 // Total supply ghost
@@ -93,7 +93,7 @@ persistent ghost mapping(address => mathint) ghostERC20TotalSupply {
     init_state axiom forall address token. ghostERC20TotalSupply[token] == 0;
     axiom forall address token. ghostERC20TotalSupply[token] >= 0 
         // UNSAFE: Reduce max amount to reduce complexity
-        && ghostERC20TotalSupply[token] <= ghostWeiUpperLimit;
+        && ghostERC20TotalSupply[token] <= max_uint128;
 }
 
 // User balances

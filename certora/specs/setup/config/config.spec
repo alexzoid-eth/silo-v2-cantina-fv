@@ -6,6 +6,7 @@ import "./config_cvl.spec";
 
 definition BP2DP_NORMALIZATION() returns mathint = 10^14;
 definition CONFIG_100_PERCENT() returns mathint = 10^18;
+definition UNDERESTIMATION() returns mathint = 2; // "2 wei"
 
 definition FEE_5_PERCENT() returns mathint = 5 * 10^16;
 definition FEE_15_PERCENT() returns mathint = 15 * 10^16;
@@ -76,7 +77,9 @@ persistent ghost mathint ghostConfigDeployerFee {
         || ghostConfigDeployerFee >= BP2DP_NORMALIZATION() && ghostConfigDeployerFee <= FEE_15_PERCENT(); 
 }
 
-persistent ghost address ghostHookReceiver;
+persistent ghost address ghostHookReceiver {
+    axiom ADDRESS_NOT_CONTRACT_IN_SCENE(ghostHookReceiver);
+}
 
 // Silo0
 

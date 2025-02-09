@@ -42,18 +42,20 @@ invariant inv_eip20_totalSupplySolvency(env e)
         + ghostERC20Balances[token][ghostErc20AccountsValues[token][7]]
         + ghostERC20Balances[token][ghostErc20AccountsValues[token][8]]
         + ghostERC20Balances[token][ghostErc20AccountsValues[token][9]]
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 // 
 // CrossReentrancyGuard
 //
 
-// VS- The cross reentrancy guard must remain opened on exit
+// The cross reentrancy guard must remain opened on exit
 invariant inv_crossReentrancyGuardOpenedOnExit(env e)
     ghostCrossReentrantStatus == NOT_ENTERED()
 filtered { 
     // SAFE: Ignore turning on protection function 
     f -> f.selector != 0x9dd41330   // Config.turnOnReentrancyProtection()
+    && !VIEW_OR_FALLBACK_FUNCTION(f)
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
@@ -61,17 +63,19 @@ filtered {
 // Silo
 // 
 
-// VS- The silo’s transferWithChecks feature must always remain enabled
+// The silo’s transferWithChecks feature must always remain enabled
 invariant inv_transferWithChecksAlwaysEnabled(env e)
     forall address shareToken. ghostShareTokenTransferWithChecks[shareToken] == true
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- The interest rate timestamp must never be set in the future
+// The interest rate timestamp must never be set in the future
 invariant inv_interestRateTimestampNotInFuture(env e)
     forall address silo. ghostInterestRateTimestamp[silo] <= e.block.timestamp 
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- A borrower must never hold debt in more than one silo at the same time
+// A borrower must never hold debt in more than one silo at the same time
 invariant inv_borrowerCannotHaveTwoDebts(env e)
     forall address user.
         // No debt at all
@@ -85,10 +89,11 @@ invariant inv_borrowerCannotHaveTwoDebts(env e)
 filtered { 
     // SAFE: Can be executed by Silo only
     f -> f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
+    && !VIEW_OR_FALLBACK_FUNCTION(f)
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- Borrower cannot have debt without collateral set in the config
+// Borrower cannot have debt without collateral set in the config
 invariant inv_borrowerCannotHaveDebtWithoutCollateralSet(env e) 
     forall address user.
         // User has a debt
@@ -101,10 +106,11 @@ filtered {
     f -> f.selector != 0xc6c3bbe6     // ShareDebtToken.mint()
     // SAFE: Can be executed by HookReceiver only, but there is no debt transfer from it
     && f.selector != 0xd985616c     // ShareDebtToken.forwardTransferFromNoChecks()
+    && !VIEW_OR_FALLBACK_FUNCTION(f)
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- Borrower cannot have debt without collateral shares
+// Borrower cannot have debt without collateral shares
 invariant inv_borrowerCannotHaveDebtWithoutCollateralShares(env e) 
     forall address borrower.
         // User has a debt
@@ -124,6 +130,7 @@ filtered {
     && f.selector != 0xf6b911bc     // ShareDebtToken.burn()
     // SAFE: Can be executed by HookReceiver only, but there is no debt transfer from it
     && f.selector != 0xd985616c     // ShareDebtToken.forwardTransferFromNoChecks()
+    && !VIEW_OR_FALLBACK_FUNCTION(f)
     } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
@@ -131,7 +138,7 @@ filtered {
 // SiloX
 // 
 
-// VS- The Silo's liquidity must cover its protected collateral, collateral, 
+// The Silo's liquidity must cover its protected collateral, collateral, 
 //  and fees minus any outstanding debt
 definition liquiditySolvency(bool zero) returns bool =
     ghostERC20Balances[ghostTokenX(zero)][ghostSiloX(zero)] >= 
@@ -141,39 +148,47 @@ definition liquiditySolvency(bool zero) returns bool =
         - ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_DEBT()];
 
 invariant inv_liquiditySolvency0(env e) liquiditySolvency(true)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_liquiditySolvency1(env e) liquiditySolvency(false)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- The Silo contract must never have an allowance to withdraw assets
+// The Silo contract must never have an allowance to withdraw assets
 definition siloMustNotHaveUserAllowances(bool zero) returns bool =
     forall address user. ghostERC20Allowances[ghostTokenX(zero)][ghostSiloX(zero)][user] == 0;
 
 invariant inv_siloMustNotHaveUserAllowances0(env e) siloMustNotHaveUserAllowances(true)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_siloMustNotHaveUserAllowances1(env e) siloMustNotHaveUserAllowances(false)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- Protected collateral must remain fully available for withdrawal
+// Protected collateral must remain fully available for withdrawal
 definition protectedCollateralAlwaysLiquid(bool zero) returns bool =
     ghostERC20Balances[ghostTokenX(zero)][ghostSiloX(zero)]
         >= ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_PROTECTED()];
 
 invariant inv_protectedCollateralAlwaysLiquid0(env e) protectedCollateralAlwaysLiquid(true)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_protectedCollateralAlwaysLiquid1(env e) protectedCollateralAlwaysLiquid(false)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
-// VS- If the Silo's total collateral is zero, then its total debt must also be zero
+// If the Silo's total collateral is zero, then its total debt must also be zero
 definition zeroCollateralMeansZeroDebt(bool zero) returns bool = 
     ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_COLLATERAL()] == 0
         => ghostTotalAssets[ghostSiloX(zero)][ASSET_TYPE_DEBT()] == 0;
 
 invariant inv_zeroCollateralMeansZeroDebt0(env e) zeroCollateralMeansZeroDebt(true)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 invariant inv_zeroCollateralMeansZeroDebt1(env e) zeroCollateralMeansZeroDebt(false)
+filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }

@@ -62,6 +62,9 @@ methods {
     function _.config() external
         => DISPATCHER(true);
 
+    function _.isSolvent(address _borrower) external
+        => DISPATCHER(true);
+
     // Resolve external call in `IERC3156FlashBorrower`
 
     function _.onFlashLoan(address _initiator, address _token, uint256 _amount, uint256 _fee, bytes _data) external
@@ -70,13 +73,13 @@ methods {
     // Resolve external calls in `IHookReceiver`
 
     function _.beforeAction(address _silo, uint256 _action, bytes _input) external
-        => NONDET; // not in use
+        => beforeActionCVL() expect void; 
 
     function _.afterAction(address _silo, uint256 _action, bytes _inputAndOutput) external
-        => NONDET; // not in use
+        => afterActionCVL() expect void; 
 
     function _.hookReceiverConfig(address _silo) external
-        => NONDET; // not in use
+        => NONDET; 
 
     // SAFE: Remove from the scene 
     
@@ -99,15 +102,6 @@ methods {
 
     function _.beforeQuote(address) external 
         => NONDET;
-
-    // UNSAFE: exclude solvency check from user flow
-    function SiloSolvencyLib.isSolvent(
-        ISiloConfig.ConfigData memory _collateralConfig,
-        ISiloConfig.ConfigData memory _debtConfig,
-        address _borrower,
-        ISilo.AccrueInterestInMemory _accrueInMemory
-    ) internal returns bool
-    => ghostUserSolvent[_borrower];
 }
 
 //
@@ -122,7 +116,7 @@ persistent ghost mathint ghostTokensSupply {
 
 // UNSAFE: limit the max users and total balance of all assets and shares 
 persistent ghost mathint ghostWeiUpperLimit {
-    axiom ghostWeiUpperLimit == max_uint32;
+    axiom ghostWeiUpperLimit == max_uint64;
 }
 
 function setupSilo(env e) {
@@ -219,17 +213,17 @@ definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool
         && a != _Protected0
         && a != _Silo0
         && a != _Debt0
-        && a != ghostConfigSolvencyOracle0
-        && a != ghostConfigMaxLtvOracle0
-        && a != ghostConfigInterestRateModel0
-        && a != _Silo1
         && a != _Protected1
         && a != _Silo1
         && a != _Debt1
-        && a != ghostConfigSolvencyOracle1
-        && a != ghostConfigMaxLtvOracle1
-        && a != ghostConfigInterestRateModel1
-        && a != ghostHookReceiver;
+        ;
+
+definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
+    f.isPure 
+    || f.isView 
+    || f.isFallback
+    || f.selector == 0x97d2a50b // Harness.makeUnresolvedCall()
+    ;
 
 //
 // Methods summarizes
@@ -271,6 +265,18 @@ function onFlashLoanCVL(address _receiver) returns bytes32 {
 
     bytes32 result;
     return result;
+}
+
+// `IHookReceiver`
+
+persistent ghost bool ghostBeforeActionCalled;
+function beforeActionCVL() {
+    ghostBeforeActionCalled = true;
+}
+
+persistent ghost bool ghostAfterActionCalled;
+function afterActionCVL() {
+    ghostAfterActionCalled = true;
 }
 
 // `SiloSolvencyLib`

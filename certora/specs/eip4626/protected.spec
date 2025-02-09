@@ -5,25 +5,15 @@ import "../setup/silo1/silo1.spec";
 import "../invariants.spec";
 
 /*
-    Violated:
+    Excluded (violated):
     - eip4626_protected_convertToAssetsRoundTripDoesNotExceed
-    - eip4626_protected_maxWithdrawDoesNotDependOnUserShares
-    - eip4626_protected_maxWithdrawNoHigherThanActual
-    - eip4626_protected_totalAssetsIntegrity
-    - eip4626_protected_maxWithdrawZeroIfDisabled
+*/
 
-    - eip4626_protected_depositIntegrity
-    - eip4626_protected_maxWithdrawNoHigherThanActual
-    - eip4626_protected_mintIntegrity
-    - eip4626_protected_mintMustRevertIfCannotMint
-    - eip4626_protected_mintPossibility
-    - eip4626_protected_redeemFromOtherIntegrity
-    - eip4626_protected_redeemIntegrity
-    - eip4626_protected_withdrawFromOtherIntegrity
-    - eip4626_protected_withdrawIntegrity
-
-    Halted/Ok:
-    - eip4626_protected_maxRedeemNoHigherThanActual
+/*
+    @todo
+    ~ eip4626_protected_maxRedeemNoHigherThanActual
+    ~ eip4626_protected_maxWithdrawNoHigherThanActual
+    ~ eip4626_protected_maxWithdrawZeroIfDisabled
 */
 
 //
@@ -33,7 +23,7 @@ import "../invariants.spec";
 // MUST be an EIP-20 token contract
 rule eip4626_protected_assetIntegrity(env e) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     address asset = asset(e);
@@ -44,7 +34,7 @@ rule eip4626_protected_assetIntegrity(env e) {
 // MUST NOT revert
 rule eip4626_protected_assetMustNotRevert(env e) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     asset@withrevert(e);
@@ -59,11 +49,11 @@ rule eip4626_protected_assetMustNotRevert(env e) {
 // SHOULD include any compounding that occurs from yield
 rule eip4626_protected_totalAssetsIntegrity(env e) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
     
     // Total available assets including compounding
-    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, _Silo0);
+    mathint expectedTotalAssets = getTotalCollateralAssetsWithInterestCVL(e, _Silo1);
 
     mathint totalAssets = totalAssets(e);
 
@@ -73,7 +63,7 @@ rule eip4626_protected_totalAssetsIntegrity(env e) {
 // MUST NOT revert
 rule eip4626_protected_totalAssetsMustNotRevert(env e) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     totalAssets@withrevert(e);
@@ -88,7 +78,7 @@ rule eip4626_protected_totalAssetsMustNotRevert(env e) {
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check deposit)
 rule eip4626_protected_convertToSharesNotIncludeFeesInDeposit(env e, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -103,7 +93,7 @@ rule eip4626_protected_convertToSharesNotIncludeFeesInDeposit(env e, uint256 ass
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check withdrawal)
 rule eip4626_protected_convertToSharesNotIncludeFeesInWithdraw(env e, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -118,7 +108,7 @@ rule eip4626_protected_convertToSharesNotIncludeFeesInWithdraw(env e, uint256 as
 // MUST NOT show any variations depending on the caller
 rule eip4626_protected_convertToSharesMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -137,7 +127,7 @@ rule eip4626_protected_convertToSharesMustNotDependOnCaller(env e1, env e2, uint
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
 rule eip4626_protected_convertToSharesMustNotRevert(env e, uint256 assets) {
     
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -152,7 +142,7 @@ rule eip4626_protected_convertToSharesMustNotRevert(env e, uint256 assets) {
 // MUST round down towards 0
 rule eip4626_protected_convertToSharesRoundTripDoesNotExceed(env e, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -171,7 +161,7 @@ rule eip4626_protected_convertToSharesRoundTripDoesNotExceed(env e, uint256 asse
 // MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
 rule eip4626_protected_convertToSharesNoSlippage(env e1, env e2, uint256 assets) {
 
-    // Assume valid Silo0 state
+    // Assume valid Silo state
     setupSilo(e1);
 
     // Another way: if totalAssets and totalSupply remain the same between two calls, convertToShares 
@@ -184,7 +174,7 @@ rule eip4626_protected_convertToSharesNoSlippage(env e1, env e2, uint256 assets)
     // Havoc storage
     _HelperCVL.makeUnresolvedCall(e1);
 
-    // Assume valid Silo0 state with another environment
+    // Assume valid Silo state with another environment
     setupSilo(e2);
 
     mathint totalAssets2 = totalAssets(e2);
@@ -205,7 +195,7 @@ rule eip4626_protected_convertToSharesNoSlippage(env e1, env e2, uint256 assets)
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check redeem)
 rule eip4626_protected_convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -219,7 +209,7 @@ rule eip4626_protected_convertToAssetsNotIncludeFeesRedeem(env e, uint256 shares
 // MUST NOT be inclusive of any fees that are charged against assets in the Vault (check mint)
 rule eip4626_protected_convertToAssetsNotIncludeFeesMint(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -233,7 +223,7 @@ rule eip4626_protected_convertToAssetsNotIncludeFeesMint(env e, uint256 shares) 
 // MUST NOT show any variations depending on the caller
 rule eip4626_protected_convertToAssetsMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -251,7 +241,7 @@ rule eip4626_protected_convertToAssetsMustNotDependOnCaller(env e1, env e2, uint
 // MUST NOT revert unless due to integer overflow caused by an unreasonably large input
 rule eip4626_protected_convertToAssetsMustNotRevert(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -264,14 +254,14 @@ rule eip4626_protected_convertToAssetsMustNotRevert(env e, uint256 shares) {
 // MUST round down towards 0
 rule eip4626_protected_convertToAssetsRoundTripDoesNotExceed(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // SAFE: Solve complexity, avoiding unreasonably large input
     require(shares < max_uint64);
 
     // UNSAFE: assume ERC20 total share not zero
-    require(ghostERC20TotalSupply[currentContract] != 0);
+    require(ghostERC20TotalSupply[_Protected1] != 0);
 
     // Indirectly prove rounding down. If we convert to assets and back, 
     // we can't exceed the original shares.
@@ -286,7 +276,7 @@ rule eip4626_protected_convertToAssetsRoundTripDoesNotExceed(env e, uint256 shar
 // MUST NOT reflect slippage or other on-chain conditions, when performing the actual exchange
 rule eip4626_protected_convertToAssetsNoSlippage(env e1, env e2, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
 
     // Snapshot totalAssets() and totalSupply() before first call
@@ -297,7 +287,7 @@ rule eip4626_protected_convertToAssetsNoSlippage(env e1, env e2, uint256 shares)
     // Havoc storage
     _HelperCVL.makeUnresolvedCall(e1);
 
-    // Assume valid Silo0 state with another environment
+    // Assume valid Silo state with another environment
     setupSilo(e2);
 
     // Snapshot again
@@ -320,7 +310,7 @@ rule eip4626_protected_convertToAssetsNoSlippage(env e1, env e2, uint256 shares)
 // MUST NOT be higher than the actual maximum that would be accepted
 rule eip4626_protected_maxDepositNoHigherThanActual(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Query the reported limit
@@ -337,7 +327,7 @@ rule eip4626_protected_maxDepositNoHigherThanActual(env e, uint256 assets, addre
 // MUST NOT rely on balanceOf of asset
 rule eip4626_protected_maxDepositDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -360,7 +350,7 @@ rule eip4626_protected_maxDepositDoesNotDependOnUserBalance(env e1, env e2, addr
 // MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of assets that may be deposited
 rule eip4626_protected_maxDepositUnlimitedReturnsMax(env e, uint256 assets, address receiver) {
     
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint limit = maxDepositProtected(e, receiver);
@@ -380,7 +370,7 @@ rule eip4626_protected_maxDepositUnlimitedReturnsMax(env e, uint256 assets, addr
 // MUST NOT revert
 rule eip4626_protected_maxDepositMustNotRevert(env e, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     maxDepositProtected@withrevert(e, receiver);
@@ -396,7 +386,7 @@ rule eip4626_protected_maxDepositMustNotRevert(env e, address receiver) {
 //  be minted in a deposit call in the same transaction
 rule eip4626_protected_previewDepositNoMoreThanActualShares(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint previewedShares = previewDepositProtected(e, assets);
@@ -411,7 +401,7 @@ rule eip4626_protected_previewDepositNoMoreThanActualShares(env e, uint256 asset
 //  tokens approved, etc.
 rule eip4626_protected_previewDepositMustIgnoreLimits(env e, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     bool enoughAllowance = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract] >= assets;
@@ -429,7 +419,7 @@ rule eip4626_protected_previewDepositMustIgnoreLimits(env e, uint256 assets) {
 // MUST be inclusive of deposit fees. Integrators should be aware of the existence of deposit fees.
 rule eip4626_protected_previewDepositMustIncludeFees(env e, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -445,7 +435,7 @@ rule eip4626_protected_previewDepositMustIncludeFees(env e, uint256 assets) {
 // MUST NOT revert due to vault specific user/global limits
 rule eip4626_protected_previewDepositMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -463,7 +453,7 @@ rule eip4626_protected_previewDepositMustNotDependOnCaller(env e1, env e2, uint2
 // MAY revert due to other conditions that would also cause deposit to revert
 rule eip4626_protected_previewDepositMayRevertOnlyWithDepositRevert(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Save current storage 
@@ -486,14 +476,14 @@ rule eip4626_protected_previewDepositMayRevertOnlyWithDepositRevert(env e, uint2
 // Mints shares Vault shares to receiver by depositing exactly assets of underlying tokens
 rule eip4626_protected_depositIntegrity(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Pre-state checks
     mathint vaultAssetsPrev    = ghostERC20Balances[ghostToken1][currentContract];
     mathint callerBalancePrev  = ghostERC20Balances[ghostToken1][ghostCaller];
-    mathint receiverSharesPrev = ghostERC20Balances[currentContract][receiver];
-    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[currentContract];
+    mathint receiverSharesPrev = ghostERC20Balances[_Protected1][receiver];
+    mathint vaultSharesSupplyPrev = ghostERC20TotalSupply[_Protected1];
 
     // Attempt deposit
     mathint shares = depositProtected(e, assets, receiver);
@@ -509,17 +499,17 @@ rule eip4626_protected_depositIntegrity(env e, uint256 assets, address receiver)
     assert(callerBalancePost == callerBalancePrev - assets);
 
     // The receiver's share balance must have increased by `shares`
-    mathint receiverSharesPost = ghostERC20Balances[currentContract][receiver];
+    mathint receiverSharesPost = ghostERC20Balances[_Protected1][receiver];
     assert(receiverSharesPost == receiverSharesPrev + shares);
 
     // The vault's total supply of shares must have increased by `shares`
-    mathint vaultSharesSupplyPost = ghostERC20TotalSupply[currentContract];
+    mathint vaultSharesSupplyPost = ghostERC20TotalSupply[_Protected1];
     assert(vaultSharesSupplyPost == vaultSharesSupplyPrev + shares);
 }
 
 rule eip4626_protected_depositToSelfIntegrity(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Attempt deposit
@@ -532,7 +522,7 @@ rule eip4626_protected_depositToSelfIntegrity(env e, uint256 assets, address rec
 // MUST support EIP-20 approve / transferFrom on asset as a deposit flow
 rule eip4626_protected_depositRespectsApproveTransfer(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint allowanceBefore = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
@@ -548,7 +538,7 @@ rule eip4626_protected_depositRespectsApproveTransfer(env e, uint256 assets, add
 //  user not approving enough underlying tokens to the Vault contract, etc).
 rule eip4626_protected_depositMustRevertIfCannotDeposit(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint balanceBefore = ghostERC20Balances[ghostToken1][currentContract];
@@ -564,7 +554,7 @@ rule eip4626_protected_depositMustRevertIfCannotDeposit(env e, uint256 assets, a
 
 rule eip4626_protected_depositPossibility(env e, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint balanceBefore = ghostERC20Balances[ghostToken1][currentContract];
@@ -585,7 +575,7 @@ rule eip4626_protected_depositPossibility(env e, uint256 assets, address receive
 //  and not cause a revert, which MUST NOT be higher than the actual maximum that would be accepted
 rule eip4626_protected_maxMintNoHigherThanActual(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Query the reported limit
@@ -602,7 +592,7 @@ rule eip4626_protected_maxMintNoHigherThanActual(env e, uint256 shares, address 
 // MUST NOT rely on balanceOf of asset
 rule eip4626_protected_maxMintDoesNotDependOnUserBalance(env e1, env e2, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -621,7 +611,7 @@ rule eip4626_protected_maxMintDoesNotDependOnUserBalance(env e1, env e2, address
 // MUST return 0 if mints are entirely disabled (even temporarily)
 rule eip4626_protected_maxMintZeroIfDisabled(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint limit = maxMintProtected(e, receiver);
@@ -637,7 +627,7 @@ rule eip4626_protected_maxMintZeroIfDisabled(env e, uint256 shares, address rece
 // MUST return `2 ** 256 - 1` if there is no limit on the maximum amount of shares that may be minted
 rule eip4626_protected_maxMintUnlimitedReturnsMax(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint limit = maxMintProtected(e, receiver);
@@ -654,7 +644,7 @@ rule eip4626_protected_maxMintUnlimitedReturnsMax(env e, uint256 shares, address
 // MUST NOT revert
 rule eip4626_protected_maxMintMustNotRevert(env e, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     maxMintProtected@withrevert(e, receiver);
@@ -671,7 +661,7 @@ rule eip4626_protected_maxMintMustNotRevert(env e, address receiver) {
 //  deposited in a mint call in the same transaction
 rule eip4626_protected_previewMintNoFewerThanActualAssets(env e, uint256 shares, address receiver) {
     
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint previewedAssets = previewMintProtected(e, shares);
@@ -690,7 +680,7 @@ rule eip4626_protected_previewMintNoFewerThanActualAssets(env e, uint256 shares,
 //  always act as though the mint would be accepted
 rule eip4626_protected_previewMintMustIgnoreLimits(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint allowance = ghostERC20Allowances[ghostToken1][ghostCaller][currentContract];
@@ -708,7 +698,7 @@ rule eip4626_protected_previewMintMustIgnoreLimits(env e, uint256 shares) {
 // MUST be inclusive of deposit fees. Integrators should be aware of the existence of deposit fees
 rule eip4626_protected_previewMintMustIncludeFees(env e, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Solve complexity, avoiding unreasonably large input
@@ -726,7 +716,7 @@ rule eip4626_protected_previewMintMustIncludeFees(env e, uint256 shares) {
 //  (i.e. MUST NOT show any variations depending on the caller)
 rule eip4626_protected_previewMintMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -744,7 +734,7 @@ rule eip4626_protected_previewMintMustNotDependOnCaller(env e1, env e2, uint256 
 // MAY revert due to other conditions that would also cause `mint` to revert
 rule eip4626_protected_previewMintMayRevertOnlyWithMintRevert(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Save current storage
@@ -767,14 +757,14 @@ rule eip4626_protected_previewMintMayRevertOnlyWithMintRevert(env e, uint256 sha
 // Mints exactly `shares` Vault shares to `receiver` by depositing assets of underlying tokens
 rule eip4626_protected_mintIntegrity(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Capture pre-state
     mathint vaultAssetsPrev         = ghostERC20Balances[ghostToken1][currentContract];
     mathint callerAssetBalancePrev  = ghostERC20Balances[ghostToken1][ghostCaller];
-    mathint receiverSharesPrev      = ghostERC20Balances[currentContract][receiver];
-    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[currentContract];
+    mathint receiverSharesPrev      = ghostERC20Balances[_Protected1][receiver];
+    mathint vaultShareSupplyPrev    = ghostERC20TotalSupply[_Protected1];
 
     // Perform the mint
     mathint actualAssetsUsed = mintProtected(e, shares, receiver);
@@ -782,8 +772,8 @@ rule eip4626_protected_mintIntegrity(env e, uint256 shares, address receiver) {
     // Capture post-state
     mathint vaultAssetsPost         = ghostERC20Balances[ghostToken1][currentContract];
     mathint callerAssetBalancePost  = ghostERC20Balances[ghostToken1][ghostCaller];
-    mathint receiverSharesPost      = ghostERC20Balances[currentContract][receiver];
-    mathint vaultShareSupplyPost    = ghostERC20TotalSupply[currentContract];
+    mathint receiverSharesPost      = ghostERC20Balances[_Protected1][receiver];
+    mathint vaultShareSupplyPost    = ghostERC20TotalSupply[_Protected1];
 
     // The vault’s asset balance must have increased by exactly `actualAssetsUsed`
     assert(vaultAssetsPost == vaultAssetsPrev + actualAssetsUsed);
@@ -800,7 +790,7 @@ rule eip4626_protected_mintIntegrity(env e, uint256 shares, address receiver) {
 
 rule eip4626_protected_mintToSelfIntegrity(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Perform the mint
@@ -813,7 +803,7 @@ rule eip4626_protected_mintToSelfIntegrity(env e, uint256 shares, address receiv
 // MUST support EIP-20 approve / transferFrom on asset as a mint flow
 rule eip4626_protected_mintRespectsApproveTransfer(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Snapshot the caller’s allowance and needed assets prior to calling mint
@@ -836,16 +826,16 @@ rule eip4626_protected_mintRespectsApproveTransfer(env e, uint256 shares, addres
 // MUST revert if all of `shares` cannot be minted (due to limit reached, user not approving enough tokens, etc.)
 rule eip4626_protected_mintMustRevertIfCannotMint(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
-    mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
+    mathint receiverSharesBefore = ghostERC20Balances[_Protected1][receiver];
 
     // Attempt the mint
     mintProtected@withrevert(e, shares, receiver);
     bool mintReverted = lastReverted;
 
-    mathint receiverSharesAfter = ghostERC20Balances[currentContract][receiver];
+    mathint receiverSharesAfter = ghostERC20Balances[_Protected1][receiver];
 
     // If the receiver's share balance did not increase by the required amount for these shares,
     //    EIP-4626 says it MUST revert
@@ -856,14 +846,14 @@ rule eip4626_protected_mintMustRevertIfCannotMint(env e, uint256 shares, address
 
 rule eip4626_protected_mintPossibility(env e, uint256 shares, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
-    mathint receiverSharesBefore = ghostERC20Balances[currentContract][receiver];
+    mathint receiverSharesBefore = ghostERC20Balances[_Protected1][receiver];
 
     mintProtected(e, shares, receiver);
 
-    mathint receiverSharesAfter = ghostERC20Balances[currentContract][receiver];
+    mathint receiverSharesAfter = ghostERC20Balances[_Protected1][receiver];
 
     // At least one path when balance changed correctly and not reverted
     satisfy(shares != 0 && receiverSharesAfter == receiverSharesBefore + shares);
@@ -876,14 +866,16 @@ rule eip4626_protected_mintPossibility(env e, uint256 shares, address receiver) 
 // MUST NOT be higher than the actual maximum that would be accepted 
 rule eip4626_protected_maxWithdrawNoHigherThanActual(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
+    storage init = lastStorage;
+
     // Query the reported limit
-    mathint limit = maxWithdrawProtected(e, owner);
+    mathint limit = maxWithdrawProtected(e, owner) at init;
 
     // Attempt a withdraw any assets amount
-    withdrawProtected@withrevert(e, assets, receiver, owner);
+    withdrawProtected@withrevert(e, assets, receiver, owner) at init;
     bool reverted = lastReverted;
 
     // Always revert when withdraw over the limit
@@ -892,7 +884,7 @@ rule eip4626_protected_maxWithdrawNoHigherThanActual(env e, uint256 assets, addr
 
 rule eip4626_protected_maxWithdrawWithdrawPossibility(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Query the reported limit
@@ -906,36 +898,19 @@ rule eip4626_protected_maxWithdrawWithdrawPossibility(env e, uint256 assets, add
 }
 
 // MUST factor in both global and user-specific limits
-rule eip4626_protected_maxWithdrawDoesNotDependOnUserShares(env e1, env e2, address owner) {
-
-    // SAFE: Assume valid Silo0 state
-    setupSilo(e1);
-    setupSilo(e2);
-
-    // Query the limit first time
-    mathint limit1 = maxWithdrawProtected(e1, owner);
-
-    // Havoc the user’s share balance in the vault
-    havoc ghostERC20Balances assuming
-        ghostERC20Balances@new[currentContract][owner] != ghostERC20Balances@old[currentContract][owner];
-
-    // Query the limit again in a second environment
-    mathint limit2 = maxWithdrawProtected(e2, owner);
-
-    // If global state is otherwise the same, the two calls must return the same
-    assert(limit1 == limit2);
-}
 
 // MUST return 0 if withdrawals are entirely disabled
 rule eip4626_protected_maxWithdrawZeroIfDisabled(env e, address owner, uint256 assets, address receiver) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
-    mathint limit = maxWithdrawProtected(e, owner);
+    storage init = lastStorage;
+
+    mathint limit = maxWithdrawProtected(e, owner) at init;
 
     // Attempt withdrawing any assets
-    withdrawProtected@withrevert(e, assets, receiver, owner);
+    withdrawProtected@withrevert(e, assets, receiver, owner) at init;
     bool reverted = lastReverted;
 
     // Always reverted with zero limit
@@ -945,7 +920,7 @@ rule eip4626_protected_maxWithdrawZeroIfDisabled(env e, address owner, uint256 a
 // MUST NOT revert
 rule eip4626_protected_maxWithdrawMustNotRevert(env e, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     maxWithdrawProtected@withrevert(e, owner);
@@ -962,7 +937,7 @@ rule eip4626_protected_maxWithdrawMustNotRevert(env e, address owner) {
 //  burned in a `withdraw` call in the same transaction
 rule eip4626_protected_previewWithdrawNoFewerThanActualShares(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Compare the previewed shares vs. the actual shares burned by withdraw.
@@ -982,7 +957,7 @@ rule eip4626_protected_previewWithdrawNoFewerThanActualShares(env e, uint256 ass
 //  though the withdrawal would be accepted, regardless if the user has enough shares, etc.
 rule eip4626_protected_previewWithdrawMustIgnoreLimits(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint assetsLimit = maxWithdrawProtected(e, ghostCaller);
@@ -1004,7 +979,7 @@ rule eip4626_protected_previewWithdrawMustIgnoreLimits(env e, uint256 assets, ad
 //  (i.e. MUST NOT vary by the caller if the state is the same).
 rule eip4626_protected_previewWithdrawMustNotDependOnCaller(env e1, env e2, uint256 assets) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -1022,7 +997,7 @@ rule eip4626_protected_previewWithdrawMustNotDependOnCaller(env e1, env e2, uint
 // MAY revert due to other conditions that would also cause `withdraw` to revert
 rule eip4626_protected_previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Save current storage so that the same state is tested for both calls
@@ -1045,12 +1020,12 @@ rule eip4626_protected_previewWithdrawMayRevertOnlyWithWithdrawRevert(env e, uin
 // Burns shares from owner and sends exactly assets of underlying tokens to receiver
 rule eip4626_protected_withdrawIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
     
     // Pre-state snapshots
-    mathint ownerSharesBefore    = ghostERC20Balances[currentContract][owner];
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];
+    mathint ownerSharesBefore    = ghostERC20Balances[_Protected1][owner];
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[_Protected1];
     mathint vaultAssetsBefore    = ghostERC20Balances[ghostToken1][currentContract];
     mathint receiverAssetsBefore = ghostERC20Balances[ghostToken1][receiver];    
     
@@ -1058,8 +1033,8 @@ rule eip4626_protected_withdrawIntegrity(env e, uint256 assets, address receiver
     mathint sharesBurned = withdrawProtected(e, assets, receiver, owner);
     
     // Post-state snapshots
-    mathint ownerSharesAfter    = ghostERC20Balances[currentContract][owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
+    mathint ownerSharesAfter    = ghostERC20Balances[_Protected1][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[_Protected1];
     mathint vaultAssetsAfter    = ghostERC20Balances[ghostToken1][currentContract];
     mathint receiverAssetsAfter = ghostERC20Balances[ghostToken1][receiver];
 
@@ -1084,15 +1059,15 @@ rule eip4626_protected_withdrawIntegrity(env e, uint256 assets, address receiver
 //  EIP-20 approval over the shares of owner
 rule eip4626_protected_withdrawFromOtherIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
-    mathint ownerAllowancesBefore= ghostERC20Allowances[currentContract][owner][ghostCaller];
+    mathint ownerAllowancesBefore= ghostERC20Allowances[_Protected1][owner][ghostCaller];
 
     // Perform the withdraw
     mathint sharesBurned = withdrawProtected(e, assets, receiver, owner);
 
-    mathint ownerAllowancesAfter= ghostERC20Allowances[currentContract][owner][ghostCaller];
+    mathint ownerAllowancesAfter= ghostERC20Allowances[_Protected1][owner][ghostCaller];
 
     // SHOULD check msg.sender can spend owner funds, assets needs to be converted to shares and shares 
     //  should be checked for allowance
@@ -1106,7 +1081,7 @@ rule eip4626_protected_withdrawFromOtherIntegrity(env e, uint256 assets, address
 // MUST support a `withdraw` flow where the shares are burned from owner directly where owner is msg.sender
 rule eip4626_protected_withdrawFromSelfIntegrity(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint sharesBurned = withdrawProtected(e, assets, receiver, owner);
@@ -1117,7 +1092,7 @@ rule eip4626_protected_withdrawFromSelfIntegrity(env e, uint256 assets, address 
 // MUST revert if all of assets cannot be withdrawn
 rule eip4626_protected_withdrawMustRevertIfCannotWithdraw(env e, uint256 assets, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // SAFE: Assume receiver is not current contract
@@ -1151,11 +1126,13 @@ rule eip4626_protected_maxRedeemNoHigherThanActual(env e, uint256 shares, addres
     // SAFE: Avoid reverting for non-zero msg.value and invalid msg.sender
     setupSilo(e);
 
+    storage init = lastStorage;
+
     // Query the reported limit
-    mathint maxShares = maxRedeemProtected(e, owner);
+    mathint maxShares = maxRedeemProtected(e, owner) at init;
 
     // Attempt redeeming `shares`
-    redeemProtected@withrevert(e, shares, receiver, owner);
+    redeemProtected@withrevert(e, shares, receiver, owner) at init;
     bool reverted = lastReverted;
 
     // Going above that limit must revert, 1 wei rounding acceptance
@@ -1186,7 +1163,7 @@ rule eip4626_protected_maxRedeemMustNotRevert(env e, address owner) {
 //  be withdrawn in a `redeem` call in the same transaction.
 rule eip4626_protected_previewRedeemNoMoreThanActualAssets(env e, uint256 shares, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     // Compute the “previewed” assets
@@ -1207,7 +1184,7 @@ rule eip4626_protected_previewRedeemNoMoreThanActualAssets(env e, uint256 shares
 //  act as though the redemption would be accepted, regardless if the user has enough shares, etc.
 rule eip4626_protected_previewRedeemMustIgnoreLimits(env e, uint256 shares, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint sharesLimit = maxRedeemProtected(e, ghostCaller);
@@ -1230,7 +1207,7 @@ rule eip4626_protected_previewRedeemMustIgnoreLimits(env e, uint256 shares, addr
 //  (i.e. MUST NOT vary by the caller if the state is unchanged).
 rule eip4626_protected_previewRedeemMustNotDependOnCaller(env e1, env e2, uint256 shares) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e1);
     setupSilo(e2);
 
@@ -1277,8 +1254,8 @@ rule eip4626_protected_redeemIntegrity(env e, uint256 shares, address receiver, 
     setupSilo(e);
 
     // Pre-state snapshots
-    mathint ownerSharesBefore       = ghostERC20Balances[currentContract][owner];                       
-    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[currentContract];                         
+    mathint ownerSharesBefore       = ghostERC20Balances[_Protected1][owner];                       
+    mathint vaultSharesSupplyBefore = ghostERC20TotalSupply[_Protected1];                         
     mathint vaultAssetsBefore       = ghostERC20Balances[ghostToken1][currentContract];
     mathint receiverAssetsBefore    = ghostERC20Balances[ghostToken1][receiver];
 
@@ -1286,8 +1263,8 @@ rule eip4626_protected_redeemIntegrity(env e, uint256 shares, address receiver, 
     mathint assetsOut = redeemProtected(e, shares, receiver, owner);
 
     // Post-state snapshots
-    mathint ownerSharesAfter       = ghostERC20Balances[currentContract][owner];
-    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[currentContract];
+    mathint ownerSharesAfter       = ghostERC20Balances[_Protected1][owner];
+    mathint vaultSharesSupplyAfter = ghostERC20TotalSupply[_Protected1];
     mathint vaultAssetsAfter       = ghostERC20Balances[ghostToken1][currentContract];
     mathint receiverAssetsAfter    = ghostERC20Balances[ghostToken1][receiver];
 
@@ -1314,16 +1291,16 @@ rule eip4626_protected_redeemIntegrity(env e, uint256 shares, address receiver, 
 rule eip4626_protected_redeemFromOtherIntegrity(env e, uint256 shares, address receiver, address owner) {
 
     // SAFE: Assume receiver is not current contract
-    require(receiver != currentContract);
+    require(receiver != _Protected1);
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
-    mathint ownerAllowancesBefore = ghostERC20Allowances[currentContract][owner][ghostCaller];
+    mathint ownerAllowancesBefore = ghostERC20Allowances[_Protected1][owner][ghostCaller];
 
     mathint sharesBurned = redeemProtected(e, shares, receiver, owner);
 
-    mathint ownerAllowancesAfter = ghostERC20Allowances[currentContract][owner][ghostCaller];
+    mathint ownerAllowancesAfter = ghostERC20Allowances[_Protected1][owner][ghostCaller];
 
     // SHOULD check msg.sender can spend owner’s funds
     // => if `owner != msg.sender`, the allowance should be reduced by `shares`
@@ -1340,7 +1317,7 @@ rule eip4626_protected_redeemFromOtherIntegrity(env e, uint256 shares, address r
 // MUST support a redeem flow where the shares are burned from owner directly where owner is msg.sender
 rule eip4626_protected_redeemFromSelfIntegrity(env e, uint256 shares, address receiver, address owner) {
 
-    // SAFE: Assume valid Silo0 state
+    // SAFE: Assume valid Silo state
     setupSilo(e);
 
     mathint assetsOut = redeemProtected(e, shares, receiver, owner);

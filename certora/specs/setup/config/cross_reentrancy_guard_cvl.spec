@@ -21,6 +21,8 @@ persistent ghost mathint ghostCrossReentrantStatus {
         || ghostCrossReentrantStatus == ENTERED();
 }
 
+persistent ghost bool ghostReentrancyCalled;
+
 persistent ghost bool ghostReentrancyProtectionDoubleCall {
     init_state axiom ghostReentrancyProtectionDoubleCall == false;
 }
@@ -29,6 +31,7 @@ function turnOnReentrancyProtectionCVL(env e) {
 
     onlySiloOrTokenOrHookReceiverCVL(e);
 
+    ghostReentrancyCalled = true;
     ghostReentrancyProtectionDoubleCall = (ghostCrossReentrantStatus == ENTERED());
 
     ASSERT(ghostCrossReentrantStatus != ENTERED());
@@ -40,6 +43,7 @@ function turnOffReentrancyProtectionCVL(env e) {
 
     onlySiloOrTokenOrHookReceiverCVL(e);
 
+    ghostReentrancyCalled = true;
     ghostReentrancyProtectionDoubleCall = (ghostCrossReentrantStatus == NOT_ENTERED());
 
     ASSERT(ghostCrossReentrantStatus != NOT_ENTERED());

@@ -23,5 +23,8 @@ cd ../invariants
 cd ../sanity
 ./gen_all.sh
 
+cd ../share_tokens
+./gen_all.sh
+
 cd ../silo
 ./gen_all.sh
