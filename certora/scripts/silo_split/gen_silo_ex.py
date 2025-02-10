@@ -5,7 +5,7 @@ import os
 import sys
 
 # If silo_methods.py is one directory up, ensure we can import it:
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../silo/'))
 sys.path.append(parent_dir)
 
 from rule_names import rule_names_ex
@@ -78,9 +78,10 @@ def base_function_name(method_signature: str) -> str:
     """
     return method_signature.split('(')[0].strip()
 
-os.makedirs("silo", exist_ok=True)
+os.makedirs("silo_split", exist_ok=True)
 
 for rule in rule_names_ex:
+
     # We will keep track of how many times each base function name appears
     # so we can append "_2", "_3", etc. for overloads
     function_count = {}

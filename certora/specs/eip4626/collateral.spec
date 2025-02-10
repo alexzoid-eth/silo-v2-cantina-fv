@@ -19,8 +19,6 @@ import "../setup/silo1/silo1.spec";
         - https://prover.certora.com/output/52567/14cb804a689b48cbbfcd3248cd7b6251?anonymousKey=c5881fe0d32e941f3b2529e69f4f90a32c720505
     - eip4626_collateral_maxWithdrawZeroIfDisabled
         - https://prover.certora.com/output/52567/c51c1b2a71ba4e76b306b6e91edf17c2?anonymousKey=9b786c73b34abaf483cb1a420319eab670e0d1ac
-    - eip4626_collateral_maxWithdrawWithdrawPossibility
-        - https://prover.certora.com/output/52567/cbf5ac758a184b33b74c1b115bd9b7c5?anonymousKey=aea8c2d6c65e480c164bb842df4eacf1716cf499
 */
 
 //

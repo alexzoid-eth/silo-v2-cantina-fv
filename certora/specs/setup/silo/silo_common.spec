@@ -20,8 +20,8 @@ methods {
 
     // Resolve external calls to `SiloFactory`
 
-    function _.getFeeReceivers(address _silo) external
-        => getFeeReceiversCVL() expect (address, address);
+    function _.getFeeReceivers(address _silo) external with (env e)
+        => getFeeReceiversCVL(e) expect (address, address);
         
     // Resolve external calls to `Silo`
 
@@ -173,7 +173,7 @@ function setupSilo(env e) {
     require(ghostConfigSolvencyOracle1 == 0 && ghostConfigMaxLtvOracle1 == 0);
 
     // UNSAFE: set `true` to use static config based on `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
-    require(ghostUseStaticConfig == false);
+    require(ghostUseStaticConfig == HOOK_MODE()); // Set in Hook configuration only
     require(ghostUseStaticConfig => (
         // Fees
         ghostConfigDaoFee == 1500 * BP2DP_NORMALIZATION()
@@ -229,8 +229,15 @@ definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
     || f.selector == 0x97d2a50b // Harness.makeUnresolvedCall()
     ;
 
+persistent ghost address ghostSiloMode {
+    axiom ghostSiloMode == _Silo1._SILO_MODE;
+}
+
 definition SILO1_MODE() returns bool = 
     _Silo1._SILO_MODE == _Silo1;
+
+definition HOOK_MODE() returns bool = 
+    _Silo1._SILO_MODE != _Silo1;
 
 //
 // Methods summarizes
@@ -265,7 +272,7 @@ persistent ghost mapping(uint256 => address) ghostDeployerFeeReceiver {
     axiom forall uint256 id. ghostDeployerFeeReceiver[id] != ghostDaoFeeReceiver
         && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDeployerFeeReceiver[id]);
 }
-function getFeeReceiversCVL() returns (address, address) {
+function getFeeReceiversCVL(env e) returns (address, address) {
     return (ghostDaoFeeReceiver, ghostDeployerFeeReceiver[ghostSiloId]);
 }
 

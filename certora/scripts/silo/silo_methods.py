@@ -1,7 +1,4 @@
 silo_methods_hard = [
-]
-
-silo_methods_other = [
     "transitionCollateralFromCollateral(uint256,address)",
     "transitionCollateralFromProtected(uint256,address)",
     "redeemCollateral(uint256,address,address)",
@@ -15,6 +12,9 @@ silo_methods_other = [
     "borrowSameAsset(uint256,address,address)",    
     "switchCollateralToThisSilo()",
     "accrueInterestForConfig(address,uint256,uint256)",
+]
+
+silo_methods_other = [
     "approve(address,uint256)",
     "flashFee(address,uint256)",
     "transfer(address,uint256)",

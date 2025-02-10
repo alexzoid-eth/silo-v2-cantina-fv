@@ -2,7 +2,6 @@
 
 # generate new 
 python3 ./gen_silo.py
-python3 ./gen_silo_ex.py
 python3 ./gen_silo_violated.py
 
 # move into configs

@@ -125,6 +125,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
 
     /// @inheritdoc ISiloFactory
     function burn(uint256 _siloIdToBurn) external virtual {
+        require(msg.sender == _ownerOf(_siloIdToBurn));
         _burn(_siloIdToBurn);
     }
 

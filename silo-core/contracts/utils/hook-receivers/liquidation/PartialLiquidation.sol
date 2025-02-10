@@ -112,7 +112,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         );
         
         siloConfigCached.turnOffReentrancyProtection();
-        /*
+        
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
         
         if (_receiveSToken) {
@@ -170,7 +170,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             repayDebtAssets,
             withdrawCollateral,
             _receiveSToken
-        );*/
+        );
     }
 
     function hookReceiverConfig(address) external virtual view returns (uint24 hooksBefore, uint24 hooksAfter) {

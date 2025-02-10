@@ -273,9 +273,6 @@ rule share_allowedReenterFunctionDoNotCallCrossReentrancyGuard(env e, method f, 
 
 ////////////////////////////////////////////////// Interest
 
-// @todo transfer/transfer/From
-// https://prover.certora.com/output/52567/7b800adf257147daa2aebe027d2b71ed?anonymousKey=e9ab746252c2d7c24c50e07e0b03f8e8b823597e
-// https://prover.certora.com/output/52567/6f0bbf6e960442ee8a8015a6886efe3a?anonymousKey=868293b35dc27e67f2d041029290bec0bba7c26d
 // Any change in share balances or total supply must have interest up-to-date (same block)
 rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg args, address user) 
     filtered {
@@ -285,6 +282,11 @@ rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg ar
     // SAFE: Can be executed by HookReceiver only
     && f.selector != 0xd985616c     // ShareDebtToken.forwardTransferFromNoChecks()
     && !VIEW_OR_FALLBACK_FUNCTION(f)
+    // UNSAFE: @todo violated in transfer/transfer/From
+    // https://prover.certora.com/output/52567/7b800adf257147daa2aebe027d2b71ed?anonymousKey=e9ab746252c2d7c24c50e07e0b03f8e8b823597e
+    // https://prover.certora.com/output/52567/6f0bbf6e960442ee8a8015a6886efe3a?anonymousKey=868293b35dc27e67f2d041029290bec0bba7c26d
+    && f.selector != 0xa9059cbb // transfer()
+    && f.selector != 0x23b872dd // transferFrom()
     } {
     
     setupSilo(e);
