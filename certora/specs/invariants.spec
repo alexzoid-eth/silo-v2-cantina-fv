@@ -71,7 +71,8 @@ filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 
 // The interest rate timestamp must never be set in the future
 invariant inv_interestRateTimestampNotInFuture(env e)
-    forall address silo. ghostInterestRateTimestamp[silo] <= e.block.timestamp 
+    ghostInterestRateTimestamp[_Silo0] <= e.block.timestamp 
+    && ghostInterestRateTimestamp[_Silo1] <= e.block.timestamp 
 filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) }
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 

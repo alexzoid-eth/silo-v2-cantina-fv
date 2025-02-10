@@ -77,8 +77,10 @@ methods {
             expect (address);
 
     function _.SILO_ID() external
-        => NONDET DELETE;
+        => ghostSiloId expect uint256;
 }
+
+persistent ghost uint256 ghostSiloId;
 
 function setThisSiloAsCollateralSiloCVL(env e, address _borrower) {
     assert(e.msg.sender == _Silo0 || e.msg.sender == _Silo1);

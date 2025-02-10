@@ -229,8 +229,8 @@ definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
     || f.selector == 0x97d2a50b // Harness.makeUnresolvedCall()
     ;
 
-definition SILO_MODE_HOOK() returns bool = 
-    _Silo1._SILO_MODE != _Silo1;
+definition SILO1_MODE() returns bool = 
+    _Silo1._SILO_MODE == _Silo1;
 
 //
 // Methods summarizes
@@ -258,16 +258,15 @@ function shareTokenLibDecimalsCVL(address token) returns uint8 {
 // `SiloFactory`
 
 persistent ghost address ghostDaoFeeReceiver {
-    axiom ghostDaoFeeReceiver != ghostDeployerFeeReceiver
-        && ghostDaoFeeReceiver != 0
+    axiom ghostDaoFeeReceiver != 0
         && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDaoFeeReceiver);
 }
-persistent ghost address ghostDeployerFeeReceiver {
-    axiom ghostDeployerFeeReceiver != ghostDaoFeeReceiver
-        && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDeployerFeeReceiver);
+persistent ghost mapping(uint256 => address) ghostDeployerFeeReceiver {
+    axiom forall uint256 id. ghostDeployerFeeReceiver[id] != ghostDaoFeeReceiver
+        && ADDRESS_NOT_CONTRACT_IN_SCENE(ghostDeployerFeeReceiver[id]);
 }
 function getFeeReceiversCVL() returns (address, address) {
-    return (ghostDaoFeeReceiver, ghostDeployerFeeReceiver);
+    return (ghostDaoFeeReceiver, ghostDeployerFeeReceiver[ghostSiloId]);
 }
 
 // `IERC3156FlashBorrower`

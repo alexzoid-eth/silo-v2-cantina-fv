@@ -5,13 +5,13 @@ methods {
     ) internal returns (uint256) 
         => convertToAssetsCVL(
             _shares, _totalAssets, _totalShares, to_mathint(_rounding) == 1, _assetType == ISilo.AssetType.Debt
-            );
+            ); 
 
     function SiloMathLib.convertToShares(
         uint256 _assets, uint256 _totalAssets, uint256 _totalShares, Math.Rounding _rounding, ISilo.AssetType _assetType
     ) internal returns (uint256) 
         => convertToSharesCVL(
-            _assets, _totalAssets, _totalShares, to_mathint(_rounding) == 1, _assetType == ISilo.AssetType.Debt
+                _assets, _totalAssets, _totalShares, to_mathint(_rounding) == 1, _assetType == ISilo.AssetType.Debt
             ); 
 }
 
@@ -42,7 +42,9 @@ function convertToAssetsCVL(uint256 _shares, uint256 _totalAssets, uint256 _tota
     if(totalShares == 0) {
         return _shares;
     } else {
-        return mulDivRoundingCVL(_shares, totalAssets, totalShares, roundingUp);
+        return SILO1_MODE()
+            ? mulDivRoundingCVL(_shares, totalAssets, totalShares, roundingUp)
+            : mulDivRoundingApproxCVL(_shares, totalAssets, totalShares, roundingUp);
     }
 }
 
@@ -52,6 +54,8 @@ function convertToSharesCVL(uint256 _assets, uint256 _totalAssets, uint256 _tota
     if(totalShares == 0) {
         return _assets;
     } else {
-        return mulDivRoundingCVL(_assets, totalShares, totalAssets, roundingUp);
+        return SILO1_MODE()
+            ? mulDivRoundingCVL(_assets, totalShares, totalAssets, roundingUp) 
+            : mulDivRoundingApproxCVL(_assets, totalShares, totalAssets, roundingUp);
     }
 }   

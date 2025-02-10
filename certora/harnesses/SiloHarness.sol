@@ -7,11 +7,6 @@ import { SafeERC20 } from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import { ISilo } from "silo-core/contracts/interfaces/ISilo.sol";
 import { IShareToken } from "silo-core/contracts/interfaces/IShareToken.sol";
-import { IERC20R } from "silo-core/contracts/interfaces/IERC20R.sol";
-import { ERC20Upgradeable } from "openzeppelin5-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import { NoncesUpgradeable } from "openzeppelin5-upgradeable/utils/NoncesUpgradeable.sol";
-import { EIP712Upgradeable } from "openzeppelin5-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Actions } from "silo-core/contracts/lib/Actions.sol";
 import { SiloERC4626Lib } from "silo-core/contracts/lib/SiloERC4626Lib.sol";
 import { SiloMathLib } from "silo-core/contracts/lib/SiloMathLib.sol";
@@ -25,7 +20,7 @@ abstract contract SiloHarness is Silo, SiloStorage, HelperCVL {
     // Linked with Silo1 or Hook. Solidity compiler will not accept unreferenced immutable
     address private immutable _SILO_MODE;
     
-    function viewSiloMode() external pure returns (address) {
+    function viewSiloMode() external view returns (address) {
         return _SILO_MODE;
     }
 

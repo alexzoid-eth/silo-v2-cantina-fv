@@ -14,5 +14,3 @@ methods {
 persistent ghost mapping(address => bool) ghostUserSolvent {
     init_state axiom forall address user. ghostUserSolvent[user] == false;
 }
-
-// @todo summarize redeem/preview
