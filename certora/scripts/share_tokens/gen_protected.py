@@ -14,6 +14,9 @@ def generate_config(rule_name):
             "certora/harnesses/silo1/Debt1.sol",
             "certora/harnesses/silo1/Protected1.sol",
         ],
+        "link": [
+            "Silo1:_SILO_MODE=Silo1",
+        ],
         "msg": f"Protected1_{rule_name}_verified",
         "mutations": {
             "manual_mutants": [

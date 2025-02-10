@@ -273,10 +273,9 @@ rule share_allowedReenterFunctionDoNotCallCrossReentrancyGuard(env e, method f, 
 
 ////////////////////////////////////////////////// Interest
 
-// @todo 
-// https://prover.certora.com/output/52567/fb6a79fac0d7450e8bbd26a242dd1aa0?anonymousKey=58546f20dc4c5c968988e246b979bc782839079a
-// https://prover.certora.com/output/52567/dc958ca9ec844f4187eb028e8c4368f8?anonymousKey=d4afea12e5868c51330d696ac5e3790086647d1f
-// https://prover.certora.com/output/52567/60312ea50de34b0a9ce7e65251965239?anonymousKey=04f933fd7312bc7b1e0eebfd096e58d511508dff
+// @todo transfer/transfer/From
+// https://prover.certora.com/output/52567/7b800adf257147daa2aebe027d2b71ed?anonymousKey=e9ab746252c2d7c24c50e07e0b03f8e8b823597e
+// https://prover.certora.com/output/52567/6f0bbf6e960442ee8a8015a6886efe3a?anonymousKey=868293b35dc27e67f2d041029290bec0bba7c26d
 // Any change in share balances or total supply must have interest up-to-date (same block)
 rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg args, address user) 
     filtered {
@@ -356,7 +355,6 @@ rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg ar
     assert(changedGroup1 => silo1InterestAfter == e.block.timestamp);
 }
 
-// @todo https://prover.certora.com/output/52567/bb6a9bf9c1aa405895711f54be412391?anonymousKey=7d4771c823f11afa1d649492f03a1915b3343f34
 // Block timestamp never goes backwards
 rule share_InterestTimestampAlwaysGrow(env e, method f, calldataarg args)
     filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } {

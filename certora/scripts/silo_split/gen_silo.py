@@ -15,6 +15,9 @@ def generate_config(rule_name):
             "certora/harnesses/silo1/Protected1.sol",
         ],
         "independent_satisfy": True,
+        "link": [
+            "Silo1:_SILO_MODE=Silo1",
+        ],
         "msg": f"Silo1_{rule_name}_verified",
         "multi_assert_check": True, "independent_satisfy": True,
         "mutations": {

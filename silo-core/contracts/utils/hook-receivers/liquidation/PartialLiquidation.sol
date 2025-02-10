@@ -233,7 +233,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             Rounding.LIQUIDATE_TO_SHARES,
             ISilo.AssetType(_assetType)
         );
-
+        
         if (shares == 0) return 0;
 
         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);

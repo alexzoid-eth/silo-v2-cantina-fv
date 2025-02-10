@@ -65,7 +65,8 @@ rule_names = [
     "sanity_borrowShares",
     "sanity_borrow",
     "sanity_borrowSameAsset",
-    "sanity_others"
+    "sanity_others",
+    "sanity_all"
 ]
 
 # Generate configuration files

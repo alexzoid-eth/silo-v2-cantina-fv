@@ -18,6 +18,7 @@ def generate_config(rule_name):
         ],
         "independent_satisfy": True,
         "link": [
+            "Silo1:_SILO_MODE=Hook",
             "Hook:_HOOK_RECEIVER=PartialLiquidation",
             "Hook:_SILO0=Silo0",
             "Hook:_SILO1=Silo1",

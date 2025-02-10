@@ -22,6 +22,13 @@ import { SiloStorage } from "./SiloStorage.sol";
 abstract contract SiloHarness is Silo, SiloStorage, HelperCVL {
     constructor(ISiloFactory _siloFactory) Silo(_siloFactory) { }
 
+    // Linked with Silo1 or Hook. Solidity compiler will not accept unreferenced immutable
+    address private immutable _SILO_MODE;
+    
+    function viewSiloMode() external pure returns (address) {
+        return _SILO_MODE;
+    }
+
     // Split Collateral and Protected collateral EIP-4626 functions
 
     function convertToSharesCollateral(uint256 _assets) external view virtual returns (uint256 shares) {

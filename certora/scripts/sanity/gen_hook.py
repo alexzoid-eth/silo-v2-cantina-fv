@@ -15,6 +15,7 @@ def generate_config(rule_name):
             "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol",
         ],
         "link": [
+            "Silo1:_SILO_MODE=Hook",
             "Hook:_HOOK_RECEIVER=PartialLiquidation",
             "Hook:_SILO0=Silo0",
             "Hook:_SILO1=Silo1",

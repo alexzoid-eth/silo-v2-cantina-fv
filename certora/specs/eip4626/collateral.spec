@@ -1,8 +1,8 @@
 // Prove collateral vault is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
+import "../invariants.spec";
 import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
-import "../invariants.spec";
 
 /*
     Excluded (violated):
@@ -13,10 +13,14 @@ import "../invariants.spec";
 
 /*
     @todo
-    ~ eip4626_collateral_maxRedeemNoHigherThanActual
-    ~ eip4626_collateral_maxWithdrawNoHigherThanActual
-    ~ eip4626_collateral_maxWithdrawZeroIfDisabled
-    ~ eip4626_collateral_maxWithdrawWithdrawPossibility
+    - eip4626_collateral_maxRedeemNoHigherThanActual
+        - https://prover.certora.com/output/52567/538b6fbf4a1d414b82fd553208934420?anonymousKey=e75e04bf08866d2b53725b2ca748b337c534d39f
+    - eip4626_collateral_maxWithdrawNoHigherThanActual
+        - https://prover.certora.com/output/52567/14cb804a689b48cbbfcd3248cd7b6251?anonymousKey=c5881fe0d32e941f3b2529e69f4f90a32c720505
+    - eip4626_collateral_maxWithdrawZeroIfDisabled
+        - https://prover.certora.com/output/52567/c51c1b2a71ba4e76b306b6e91edf17c2?anonymousKey=9b786c73b34abaf483cb1a420319eab670e0d1ac
+    - eip4626_collateral_maxWithdrawWithdrawPossibility
+        - https://prover.certora.com/output/52567/cbf5ac758a184b33b74c1b115bd9b7c5?anonymousKey=aea8c2d6c65e480c164bb842df4eacf1716cf499
 */
 
 //

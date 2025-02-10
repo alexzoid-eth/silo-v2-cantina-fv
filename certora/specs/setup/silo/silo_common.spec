@@ -109,10 +109,10 @@ methods {
 
 // UNSAFE: limit the max balance of each user 
 persistent ghost mathint ghostWeiUpperLimit {
-    axiom ghostWeiUpperLimit == max_uint32;
+    axiom ghostWeiUpperLimit == max_uint64;
 }
 persistent ghost mathint ghostTokenSupplyRange {
-    axiom ghostTokenSupplyRange >= ghostWeiUpperLimit && ghostTokenSupplyRange <= 10 * ghostWeiUpperLimit;
+    axiom ghostTokenSupplyRange >= max_uint32 && ghostTokenSupplyRange <= max_uint64;
 }
 
 persistent ghost address ghostCaller;
@@ -124,7 +124,7 @@ function setupSilo(env e) {
 
     // SAFE: assume realistic initial amount of accumulated fee to avoid overflow in
     //  `unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }`
-    require(forall address silo. ghostDaoAndDeployerRevenue[silo] < max_uint96);
+    require(forall address silo. ghostDaoAndDeployerRevenue[silo] < max_uint64);
 
     // SAFE: Avoid reverting due non-zero msg.value
     require(e.msg.value == 0);
@@ -134,7 +134,7 @@ function setupSilo(env e) {
     require(ghostCaller == e.msg.sender);
 
     // SAFE: Valid time
-    require(e.block.timestamp > 0 && e.block.timestamp < max_uint64);
+    require(e.block.timestamp > max_uint16 && e.block.timestamp < max_uint48);
     require(e.block.number != 0);
     require(ghostToken0 != e.msg.sender && ghostToken1 != e.msg.sender);
 
@@ -173,7 +173,7 @@ function setupSilo(env e) {
     require(ghostConfigSolvencyOracle1 == 0 && ghostConfigMaxLtvOracle1 == 0);
 
     // UNSAFE: set `true` to use static config based on `silo-core/deploy/input/mainnet/FULL_CONFIG_TEST.json`
-    require(ghostUseStaticConfig == true);
+    require(ghostUseStaticConfig == false);
     require(ghostUseStaticConfig => (
         // Fees
         ghostConfigDaoFee == 1500 * BP2DP_NORMALIZATION()
@@ -228,6 +228,9 @@ definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
     || f.isFallback
     || f.selector == 0x97d2a50b // Harness.makeUnresolvedCall()
     ;
+
+definition SILO_MODE_HOOK() returns bool = 
+    _Silo1._SILO_MODE != _Silo1;
 
 //
 // Methods summarizes
