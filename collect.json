@@ -1,0 +1,35 @@
+{
+    "original": "https://prover.certora.com/output/52567/bc52f01ac3b3430cab0fca802b4b05fd?anonymousKey=0cd8c873982f5ff319e5d5c643301f9c826eeb45",
+    "mutants": [
+        {
+            "gambit_mutant": {
+                "filename": "certora/mutations/Silo/Silo_P.sol",
+                "original_filename": "silo-core/contracts/Silo.sol",
+                "directory": "certora/mutations/Silo",
+                "id": "Silo_P",
+                "diff": "819c819,824\n< }\n---\n> \n>     // mutation: add an unprotected burn function\n>     function burn(address _owner, uint256 _amount) external {\n>         _burn(_owner, _amount);\n>     }\n> }\n\\ No newline at end of file\n",
+                "description": "certora/mutations/Silo/Silo_P.sol",
+                "name": "Silo_P"
+            },
+            "link": "https://prover.certora.com/jobStatus/52567/9adbdc01fcde408f84185b01c7812bfd?anonymousKey=fc2dcfe7c5353f12374d8a218244ef27742038fa",
+            "success": true,
+            "run_directory": ".certora_internal/25_02_10_23_11_47_684/.certora_sources",
+            "rule_report_link": "https://prover.certora.com/output/52567/9adbdc01fcde408f84185b01c7812bfd?anonymousKey=fc2dcfe7c5353f12374d8a218244ef27742038fa"
+        },
+        {
+            "gambit_mutant": {
+                "filename": "certora/mutations/Actions/Actions_P.sol",
+                "original_filename": "silo-core/contracts/lib/Actions.sol",
+                "directory": "certora/mutations/Actions",
+                "id": "Actions_P",
+                "diff": "93c93\n<         \n---\n> \n97c97\n<         // For Silo1: depositConfig == Silo1, collateralConfig == Silo1, debtConfig == Silo0\n---\n> \n99c99\n<         \n---\n> \n125,127c125,127\n<         \n<         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible()); \n<         \n---\n> \n>         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());\n> \n129c129\n<         siloConfig.accrueInterestForBothSilos(); \n---\n>         siloConfig.accrueInterestForBothSilos();\n131c131\n<         \n---\n> \n136,137c136,137\n<         \n<         (assets, shares) = SiloLendingLib.borrow( \n---\n> \n>         (assets, shares) = SiloLendingLib.borrow(\n143,145c143,145\n<         \n<         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower); \n<         \n---\n> \n>         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);\n> \n147c147\n<         \n---\n> \n352c352,353\n<         IERC20(_token).safeTransfer(address(_receiver), _amount);\n---\n>         // mutation: replace \"_receiver\" with \"this\"\n>         IERC20(_token).safeTransfer(address(this), _amount);\n394c395\n<         // @audit totalAssets invariant:\n---\n> \n466c467\n<         if (_debtConfig.silo != _collateralConfig.silo) { \n---\n>         if (_debtConfig.silo != _collateralConfig.silo) {\n470c471\n<         \n---\n> \n627c628\n< }\n---\n> }\n\\ No newline at end of file\n",
+                "description": "certora/mutations/Actions/Actions_P.sol",
+                "name": "Actions_P"
+            },
+            "link": "https://prover.certora.com/jobStatus/52567/038fd702e5cf47deb163ac44cad6243e?anonymousKey=76bed4981785a5b5ee9e32a4156a00325f39efd6",
+            "success": true,
+            "run_directory": ".certora_internal/25_02_10_23_11_47_622/.certora_sources",
+            "rule_report_link": "https://prover.certora.com/output/52567/038fd702e5cf47deb163ac44cad6243e?anonymousKey=76bed4981785a5b5ee9e32a4156a00325f39efd6"
+        }
+    ]
+}

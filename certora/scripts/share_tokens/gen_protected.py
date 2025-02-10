@@ -1,7 +1,7 @@
 import json
 import os
 
-from rule_names import rule_names
+from share_tokens_rule_names import rule_names
 
 def generate_config(rule_name):
     config = {
@@ -32,9 +32,9 @@ def generate_config(rule_name):
         },
         "optimistic_loop": True,
         "packages": [
-            "openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts",
-            "openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts",
-            "@openzeppelin/contracts/=gitmodules/openzeppelin-contracts-5/contracts"
+            "openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts/",
+            "openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts/",
+            "@openzeppelin/contracts/=gitmodules/openzeppelin-contracts-5/contracts/"
         ],
         "parametric_contracts": [
             "Protected1"

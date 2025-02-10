@@ -9,16 +9,6 @@ import "../setup/silo1/silo1.spec";
     - eip4626_protected_convertToAssetsRoundTripDoesNotExceed
 */
 
-/*
-    @todo
-    - eip4626_protected_maxRedeemNoHigherThanActual
-        - https://prover.certora.com/output/52567/a6cf9cd4dd1248b6ae0de17149c8d7b9?anonymousKey=d40f9eac2cdbbb009b8af4231d3664c196700d2b
-    - eip4626_protected_maxWithdrawNoHigherThanActual
-        - https://prover.certora.com/output/52567/c0dc8226c46f422bb6811e36f103861b?anonymousKey=aae62043a03f71daad014566120e59bfc3d7038d
-    - eip4626_protected_maxWithdrawZeroIfDisabled
-        - https://prover.certora.com/output/52567/a3a77881576c4f5c9d400ec0737aee38?anonymousKey=54ff777da2e5a07ac3fbab2dd998199c3c8e7ed8
-*/
-
 //
 // Asset
 //

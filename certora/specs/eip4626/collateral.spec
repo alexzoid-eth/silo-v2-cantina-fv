@@ -11,16 +11,6 @@ import "../setup/silo1/silo1.spec";
     - eip4626_collateral_previewWithdrawNoFewerThanActualShares
 */
 
-/*
-    @todo
-    - eip4626_collateral_maxRedeemNoHigherThanActual
-        - https://prover.certora.com/output/52567/538b6fbf4a1d414b82fd553208934420?anonymousKey=e75e04bf08866d2b53725b2ca748b337c534d39f
-    - eip4626_collateral_maxWithdrawNoHigherThanActual
-        - https://prover.certora.com/output/52567/14cb804a689b48cbbfcd3248cd7b6251?anonymousKey=c5881fe0d32e941f3b2529e69f4f90a32c720505
-    - eip4626_collateral_maxWithdrawZeroIfDisabled
-        - https://prover.certora.com/output/52567/c51c1b2a71ba4e76b306b6e91edf17c2?anonymousKey=9b786c73b34abaf483cb1a420319eab670e0d1ac
-*/
-
 //
 // Asset
 //

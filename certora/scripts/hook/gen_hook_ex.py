@@ -8,7 +8,7 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
-from rule_names import rule_names_ex
+from hook_rule_names import rule_names_ex
 from hook_methods import hook_methods_hard, hook_methods_other
 
 def generate_config(rule_name, method, fn_name):
@@ -51,9 +51,9 @@ def generate_config(rule_name, method, fn_name):
         },
         "optimistic_loop": True,
         "packages": [
-            "openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts",
-            "openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts",
-            "@openzeppelin/contracts/=gitmodules/openzeppelin-contracts-5/contracts"
+            "openzeppelin5/=gitmodules/openzeppelin-contracts-5/contracts/",
+            "openzeppelin5-upgradeable/=gitmodules/openzeppelin-contracts-upgradeable-5/contracts/",
+            "@openzeppelin/contracts/=gitmodules/openzeppelin-contracts-5/contracts/"
         ],
         "parametric_contracts": [
             "Hook"
