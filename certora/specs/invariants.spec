@@ -17,7 +17,7 @@ function requireValidStateInvariants(env e) {
     requireInvariant inv_interestRateTimestampNotInFuture(e);
     requireInvariant inv_borrowerCannotHaveTwoDebts(e);
     requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralSet(e); 
-    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e); // @todo violated
+    requireInvariant inv_borrowerCannotHaveDebtWithoutCollateralShares(e); // Violated, use in setup assumptions only
 
     // SiloX
     requireInvariant inv_liquiditySolvency0(e); requireInvariant inv_liquiditySolvency1(e);

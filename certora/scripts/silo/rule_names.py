@@ -8,6 +8,4 @@ rule_names = [
 
     "silo_possibilityOfCollateralsInTwoSilos",
     "silo_possibilityOfProtectedInTwoSilos",
-
-
 ]

@@ -27,7 +27,6 @@ hook ALL_SLOAD(uint256 slot) uint256 val {
     }
 }
 
-// @todo https://prover.certora.com/output/52567/bfcb202d793f4c48826df25eb6facb6f?anonymousKey=7a1f69bd5060b641ed409220d5d53ff4afd39ce7
 // Collateral harness must not touch protected/debt storage
 rule silo_collateralFunctionsNoAccessOtherVaults(env e, method f, calldataarg args)
     filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) } 
@@ -42,7 +41,6 @@ rule silo_collateralFunctionsNoAccessOtherVaults(env e, method f, calldataarg ar
     assert(!ghostProtectedStorageAccess && !ghostDebtStorageAccess);
 }
 
-// @todo https://prover.certora.com/output/52567/e4180377f43d4b549ae68db78b3e4aa3?anonymousKey=a101b10ccf7ba950b8490e0cc6d308fb1f2cab26
 // Protected harness must not touch debt (access collateral contract as Silo)
 rule silo_protectedFunctionsNoAccessOtherVaults(env e, method f, calldataarg args)
     filtered { f -> PROTECTED_HARNESS_FUNCTIONS(f) } 
@@ -57,7 +55,6 @@ rule silo_protectedFunctionsNoAccessOtherVaults(env e, method f, calldataarg arg
     assert(!ghostDebtStorageAccess);
 }
 
-// @todo https://prover.certora.com/output/52567/c1b02adf07414990a83411f3b7865d96?anonymousKey=c52c9ac4b0956d1e8ab4f73a26d7a316fc17ebc7
 // Possibility of collateral vault read/write its own storage
 rule silo_collateralFunctionsAccessOwnStorage(env e, method f, calldataarg args)
     filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) }
