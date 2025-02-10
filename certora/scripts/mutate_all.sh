@@ -1,31 +1,11 @@
-# Execute from current directory, execute certoraMutate on all configs.
+#!/bin/bash
 
-cd ./eip20
-./mutate_all.sh
-
-cd ../eip4626_collateral
-./mutate_all.sh
-
-cd ../eip4626_protected
-./mutate_all.sh
-
-cd ../hook
-./mutate_all.sh
-
-cd ../invariants
-./mutate_all.sh
-
-cd ../sanity
-./mutate_all.sh
-
-cd ../share_tokens
-./mutate_all.sh
-
-cd ../share_tokens_split
-./mutate_all.sh
-
-cd ../silo
-./mutate_all.sh
-
-cd ../silo_split
-./mutate_all.sh
+# Execute from root directory. Updates all configs.
+# Find all .conf files in the conf directory and its subdirectories
+find certora/confs -type f -name "*.conf" | while read -r conf_file; do
+    echo "Executing certoraMutate on $conf_file"
+    certoraMutate "$conf_file"
+    if [ $? -ne 0 ]; then
+        echo "Error executing certoraMutate on $conf_file"
+    fi
+done
