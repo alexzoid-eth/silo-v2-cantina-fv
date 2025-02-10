@@ -29,7 +29,10 @@ hook ALL_SLOAD(uint256 slot) uint256 val {
 
 // Collateral harness must not touch protected/debt storage
 rule silo_collateralFunctionsNoAccessOtherVaults(env e, method f, calldataarg args)
-    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) } 
+    filtered { f -> COLLATERAL_HARNESS_FUNCTIONS(f) 
+        // SAFE: protected shares are minted when transit collateral share to protected shares
+        && f.selector != sig:transitionCollateralFromCollateral(uint256,address).selector
+    } 
 {
     setupSilo(e);
 

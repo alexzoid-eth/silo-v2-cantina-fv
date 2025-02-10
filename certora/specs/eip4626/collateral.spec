@@ -9,6 +9,11 @@ import "../setup/silo1/silo1.spec";
     - eip4626_collateral_convertToAssetsRoundTripDoesNotExceed
     - eip4626_collateral_previewRedeemNoMoreThanActualAssets
     - eip4626_collateral_previewWithdrawNoFewerThanActualShares
+
+    Excluded (timeout):
+    - eip4626_collateral_maxRedeemNoHigherThanActual
+    - eip4626_collateral_maxWithdrawNoHigherThanActual
+    - eip4626_collateral_maxWithdrawZeroIfDisabled
 */
 
 //

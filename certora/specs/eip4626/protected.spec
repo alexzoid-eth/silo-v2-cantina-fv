@@ -7,6 +7,11 @@ import "../setup/silo1/silo1.spec";
 /*
     Excluded (violated):
     - eip4626_protected_convertToAssetsRoundTripDoesNotExceed
+
+    Excluded (timeout):
+    - eip4626_protected_maxRedeemNoHigherThanActual
+    - eip4626_protected_maxWithdrawNoHigherThanActual
+    - eip4626_protected_maxWithdrawZeroIfDisabled
 */
 
 //
