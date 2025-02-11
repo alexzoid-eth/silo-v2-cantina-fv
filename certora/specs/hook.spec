@@ -7,7 +7,6 @@ import "./setup/silo1/silo1.spec";
 import "./setup/partial_liquidation/partial_liquidation.spec";
 
 rule hook_test(address borrower) {
-    setupBorrower(borrower);
     assert(true);
 }
 

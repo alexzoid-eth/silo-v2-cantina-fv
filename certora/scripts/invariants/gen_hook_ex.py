@@ -40,12 +40,8 @@ def generate_config(rule_name, method, fn_name):
         "mutations": {
             "manual_mutants": [
                 {
-                    "file_to_mutate": "silo-core/contracts/Silo.sol",
-                    "mutants_location": "certora/mutations/Silo"
-                },
-                {
-                    "file_to_mutate": "silo-core/contracts/lib/Actions.sol",
-                    "mutants_location": "certora/mutations/Actions"
+                    "file_to_mutate": "silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol",
+                    "mutants_location": "certora/mutations/PartialLiquidation",
                 }
             ]
         },

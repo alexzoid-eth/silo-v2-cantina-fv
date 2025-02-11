@@ -277,12 +277,6 @@ definition HOOK_MODE() returns bool =
 //
 // Methods summarizes
 //
-
-// `Silo`
-
-function getTotalAssetsStorageCVL(address silo, mathint assetType) returns uint256 {
-    return require_uint256(ghostTotalAssets[silo][assetType]);
-}
  
 // `ShareTokenLib.decimals`
 

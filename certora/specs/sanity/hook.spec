@@ -12,7 +12,6 @@ rule sanity_liquidationCall_noSToken_noBypass_protectedAllowed(
     uint256 _maxDebtToCover
 ) {
     setupSilo(e);
-    setupBorrower(_borrower);
     liquidationCall_noSToken_noBypass_protectedAllowed(e, _borrower, _maxDebtToCover);
     satisfy(true);
 }
@@ -23,7 +22,6 @@ rule sanity_liquidationCall_receiveSToken_bypassInterest_protectedAllowed(
     uint256 _maxDebtToCover
 ) {
     setupSilo(e);
-    setupBorrower(_borrower);
     liquidationCall_receiveSToken_bypassInterest_protectedAllowed(e, _borrower, _maxDebtToCover);
     satisfy(true);
 }
@@ -34,7 +32,6 @@ rule sanity_liquidationCall_noSToken_bypassInterest_collateralAllowed(
     uint256 _maxDebtToCover
 ) {
     setupSilo(e);
-    setupBorrower(_borrower);
     liquidationCall_noSToken_bypassInterest_collateralAllowed(e, _borrower, _maxDebtToCover);
     satisfy(true);
 }
@@ -45,7 +42,6 @@ rule sanity_liquidationCall_receiveSToken_bypassInterest_collateralAllowed(
     uint256 _maxDebtToCover
 ) {
     setupSilo(e);
-    setupBorrower(_borrower);
     liquidationCall_receiveSToken_bypassInterest_collateralAllowed(e, _borrower, _maxDebtToCover);
     satisfy(true);
 }

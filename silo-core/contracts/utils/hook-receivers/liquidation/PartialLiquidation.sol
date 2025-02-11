@@ -61,8 +61,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {
         ISiloConfig siloConfigCached = siloConfig;
         
-        require(address(siloConfigCached) != address(0), EmptySiloConfig()); // @todo
-        require(_maxDebtToCover != 0, NoDebtToCover()); // @todo
+        require(address(siloConfigCached) != address(0), EmptySiloConfig());
+        require(_maxDebtToCover != 0, NoDebtToCover()); 
         
         siloConfigCached.turnOnReentrancyProtection();
         
@@ -86,9 +86,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         RevertLib.revertIfError(params.customError);
         
         // we do not allow dust so full liquidation is required
-        require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
+        require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired()); 
         
-        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets); 
         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
         
         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
@@ -215,7 +215,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             debtConfig.callSolvencyOracleBeforeQuote();
         }
     }
-
+    
     function _callShareTokenForwardTransferNoChecks(
         address _silo,
         address _borrower,

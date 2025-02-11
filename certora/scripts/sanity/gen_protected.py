@@ -48,7 +48,7 @@ def generate_config(rule_name):
             "Debt1:silo=Silo1",
             "Protected1:silo=Silo1",
         ],
-        "verify": "Protected1:certora/specs/sanity/silo.spec"
+        "verify": "Protected1:certora/specs/sanity/protected.spec"
     }
     
     os.makedirs("protected", exist_ok=True)

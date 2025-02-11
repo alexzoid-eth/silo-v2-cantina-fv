@@ -13,9 +13,6 @@ methods {
     function _.burn(address _owner, address _spender, uint256 _amount) external
         => DISPATCHER(true);
 
-    function _.forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external
-        => DISPATCHER(true);
-
     function _.balanceOfAndTotalSupply(address _account) external with (env e)
         => balanceOfAndTotalSupplyCVL(e, calledContract, _account) expect (uint256, uint256);
 

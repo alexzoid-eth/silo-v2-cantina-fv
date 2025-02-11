@@ -12,6 +12,10 @@ hook Sload address val _Protected1.shareTokenStorage.silo {
     require(_Silo1 == val);
 }
 
+hook Sload address val _Protected1.shareTokenStorage.siloConfig {
+    require(ghostConfig == val);
+}
+
 hook Sload address val _Protected1.shareTokenStorage.hookSetup.hookReceiver {
     require(ghostHookReceiver == val);
 }

@@ -83,6 +83,10 @@ persistent ghost address ghostHookReceiver {
 
 // Silo0
 
+persistent ghost address ghostConfig {
+    axiom ghostConfig != 0;
+}
+
 persistent ghost address ghostToken0 {
     axiom ghostToken0 != 0;
     axiom ADDRESS_NOT_CONTRACT_IN_SCENE(ghostToken0);

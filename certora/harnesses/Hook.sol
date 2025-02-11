@@ -14,14 +14,7 @@ contract Hook {
     address internal immutable _TOKEN0;
     address internal immutable _TOKEN1;
 
-    /// @notice Main flexible liquidation function
-    /// @param _borrower The borrower address
-    /// @param _maxDebtToCover The max amount of debt to be covered
-    /// @param _receiveSToken Whether to receive share tokens directly
-    /// @param _bypassInterest Whether to skip interest accrual checks
-    /// @param _ignoreProtectedShares Whether to skip protected shares check
-    /// @param _ignoreCollateralShares Whether to skip collateral shares check
-    function liquidationCallFlexible(
+    function liquidationCallValidFlexible(
         address _borrower,
         uint256 _maxDebtToCover,
         bool _receiveSToken,
@@ -81,7 +74,7 @@ contract Hook {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        return liquidationCallFlexible(_borrower, _maxDebtToCover, false, false, false, true);
+        return liquidationCallValidFlexible(_borrower, _maxDebtToCover, false, false, false, true);
     }
 
     // 2) Protected allowed, bypass interest, receiveSToken = true
@@ -94,7 +87,7 @@ contract Hook {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        return liquidationCallFlexible(_borrower, _maxDebtToCover, true, true, false, true);
+        return liquidationCallValidFlexible(_borrower, _maxDebtToCover, true, true, false, true);
     }
 
     // 3) Collateral allowed, bypass interest, receiveSToken = false
@@ -107,7 +100,7 @@ contract Hook {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        return liquidationCallFlexible(_borrower, _maxDebtToCover, false, true, true, false);
+        return liquidationCallValidFlexible(_borrower, _maxDebtToCover, false, true, true, false);
     }
 
     // 4) Collateral allowed, bypass interest, receiveSToken = true
@@ -120,6 +113,6 @@ contract Hook {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        return liquidationCallFlexible(_borrower, _maxDebtToCover, true, true, true, false);
+        return liquidationCallValidFlexible(_borrower, _maxDebtToCover, true, true, true, false);
     }
 }

@@ -1,6 +1,6 @@
 // Silo valid state invariants working for all Silo contracts 
 
-import "./setup/silo/silo_hard_methods.spec";
+import "./setup/silo/hard_methods.spec";
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
 import "./setup/silo/silo_valid_state.spec";

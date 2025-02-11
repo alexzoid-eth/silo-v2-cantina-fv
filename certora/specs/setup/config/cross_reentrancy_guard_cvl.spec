@@ -1,10 +1,10 @@
 methods {
     function _.turnOnReentrancyProtection() external with (env e)
-        => turnOnReentrancyProtectionCVL(e)
+        => turnOnReentrancyProtectionCVL(e, calledContract)
             expect void;
 
     function _.turnOffReentrancyProtection() external with (env e)
-        => turnOffReentrancyProtectionCVL(e)
+        => turnOffReentrancyProtectionCVL(e, calledContract)
             expect void;
 
     function _.reentrancyGuardEntered() external
@@ -27,7 +27,9 @@ persistent ghost bool ghostReentrancyProtectionDoubleCall {
     init_state axiom ghostReentrancyProtectionDoubleCall == false;
 }
 
-function turnOnReentrancyProtectionCVL(env e) {
+function turnOnReentrancyProtectionCVL(env e, address contract) {
+
+    assert(contract != 0);
 
     onlySiloOrTokenOrHookReceiverCVL(e);
 
@@ -39,7 +41,9 @@ function turnOnReentrancyProtectionCVL(env e) {
     ghostCrossReentrantStatus = ENTERED();
 }
 
-function turnOffReentrancyProtectionCVL(env e) {
+function turnOffReentrancyProtectionCVL(env e, address contract) {
+
+    assert(contract != 0);
 
     onlySiloOrTokenOrHookReceiverCVL(e);
 
