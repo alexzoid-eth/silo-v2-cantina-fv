@@ -1,9 +1,9 @@
 // Silo1 rules
 
-import "./setup/silo/hard_methods.spec";
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
 import "./setup/silo/silo_valid_state.spec";
+import "./setup/silo/hard_methods.spec";
 
 definition COLLATERAL_HARNESS_FUNCTIONS(method f) returns bool =
     f.selector == sig:convertToSharesCollateral(uint256).selector

@@ -1,9 +1,9 @@
 // Prove contract is compatible with EIP20 (https://eips.ethereum.org/EIPS/eip-20)
 
-import "./setup/silo/hard_methods.spec";
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
 import "./setup/silo/silo_valid_state.spec";
+import "./setup/silo/hard_methods.spec";
 
 // ERC20 viewers integrity
 

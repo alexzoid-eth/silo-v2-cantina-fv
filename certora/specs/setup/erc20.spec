@@ -116,9 +116,6 @@ function transferFromCVL(address token, address from, address to, uint256 amount
 
     require(ERC20_ACCOUNT_BOUNDS(token, from) && ERC20_ACCOUNT_BOUNDS(token, to));
 
-    assert(token == ghostToken0 || token == ghostToken1, 
-        "Only Token0 or Token1 can be passed here");
-
     ASSERT(from != to);
 
     if(transferFrom) {
@@ -142,10 +139,6 @@ function safeTransferFromCVL(address token, address from, address to, uint256 am
 function increaseAllowanceCVL(address token, address owner, address spender, uint256 amount) returns bool {
 
     require(ERC20_ACCOUNT_BOUNDS(token, owner) && ERC20_ACCOUNT_BOUNDS(token, spender));
-
-    assert(token == ghostToken0 || token == ghostToken1,
-        "Only Token0 or Token1 can be passed here"
-    );
 
     ghostERC20Allowances[token][owner][spender] = require_uint256(
         ghostERC20Allowances[token][owner][spender] + amount

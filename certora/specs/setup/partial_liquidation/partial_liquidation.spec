@@ -10,17 +10,17 @@ using PartialLiquidation as _PartialLiquidation;
 
 methods {
 
-    function _.liquidationCallValidFlexible(
+    function _HookSender.liquidationCallValidFlexible(
         address _borrower,
         uint256 _maxDebtToCover,
         bool _receiveSToken,
         bool _bypassInterest,
         bool _ignoreProtectedShares,
         bool _ignoreCollateralShares
-    ) external with (env e)
+    ) internal returns (uint256, uint256) with (env e)
         => liquidationCallValidFlexibleCVL(
             e, _borrower, _maxDebtToCover, _receiveSToken, _bypassInterest, _ignoreProtectedShares, _ignoreCollateralShares
-        ) expect (uint256, uint256);
+        );
 
     function SiloSolvencyLib.isSolvent(
         ISiloConfig.ConfigData memory,

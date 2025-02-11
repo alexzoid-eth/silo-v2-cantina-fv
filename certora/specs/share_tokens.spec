@@ -1,9 +1,9 @@
 // Common rules for Protected, Collateral and Debt share tokens
 
-import "./setup/silo/hard_methods.spec";
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
 import "./setup/silo/silo_valid_state.spec";
+import "./setup/silo/hard_methods.spec";
 
 methods {
     function Hook.matchAction(uint256 _action, uint256 _expectedHook) internal returns (bool)

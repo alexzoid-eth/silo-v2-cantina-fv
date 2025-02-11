@@ -22,7 +22,7 @@ contract Hook {
         bool _ignoreProtectedShares,
         bool _ignoreCollateralShares
     )
-        public
+        internal
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         // Assume interest is already accrued for both SILOs this block
