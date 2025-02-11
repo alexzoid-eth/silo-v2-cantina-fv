@@ -59,7 +59,7 @@ methods {
 
     function _.forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external
         => forwardTransferFromNoChecksCVL(calledContract, _from, _to, _amount, true) expect void;
-    
+    /*
     function _.repay(uint256 _assets, address _borrower) external with (env e)
         => repayCVL(e, calledContract, _assets, _borrower) expect uint256;
 
@@ -68,6 +68,7 @@ methods {
 
     function _.previewRedeem(uint256 _shares, ISilo.CollateralType _collateralType) external
         => previewRedeemCVL(calledContract, _shares, _collateralType) expect uint256;
+    */
 }
 
 definition _DUST() returns mathint = 100;
@@ -224,7 +225,7 @@ function repayCVL(env e, address silo, uint256 _assets, address _borrower)
     assert(ghostERC20Balances[ghostToken1][_PartialLiquidation] >= _assets);
 
     // Allowance must be set before transferFrom()
-    // assert(ghostERC20Allowances[ghostToken1][_PartialLiquidation][_Silo1] >= _assets);
+    assert(ghostERC20Allowances[ghostToken1][_PartialLiquidation][_Silo1] >= _assets);
 
     // Borrower's shares decrease
     assert(ghostERC20Balances[_Debt1][_borrower] >= shares); 

@@ -14,8 +14,9 @@ cd ../eip4626_collateral
 cd ../eip4626_protected
 ./gen_all.sh
 
-cd ../hook
-./gen_all.sh
+# Nothing implemented
+#cd ../hook
+#./gen_all.sh
 
 cd ../invariants
 ./gen_all.sh

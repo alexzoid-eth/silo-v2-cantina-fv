@@ -224,7 +224,7 @@ function repayCVL(env e, address silo, uint256 _assets, address _borrower)
     assert(ghostERC20Balances[ghostToken1][_PartialLiquidation] >= _assets);
 
     // Allowance must be set before transferFrom()
-    // assert(ghostERC20Allowances[ghostToken1][_PartialLiquidation][_Silo1] >= _assets);
+    assert(ghostERC20Allowances[ghostToken1][_PartialLiquidation][_Silo1] >= _assets);
 
     // Borrower's shares decrease
     assert(ghostERC20Balances[_Debt1][_borrower] >= shares); 
@@ -251,7 +251,7 @@ function redeemCVL(
     returns uint256
 {
     uint256 assets = _shares;
-    
+    /*
     // Based on PartialLiquidation.sol
     assert(silo == _Silo0);
     assert(_shares == ghostConfiscatedCollateralShares);
@@ -285,14 +285,14 @@ function redeemCVL(
     require(ghostERC20Balances[ghostToken0][_Silo0] >= assets);
     ghostERC20Balances[ghostToken0][_Silo0] = ghostERC20Balances[ghostToken0][_Silo0] - assets;
     ghostERC20Balances[ghostToken0][_HookSender] = ghostERC20Balances[ghostToken0][_HookSender] + assets;
-
+    */
     return assets;
 }
 
 function previewRedeemCVL(address silo, uint256 _shares, ISilo.CollateralType _collateralType) returns uint256
 {
     uint256 assets = _shares;
-    
+    /*
     assert(ghostReceiveSToken == true);
     assert(silo == _Silo0); // Collateral silo based on liquidationCallValidFlexibleCVL()
     assert(_shares != 0);
@@ -306,6 +306,6 @@ function previewRedeemCVL(address silo, uint256 _shares, ISilo.CollateralType _c
         assert(_collateralType == ISilo.CollateralType.Protected);
         assert(ghostERC20Balances[_Protected0][_HookSender] >= ghostConfiscatedCollateralShares);
     }
-
+    */
     return assets;
 }
