@@ -2,7 +2,7 @@
 
 # generate new 
 python3 ./gen_debt.py
-#python3 ./gen_hook.py
+python3 ./gen_hook.py
 python3 ./gen_protected.py
 python3 ./gen_silo.py
 

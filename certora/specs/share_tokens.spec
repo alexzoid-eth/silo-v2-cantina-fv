@@ -1,8 +1,9 @@
 // Common rules for Protected, Collateral and Debt share tokens
 
+import "./setup/silo/silo_hard_methods.spec";
 import "./setup/silo0/silo0.spec";
 import "./setup/silo1/silo1.spec";
-import "./invariants.spec";
+import "./setup/silo/silo_valid_state.spec";
 
 methods {
     function Hook.matchAction(uint256 _action, uint256 _expectedHook) internal returns (bool)
@@ -57,8 +58,8 @@ definition TRANSFER_ALL_FUNCTIONS(method f) returns bool =
 
 // Check valid action ids inside hooks
 rule share_functionExecutesHooksBasedOnConfig(env e, method f, calldataarg args) 
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
-{
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
+        
     setupSilo(e);
 
     require(ghostHookActionAllowAll == true);
@@ -80,8 +81,8 @@ rule share_functionExecutesHooksBasedOnConfig(env e, method f, calldataarg args)
 // No Hook Function Must Not Execute Hook
 //  Any function in NO_HOOKS_FUNCTIONS must not call hooks at all.
 rule share_noHookFunctionMustNotExecuteHook(env e, method f, calldataarg args)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
-{
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
+
     setupSilo(e);
 
     // No hooks to start
@@ -103,8 +104,10 @@ invariant share_hooksShouldBeSynchronized(env e)
     // Silo1 group
     && ghostShareTokenHooksBefore[_Collateral1] == ghostShareTokenHooksBefore[_Protected1]
     && ghostShareTokenHooksBefore[_Protected1] == ghostShareTokenHooksBefore[_Debt1]
-    // SAFE: Could be executed by Silo only
-    filtered { f -> f.selector != 0x4c7b0f3c } // synchronizeHooks(uint24, uint24)
+    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f)
+        // SAFE: Could be executed by Silo only
+        && f.selector != 0x4c7b0f3c // synchronizeHooks(uint24, uint24)
+        } 
 { preserved with (env eInv) { requireSameEnv(e, eInv); setupSilo(e); } }
 
 ////////////////////////////////////////////////// ReentrancyGuard
@@ -135,7 +138,8 @@ definition ALLOWED_REENTER_FUNCTIONS(method f) returns bool =
     ;
 
 // No double calls (even reverted) to cross reentrancy protection 
-rule share_crossReentrancyProtectionNoDoubleCall(env e, method f, calldataarg args) {
+rule share_crossReentrancyProtectionNoDoubleCall(env e, method f, calldataarg args) 
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
 
     setupSilo(e);
 
@@ -148,8 +152,8 @@ rule share_crossReentrancyProtectionNoDoubleCall(env e, method f, calldataarg ar
 
 // Enforces no state-changing calls may occur while already in the ENTERED reentrancy state
 rule share_noStateChangingCallInsideReentrancyEntered(env e, method f, calldataarg args)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
-{
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
+
     // Do not setup silo due to `inv_crossReentrancyGuardOpenedOnExit` invariant
 
     mathint statusBefore = ghostCrossReentrantStatus;
@@ -173,7 +177,8 @@ rule share_noStateChangingCallInsideReentrancyEntered(env e, method f, calldataa
     );
 }
 
-rule share_protectedFunctionMightChangeState(env e, method f, calldataarg args) {
+rule share_protectedFunctionMightChangeState(env e, method f, calldataarg args) 
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
 
     setupSilo(e);
 
@@ -199,14 +204,14 @@ rule share_protectedFunctionMightChangeState(env e, method f, calldataarg args) 
 
 // Moving shares is not allowed inside a reentrant call
 rule share_noMovingSharesInsideReentrancyEntered(env e, method f, calldataarg args, address sharesUser)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) 
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) 
         // SAFE: Only silo
         && f.selector != 0xc6c3bbe6 // mint()
         && f.selector != 0xf6b911bc // burn()
         // SAFE: Only hook receiver
         && f.selector != 0xd985616c // forwardTransferFromNoChecks()
-    } 
-{
+    } {
+
     // Do not setup silo due to `inv_crossReentrancyGuardOpenedOnExit` invariant
 
     mathint statusBefore = ghostCrossReentrantStatus;
@@ -258,8 +263,8 @@ rule share_noMovingSharesInsideReentrancyEntered(env e, method f, calldataarg ar
 
 // Allowed reentrancy function never call to CrossReentrancyGuard
 rule share_allowedReenterFunctionDoNotCallCrossReentrancyGuard(env e, method f, calldataarg args)
-    filtered { f-> !VIEW_OR_FALLBACK_FUNCTION(f) } 
-{
+    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
+
     setupSilo(e);
 
     require(ghostReentrancyCalled == false);
@@ -281,7 +286,7 @@ rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg ar
     && f.selector != 0xf6b911bc     // ShareDebtToken.burn()
     // SAFE: Can be executed by HookReceiver only
     && f.selector != 0xd985616c     // ShareDebtToken.forwardTransferFromNoChecks()
-    && !VIEW_OR_FALLBACK_FUNCTION(f)
+    && !EXCLUDED_OR_VIEW_SILO_FUNCTION(f)
     // UNSOUND: we can transfer collateral shares which are not used as a collateral
     && f.selector != 0xa9059cbb // transfer()
     && f.selector != 0x23b872dd // transferFrom()
@@ -357,7 +362,7 @@ rule share_groupShareChangeRequireGroupTimestamp(env e, method f, calldataarg ar
 
 // Block timestamp never goes backwards
 rule share_InterestTimestampAlwaysGrow(env e, method f, calldataarg args)
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } {
+    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
 
     setupSilo(e);
 

@@ -84,6 +84,7 @@ persistent ghost address ghostHookReceiver {
 // Silo0
 
 persistent ghost address ghostToken0 {
+    axiom ghostToken0 != 0;
     axiom ADDRESS_NOT_CONTRACT_IN_SCENE(ghostToken0);
     axiom ghostToken0 != ghostToken1;
 }
@@ -147,6 +148,7 @@ persistent ghost bool ghostConfigCallBeforeQuote0;
 // Silo1
 
 persistent ghost address ghostToken1 {
+    axiom ghostToken1 != 0;
     axiom ADDRESS_NOT_CONTRACT_IN_SCENE(ghostToken1);
 }
 

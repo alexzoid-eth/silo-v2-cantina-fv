@@ -9,7 +9,6 @@ import "./helper.spec";
 import "./interest_rate_model.spec";
 
 import "./silo_solvency_lib.spec";
-import "./silo_math_lib.spec";
 
 methods {
 
@@ -40,19 +39,10 @@ methods {
     function _.accrueInterest() external
         => DISPATCHER(true);
 
-    function _.repay(uint256 _assets, address _borrower) external
-        => DISPATCHER(true);
-
     function _.redeem(uint256 _shares, address _receiver, address _owner) external
         => DISPATCHER(true);
 
-    function _.redeem(uint256 _shares, address _receiver, address _owner, ISilo.CollateralType _collateralType) external
-        => DISPATCHER(true);
-
     function _.previewRedeem(uint256 _shares) external
-        => DISPATCHER(true);
-
-    function _.previewRedeem(uint256 _shares, ISilo.CollateralType _collateralType) external
         => DISPATCHER(true);
 
     function _.accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee) external
@@ -222,12 +212,57 @@ definition ADDRESS_NOT_CONTRACT_IN_SCENE(address a) returns bool
         && a != _Debt1
         ;
 
-definition VIEW_OR_FALLBACK_FUNCTION(method f) returns bool =
+// These functions are replaced in harness contract 
+definition SIMPLIFIED_IN_SILO_HARNESS_FUNCTION(method f) returns bool =
+    // single-argument EIP-4626
+       f.selector == 0xc6e6f592 // sig:convertToShares(uint256).selector
+    || f.selector == 0x07a2d13a // sig:convertToAssets(uint256).selector
+    || f.selector == 0xef8b30f7 // sig:previewDeposit(uint256).selector
+    || f.selector == 0x6e553f65 // sig:deposit(uint256,address).selector
+    || f.selector == 0xb3d7f6b9 // sig:previewMint(uint256).selector
+    || f.selector == 0x94bf804d // sig:mint(uint256,address).selector
+    || f.selector == 0xce96cb77 // sig:maxWithdraw(address).selector
+    || f.selector == 0x0a28a477 // sig:previewWithdraw(uint256).selector
+    || f.selector == 0xb460af94 // sig:withdraw(uint256,address,address).selector
+    || f.selector == 0xd905777e // sig:maxRedeem(address).selector
+    || f.selector == 0x4cdad506 // sig:previewRedeem(uint256).selector
+    || f.selector == 0xba087652 // sig:redeem(uint256,address,address).selector
+    || f.selector == 0x402d267d // sig:maxDeposit(address).selector
+    || f.selector == 0xc63d75b6 // sig:maxMint(address).selector
+    || f.selector == 0xfa9b1c6a // sig:transitionCollateral(uint256,address,ISilo.CollateralType).selector
+    // overloaded EIP-4626 + CollateralType/AssetType versions
+    || f.selector == 0x5d4086af // sig:convertToShares(uint256,ISilo.AssetType).selector
+    || f.selector == 0x7ff00077 // sig:convertToAssets(uint256,ISilo.AssetType).selector
+    || f.selector == 0x6e1f8f7e // sig:previewDeposit(uint256,ISilo.CollateralType).selector
+    || f.selector == 0xb7ec8d4b // sig:deposit(uint256,address,ISilo.CollateralType).selector
+    || f.selector == 0x11b5e682 // sig:previewMint(uint256,ISilo.CollateralType).selector
+    || f.selector == 0xc061ddc7 // sig:mint(uint256,address,ISilo.CollateralType).selector
+    || f.selector == 0x12d4c574 // sig:maxWithdraw(address,ISilo.CollateralType).selector
+    || f.selector == 0x267e54a7 // sig:previewWithdraw(uint256,ISilo.CollateralType).selector
+    || f.selector == 0xb8337c2a // sig:withdraw(uint256,address,address,ISilo.CollateralType).selector
+    || f.selector == 0x071bf3ff // sig:maxRedeem(address,ISilo.CollateralType).selector
+    || f.selector == 0xa7d6e44b // sig:previewRedeem(uint256,ISilo.CollateralType).selector
+    || f.selector == 0xda537660 // sig:redeem(uint256,address,address,ISilo.CollateralType).selector
+    ;
+
+definition HELPER_SILO_HARNESS_FUNCTION(method f) returns bool =
+       f.selector == 0x041b4c94 // sig:getCollateralAmountsWithInterestHarness(uint256, uint256, uint256, uint256, uint256).selector
+    || f.selector == 0x97d2a50b // sig:makeUnresolvedCall().selector
+    || f.selector == 0x95133c82 // sig:assertOnFalse(bool).selector
+    ;
+
+definition VIEW_FUNCTION(method f) returns bool =
     f.isPure 
     || f.isView 
     || f.isFallback
     || f.selector == 0x97d2a50b // Harness.makeUnresolvedCall()
     ;
+
+definition EXCLUDED_SILO_FUNCTION(method f) returns bool =
+    HELPER_SILO_HARNESS_FUNCTION(f) || SIMPLIFIED_IN_SILO_HARNESS_FUNCTION(f);
+
+definition EXCLUDED_OR_VIEW_SILO_FUNCTION(method f) returns bool =
+    EXCLUDED_SILO_FUNCTION(f) || VIEW_FUNCTION(f);
 
 persistent ghost address ghostSiloMode {
     axiom ghostSiloMode == _Silo1._SILO_MODE;

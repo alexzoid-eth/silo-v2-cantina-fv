@@ -42,9 +42,7 @@ function convertToAssetsCVL(uint256 _shares, uint256 _totalAssets, uint256 _tota
     if(totalShares == 0) {
         return _shares;
     } else {
-        return SILO1_MODE()
-            ? mulDivRoundingCVL(_shares, totalAssets, totalShares, roundingUp)
-            : mulDivRoundingApproxCVL(_shares, totalAssets, totalShares, roundingUp);
+        return mulDivRoundingCVL(_shares, totalAssets, totalShares, roundingUp);
     }
 }
 
@@ -54,8 +52,6 @@ function convertToSharesCVL(uint256 _assets, uint256 _totalAssets, uint256 _tota
     if(totalShares == 0) {
         return _assets;
     } else {
-        return SILO1_MODE()
-            ? mulDivRoundingCVL(_assets, totalShares, totalAssets, roundingUp) 
-            : mulDivRoundingApproxCVL(_assets, totalShares, totalAssets, roundingUp);
+        return mulDivRoundingCVL(_assets, totalShares, totalAssets, roundingUp);
     }
 }   

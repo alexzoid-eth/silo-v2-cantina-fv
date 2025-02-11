@@ -61,8 +61,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {
         ISiloConfig siloConfigCached = siloConfig;
         
-        require(address(siloConfigCached) != address(0), EmptySiloConfig());
-        require(_maxDebtToCover != 0, NoDebtToCover());
+        require(address(siloConfigCached) != address(0), EmptySiloConfig()); // @todo
+        require(_maxDebtToCover != 0, NoDebtToCover()); // @todo
         
         siloConfigCached.turnOnReentrancyProtection();
         

@@ -18,7 +18,7 @@ hook ALL_SSTORE(uint256 slot, uint256 val)  {
 
 // Ensures no storage writes happen before `hookBefore` or after `hookAfter`
 rule hooks_enforceHookBeforeAfterOrdering(env e, method f, calldataarg args) 
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) 
+    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) 
         // `$.transferWithChecks = true` in `forwardTransferFromNoChecks()` breaks the rule
         && !(f.selector == 0xd985616c) // forwardTransferFromNoChecks()
     } 
@@ -48,7 +48,7 @@ rule hooks_enforceHookBeforeAfterOrdering(env e, method f, calldataarg args)
 //  If storage was changed, then both hooks must be called.
 //  For transfers, the before hook is optional, but after hook is required.
 rule share_hooksMustExecuteIfStorageChanged(env e, method f, calldataarg args)
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f)
+    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f)
         // `$.transferWithChecks = true` in `forwardTransferFromNoChecks()` breaks the rule
         && !(f.selector == 0xd985616c) // forwardTransferFromNoChecks()
     } 
@@ -70,7 +70,7 @@ rule share_hooksMustExecuteIfStorageChanged(env e, method f, calldataarg args)
 }
 
 rule share_possibilityOfStorageTouchedWhenHookInvolved(env e, method f, calldataarg args)
-    filtered { f -> !VIEW_OR_FALLBACK_FUNCTION(f) } 
+    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } 
 {
     setupSilo(e);
 

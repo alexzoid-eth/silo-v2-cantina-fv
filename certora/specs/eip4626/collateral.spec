@@ -1,6 +1,7 @@
 // Prove collateral vault is compatible with EIP4626 (https://eips.ethereum.org/EIPS/eip-4626)
 
-import "../invariants.spec";
+import "../setup/silo/silo_valid_state.spec";
+import "../setup/silo/silo_hard_methods.spec";
 import "../setup/silo0/silo0.spec";
 import "../setup/silo1/silo1.spec";
 

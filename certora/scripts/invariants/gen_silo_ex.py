@@ -29,7 +29,6 @@ def generate_config(rule_name, method, fn_name):
             "Silo1:_SILO_MODE=Silo1",
         ],
         "msg": f"Silo1_{rule_name}_{fn_name}_verified",
-        "method": method,
         "mutations": {
             "manual_mutants": [
                 {
@@ -64,6 +63,10 @@ def generate_config(rule_name, method, fn_name):
         ],
         "verify": "Silo1:certora/specs/invariants.spec"
     }
+
+    if method:
+        config["method"] = method
+
     return config
 
 def base_function_name(method_signature: str) -> str:
@@ -113,3 +116,13 @@ for rule in rule_names:
         json.dump(config_dict_others, f, indent=4)
 
     print(f"Generated {full_path_others}")
+
+    # 3) Create one config for "all" methods
+    filename_all = f"Silo1_{rule}_all_verified.conf"
+    full_path_all = os.path.join("silo", filename_all)
+    config_dict_all = generate_config(rule, "", "all")
+
+    with open(full_path_all, "w") as f:
+        json.dump(config_dict_all, f, indent=4)
+
+    print(f"Generated {full_path_all}")
