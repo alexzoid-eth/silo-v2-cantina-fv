@@ -20,14 +20,3 @@ methods {
     function _.forwardTransferFromNoChecks(address _from, address _to, uint256 _amount) external
         => DISPATCHER(true);
 }
-
-// `Silo`
-
-function getTotalAssetsStorageCVL(address silo, mathint assetType) returns uint256 {
-    assert(silo == _Silo0 || silo == _Silo1);
-    assert(assetType == ASSET_TYPE_PROTECTED() 
-        || assetType == ASSET_TYPE_COLLATERAL() 
-        || assetType == ASSET_TYPE_DEBT()
-        );
-    return require_uint256(ghostTotalAssets[silo][assetType]);
-}

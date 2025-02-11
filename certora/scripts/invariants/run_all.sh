@@ -6,7 +6,7 @@ DIRS=(
   "certora/confs/invariants/debt"
   "certora/confs/invariants/silo"
   "certora/confs/invariants/protected"
-  #"certora/confs/invariants/hook"
+  "certora/confs/invariants/hook"
 )
 
 for dir in "${DIRS[@]}"; do

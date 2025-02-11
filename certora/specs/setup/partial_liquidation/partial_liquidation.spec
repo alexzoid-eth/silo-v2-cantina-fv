@@ -30,6 +30,23 @@ methods {
     ) internal returns bool
         => ghostUserSolvent[_borrower];
 
+    function PartialLiquidationExecLib.getExactLiquidationAmounts(
+        ISiloConfig.ConfigData _collateralConfig,
+        ISiloConfig.ConfigData _debtConfig,
+        address _user,
+        uint256 _maxDebtToCover,
+        uint256 _liquidationFee
+    ) external returns (
+        uint256,
+        uint256,
+        uint256,
+        bytes4
+    ) => getExactLiquidationAmountsCVL(
+        _user,
+        _maxDebtToCover,
+        _liquidationFee
+    );
+
     function SiloMathLib.convertToAssets(
         uint256 _shares, uint256 _totalAssets, uint256 _totalShares, Math.Rounding _rounding, ISilo.AssetType _assetType
     ) internal returns (uint256) 
@@ -55,17 +72,14 @@ methods {
 
 definition _DUST() returns mathint = 100;
 
-function setupValidBorrowerWithDebtCollateral(address borrower) {
+function borrowerReadyToLiquidate(address borrower) returns bool {
 
-    require(borrower != 0);
-
-    // Has collateral in Silo0
-    require(ghostConfigBorrowerCollateralSilo[borrower] == _Silo0
+    return borrower != 0 
+        && ghostConfigBorrowerCollateralSilo[borrower] == _Silo0
         && ghostERC20Balances[_Collateral0][borrower] + ghostERC20Balances[_Protected0][borrower] > _DUST()
-    );
-
-    // Has debt in Silo1
-    require(ghostERC20Balances[_Debt1][borrower] > _DUST());
+        && ghostERC20Balances[_Debt1][borrower] > _DUST()
+        && ghostUserSolvent[borrower] == false
+        ;
 }
 
 persistent ghost address ghostBorrower;
@@ -84,11 +98,11 @@ function liquidationCallValidFlexibleCVL(
     bool _ignoreCollateralShares
 ) returns (uint256, uint256) {
 
-    ghostBorrower = _borrower;
-    ghostMaxDebtToCover = _maxDebtToCover;
-    ghostReceiveSToken = _receiveSToken;
-    ghostIgnoreProtectedShares = _ignoreProtectedShares;
-    ghostIgnoreCollateralShares = _ignoreCollateralShares;
+    require(ghostBorrower == _borrower);
+    require(ghostMaxDebtToCover == _maxDebtToCover);
+    require(ghostReceiveSToken == _receiveSToken);
+    require(ghostIgnoreProtectedShares == _ignoreProtectedShares);
+    require(ghostIgnoreCollateralShares == _ignoreCollateralShares);
 
     require(e.msg.sender == _HookSender);
 
@@ -127,27 +141,42 @@ persistent ghost mapping(address => bool) ghostUserSolvent {
     init_state axiom forall address user. ghostUserSolvent[user] == false;
 }
 
+function getExactLiquidationAmountsCVL(
+    address _user,
+    uint256 _maxDebtToCover,
+    uint256 _liquidationFee
+    ) returns (uint256, uint256, uint256, bytes4)
+{
+    uint256 withdrawAssetsFromCollateral;
+    uint256 withdrawAssetsFromProtected;
+    uint256 repayDebtAssets;
+    bytes4 customError;
+
+    if(borrowerReadyToLiquidate(_user) == false) {
+        return (0, 0, 0, customError);
+    } else {
+        if(ghostIgnoreProtectedShares) {
+            require(ghostERC20Balances[_Protected0][_user] == 0);
+            require(withdrawAssetsFromCollateral <= ghostERC20Balances[_Collateral0][_user]);
+            require(withdrawAssetsFromProtected == 0);
+            require(repayDebtAssets == withdrawAssetsFromCollateral);
+        } else {
+            require(ghostERC20Balances[_Collateral0][_user] == 0);
+            require(withdrawAssetsFromCollateral == 0);
+            require(withdrawAssetsFromProtected <= ghostERC20Balances[_Protected0][_user]);
+            require(repayDebtAssets == withdrawAssetsFromProtected);
+        }
+
+        return (withdrawAssetsFromCollateral, withdrawAssetsFromProtected, repayDebtAssets, to_bytes4(0));
+    }
+}
+
 function convertToAssetsCVL(uint256 _shares) returns uint256 {
     return _shares;
 }
 
 function convertToSharesCVL(uint256 _assets) returns uint256 {
     return _assets;
-}
-
-function getTotalAssetsStorageCVL(address silo, mathint assetType) returns uint256 {
-
-    // Collateral Silo
-    assert(silo == _Silo0);
-
-    // Selected collateral shares
-    if(ghostIgnoreProtectedShares) {
-        assert(assetType == ASSET_TYPE_COLLATERAL());
-    } else {
-        assert(assetType == ASSET_TYPE_PROTECTED());
-    }
-
-    return require_uint256(ghostTotalAssets[silo][assetType]);
 }
 
 persistent ghost mathint ghostConfiscatedCollateralShares;
@@ -184,7 +213,6 @@ function forwardTransferFromNoChecksCVL(address token, address _from, address _t
 function repayCVL(env e, address silo, uint256 _assets, address _borrower)
     returns uint256
 {
-    // For harness only, treat 1 underlying asset = 1 debt share
     uint256 shares = _assets;
     
     assert(silo == _Silo1); // Debt silo based on liquidationCallValidFlexibleCVL()
@@ -199,7 +227,7 @@ function repayCVL(env e, address silo, uint256 _assets, address _borrower)
     assert(ghostERC20Allowances[ghostToken1][_PartialLiquidation][_Silo1] >= _assets);
 
     // Borrower's shares decrease
-    require(ghostERC20Balances[_Debt1][_borrower] >= shares); // @todo assert?
+    assert(ghostERC20Balances[_Debt1][_borrower] >= shares); 
     ghostERC20Balances[_Debt1][_borrower] = ghostERC20Balances[_Debt1][_borrower] - shares;
     
     // Total debt assets decrease
@@ -225,8 +253,8 @@ function redeemCVL(
     uint256 assets = _shares;
     
     // Based on PartialLiquidation.sol
-    assert(silo == _Silo0); // Collateral silo based on liquidationCallValidFlexibleCVL()
-    assert(_shares != 0);
+    assert(silo == _Silo0);
+    assert(_shares == ghostConfiscatedCollateralShares);
     assert(_receiver == _HookSender);       // msg.sender 
     assert(_owner == _PartialLiquidation);  // this
     if(ghostIgnoreProtectedShares) {
@@ -236,34 +264,28 @@ function redeemCVL(
     }
 
     if (_collateralType == ISilo.CollateralType.Collateral) {
-        // Check the owner has enough "collateral share" balance
-        require(ghostERC20Balances[silo][_owner] >= _shares);
-        ghostERC20Balances[silo][_owner] = ghostERC20Balances[silo][_owner] - _shares;
+        // Burn collateral shares
+        assert(ghostERC20Balances[_Collateral0][_PartialLiquidation] >= _shares);
+        ghostERC20Balances[_Collateral0][_PartialLiquidation] = ghostERC20Balances[_Collateral0][_PartialLiquidation] - _shares;
 
         // Decrease total tracked Collateral assets in Silo
-        require(ghostTotalAssets[silo][ASSET_TYPE_COLLATERAL()] >= _shares);
-        ghostTotalAssets[silo][ASSET_TYPE_COLLATERAL()] = ghostTotalAssets[silo][ASSET_TYPE_COLLATERAL()] - _shares;
-
-        // Send underlying assets from Silo to `_owner` (or `_receiver`, but here `_receiver == _owner`)
-        require(ghostERC20Balances[ghostToken1][_Silo1] >= _shares);
-        ghostERC20Balances[ghostToken1][_Silo1] = ghostERC20Balances[ghostToken1][_Silo1] - _shares;
-        ghostERC20Balances[ghostToken1][_owner] = ghostERC20Balances[ghostToken1][_owner] + _shares;
-
+        require(ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] >= assets);
+        ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] = ghostTotalAssets[_Silo0][ASSET_TYPE_COLLATERAL()] - assets;
     } else {
-        // Check the owner has enough "protected share" balance
-        require(ghostERC20Balances[_Protected1][_owner] >= _shares);
-        ghostERC20Balances[_Protected1][_owner] = ghostERC20Balances[_Protected1][_owner] - _shares;
+        // Burn protected collateral shares
+        assert(ghostERC20Balances[_Protected0][_PartialLiquidation] >= _shares);
+        ghostERC20Balances[_Protected0][_PartialLiquidation] = ghostERC20Balances[_Protected0][_PartialLiquidation] - _shares;
 
-        // Decrease total tracked Protected assets in Silo
-        require(ghostTotalAssets[_Silo1][ASSET_TYPE_PROTECTED()] >= _shares);
-        ghostTotalAssets[_Silo1][ASSET_TYPE_PROTECTED()] = ghostTotalAssets[_Silo1][ASSET_TYPE_PROTECTED()] - _shares;
-
-        // Send underlying assets from Silo to `_owner`
-        require(ghostERC20Balances[ghostToken1][_Silo1] >= _shares);
-        ghostERC20Balances[ghostToken1][_Silo1] = ghostERC20Balances[ghostToken1][_Silo1] - _shares;
-        ghostERC20Balances[ghostToken1][_owner] = ghostERC20Balances[ghostToken1][_owner] + _shares;
+        // Decrease total tracked Collateral assets in Silo
+        require(ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] >= assets);
+        ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] = ghostTotalAssets[_Silo0][ASSET_TYPE_PROTECTED()] - assets;
     }
     
+    // Send underlying assets Token0 from Silo to HookSender
+    require(ghostERC20Balances[ghostToken0][_Silo0] >= assets);
+    ghostERC20Balances[ghostToken0][_Silo0] = ghostERC20Balances[ghostToken0][_Silo0] - assets;
+    ghostERC20Balances[ghostToken0][_HookSender] = ghostERC20Balances[ghostToken0][_HookSender] + assets;
+
     return assets;
 }
 

@@ -202,7 +202,6 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {   
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
         
-        // @note reverted if user has no debt
         require(debtConfig.silo != address(0), UserIsSolvent());
         require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());
         require(_debtAsset == debtConfig.token, UnexpectedDebtToken());
