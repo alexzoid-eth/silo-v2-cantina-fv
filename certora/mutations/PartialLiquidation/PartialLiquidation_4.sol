@@ -88,8 +88,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         // we do not allow dust so full liquidation is required
         require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
 
-        IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
-        IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
+        // MUTATION: Skipped repayment validation check to allow liquidations without actual debt repayment
+        // IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
+        // IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
 
         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);
 
@@ -113,8 +114,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {

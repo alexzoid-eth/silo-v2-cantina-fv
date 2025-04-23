@@ -649,31 +649,37 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     function _convertToAssets(uint256 _shares, AssetType _assetType) internal view virtual returns (uint256 assets) {
-        (
-            uint256 totalSiloAssets, uint256 totalShares
-        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
+        // mutation: removed the calculation of total assets and shares and set assets to the original shares
+        // (
+        //     uint256 totalSiloAssets, uint256 totalShares
+        // ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
 
-        assets = SiloMathLib.convertToAssets(
-            _shares,
-            totalSiloAssets,
-            totalShares,
-            _assetType == AssetType.Debt ? Rounding.BORROW_TO_ASSETS : Rounding.DEPOSIT_TO_ASSETS,
-            _assetType
-        );
+        // assets = SiloMathLib.convertToAssets(
+        //     _shares,
+        //     totalSiloAssets,
+        //     totalShares,
+        //     _assetType == AssetType.Debt ? Rounding.BORROW_TO_ASSETS : Rounding.DEPOSIT_TO_ASSETS,
+        //     _assetType
+        // );
+
+        assets = _shares;
     }
 
     function _convertToShares(uint256 _assets, AssetType _assetType) internal view virtual returns (uint256 shares) {
-        (
-            uint256 totalSiloAssets, uint256 totalShares
-        ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
+        // mutation: removed the calculation of total assets and shares and set shares to the original assets
+        // (
+        //     uint256 totalSiloAssets, uint256 totalShares
+        // ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), _assetType);
 
-        shares = SiloMathLib.convertToShares(
-            _assets,
-            totalSiloAssets,
-            totalShares,
-            _assetType == AssetType.Debt ? Rounding.BORROW_TO_SHARES : Rounding.DEPOSIT_TO_SHARES,
-            _assetType
-        );
+        // shares = SiloMathLib.convertToShares(
+        //     _assets,
+        //     totalSiloAssets,
+        //     totalShares,
+        //     _assetType == AssetType.Debt ? Rounding.BORROW_TO_SHARES : Rounding.DEPOSIT_TO_SHARES,
+        //     _assetType
+        // );
+
+        shares = _assets;
     }
 
     function _deposit(
@@ -815,10 +821,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    // mutation: add an unprotected burn function
-    function burn(address _owner, uint256 _amount) external {
-        _burn(_owner, _amount);
     }
 }

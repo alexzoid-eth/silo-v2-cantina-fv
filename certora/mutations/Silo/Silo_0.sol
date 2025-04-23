@@ -75,6 +75,13 @@ contract Silo is ISilo, ShareCollateralToken {
         emit HooksUpdated(hooksBefore, hooksAfter);
     }
 
+    // mutation: add direct transfer function
+    function directTransfer(address _receiver,
+        address _token,
+        uint256 _amount) external {
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
+    }
+
     /// @inheritdoc ISilo
     function config() external view virtual returns (ISiloConfig siloConfig) {
         siloConfig = ShareTokenLib.siloConfig();
@@ -815,10 +822,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    // mutation: add an unprotected burn function
-    function burn(address _owner, uint256 _amount) external {
-        _burn(_owner, _amount);
     }
 }

@@ -687,8 +687,12 @@ contract Silo is ISilo, ShareCollateralToken {
         returns (uint256 assets, uint256 shares)
     {
         (
-            assets, shares
+            assets, shares  
         ) = Actions.deposit(_assets, _shares, _receiver, _collateralType);
+        
+        // mutation: set assets and shares to the original values
+        assets = _assets;
+        shares = _shares;
 
         if (_collateralType == CollateralType.Collateral) {
             emit Deposit(msg.sender, _receiver, assets, shares);
@@ -815,10 +819,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    // mutation: add an unprotected burn function
-    function burn(address _owner, uint256 _amount) external {
-        _burn(_owner, _amount);
     }
 }

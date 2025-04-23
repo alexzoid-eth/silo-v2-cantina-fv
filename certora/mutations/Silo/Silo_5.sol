@@ -458,14 +458,16 @@ contract Silo is ISilo, ShareCollateralToken {
     {
         uint256 shares;
 
-        (assets, shares) = Actions.borrow(
-            BorrowArgs({
-                assets: 0,
-                shares: _shares,
-                receiver: _receiver,
-                borrower: _borrower
-            })
-        );
+        // mutation: removed interest accrual before borrowing and set assets to 0
+        //(assets, shares) = Actions.borrow(
+        //    BorrowArgs({
+        //        assets: 0,
+        //        shares: _shares,
+        //        receiver: _receiver,
+        //        borrower: _borrower  
+        //    })
+        //);
+        (assets, shares) = (0, _shares);
 
         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
     }
@@ -815,10 +817,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    // mutation: add an unprotected burn function
-    function burn(address _owner, uint256 _amount) external {
-        _burn(_owner, _amount);
     }
 }

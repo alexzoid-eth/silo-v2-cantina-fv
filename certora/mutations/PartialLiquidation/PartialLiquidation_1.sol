@@ -64,7 +64,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
         require(_maxDebtToCover != 0, NoDebtToCover());
 
-        siloConfigCached.turnOnReentrancyProtection();
+        // mutation: turn off reentrancy protection instead of turning on 
+        siloConfigCached.turnOffReentrancyProtection();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
@@ -113,8 +114,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {

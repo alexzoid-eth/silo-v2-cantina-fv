@@ -346,18 +346,19 @@ library Actions {
         // this check also verify if token is correct
         require(_amount <= Views.maxFlashLoan(_token), FlashLoanNotPossible());
 
+        // MUTATION: Skip fee collection to allow free flash loans
         // cast safe, because we checked `fee > type(uint192).max`
-        SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
+        // SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        // mutation: replace "_receiver" with "this"
-        IERC20(_token).safeTransfer(address(this), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
             ISilo.FlashloanFailed()
         );
 
-        IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount + fee);
+        // MUTATION: Only require repayment of borrowed amount, not fee
+        IERC20(_token).safeTransferFrom(address(_receiver), address(this), _amount);
 
         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.FLASH_LOAN)) {
             bytes memory data = abi.encodePacked(_receiver, _token, _amount, fee);
@@ -407,12 +408,14 @@ library Actions {
             // deployer was never setup or deployer NFT has been burned
             IERC20(asset).safeTransfer(daoFeeReceiver, earnedFees);
         } else {
+            // MUTATION: Incorrect fee calculation that ignores fee proportions
             // split fees proportionally
-            daoRevenue = earnedFees * daoFee;
+            // daoRevenue = earnedFees * daoFee;
+            daoRevenue = earnedFees / 2;  // Always split 50-50 regardless of configured fee percentages
 
             unchecked {
                 // fees are % in decimal point so safe to uncheck
-                daoRevenue = daoRevenue / (daoFee + deployerFee);
+                // daoRevenue = daoRevenue / (daoFee + deployerFee);
                 // `daoRevenue` is chunk of `earnedFees`, so safe to uncheck
                 deployerRevenue = earnedFees - daoRevenue;
             }

@@ -36,7 +36,8 @@ library Actions {
     function initialize(ISiloConfig _siloConfig) external returns (address hookReceiver) {
         IShareToken.ShareTokenStorage storage _sharedStorage = ShareTokenLib.getShareTokenStorage();
 
-        require(address(_sharedStorage.siloConfig) == address(0), ISilo.SiloInitialized());
+        // MUTATION: Removed initialization check to allow double initialization
+        // require(address(_sharedStorage.siloConfig) == address(0), ISilo.SiloInitialized());
 
         ISiloConfig.ConfigData memory configData = _siloConfig.getConfig(address(this));
 
@@ -268,11 +269,6 @@ library Actions {
             _collateralType: depositType
         });
 
-        // If deposit is collateral, then check the solvency.
-        if (depositConfig.silo == collateralConfig.silo) {
-            _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);
-        }
-
         siloConfig.turnOffReentrancyProtection();
 
         _hookCallAfterTransitionCollateral(_args, toShares, assets);
@@ -349,8 +345,7 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        // mutation: replace "_receiver" with "this"
-        IERC20(_token).safeTransfer(address(this), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
@@ -444,10 +439,11 @@ library Actions {
         internal
         returns (bool success, bytes memory result)
     {
-        require(
-            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
-            ISilo.OnlyHookReceiver()
-        );
+        // MUTATION: Skip permission check to allow any address to make privileged calls on behalf of the Silo
+        // require(
+        //     msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
+        //     ISilo.OnlyHookReceiver()
+        // );
 
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.

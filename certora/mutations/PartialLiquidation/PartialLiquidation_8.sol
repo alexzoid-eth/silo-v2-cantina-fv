@@ -85,8 +85,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         RevertLib.revertIfError(params.customError);
 
-        // we do not allow dust so full liquidation is required
-        require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
+        // MUTATION: Removed slippage protection check to enable price manipulation during liquidations
+        // require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
 
         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);
         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);
@@ -113,8 +113,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {

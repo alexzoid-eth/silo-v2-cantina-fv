@@ -80,7 +80,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
             debtConfig,
             _borrower,
             _maxDebtToCover,
-            collateralConfig.liquidationFee
+            // MUTATION: Divided liquidation fee by 2 to provide insufficient incentive for liquidators
+            collateralConfig.liquidationFee / 2
         );
 
         RevertLib.revertIfError(params.customError);
@@ -113,8 +114,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {

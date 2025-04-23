@@ -113,8 +113,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
@@ -210,7 +209,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         ISilo(debtConfig.silo).accrueInterest();
 
         if (collateralConfig.silo != debtConfig.silo) {
-            ISilo(collateralConfig.silo).accrueInterest();
+            // mutation: fail to accrue interest for different collateral and debt silo
+            // ISilo(collateralConfig.silo).accrueInterest();
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }

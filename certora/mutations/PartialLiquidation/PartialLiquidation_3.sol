@@ -59,6 +59,9 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         virtual
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
+        // MUTATION: Removed access control check that verifies msg.sender is an authorized liquidator
+        // require(siloConfig.isAuthorizedLiquidator(msg.sender), "Unauthorized liquidator");
+
         ISiloConfig siloConfigCached = siloConfig;
 
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
@@ -113,8 +116,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {

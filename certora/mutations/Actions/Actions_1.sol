@@ -123,7 +123,8 @@ library Actions {
 
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
+        // mutation: fail to require hasDebtInOtherSilo
+        // require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForBothSilos();
@@ -156,7 +157,8 @@ library Actions {
 
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
-        require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
+        // mutation: fail to require hasDebtInOtherSilo
+        // require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());
 
         siloConfig.turnOnReentrancyProtection();
         siloConfig.accrueInterestForSilo(address(this));
@@ -349,8 +351,7 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        // mutation: replace "_receiver" with "this"
-        IERC20(_token).safeTransfer(address(this), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,

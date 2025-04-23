@@ -349,8 +349,7 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        // mutation: replace "_receiver" with "this"
-        IERC20(_token).safeTransfer(address(this), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
@@ -393,10 +392,11 @@ library Actions {
 
         uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
 
-        // we will never underflow because `_protectedAssets` is always less/equal `siloBalance`
-        unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
+        // MUTATION: Skip available liquidity check to allow withdrawing more fees than available
+        // unchecked { availableLiquidity = protectedAssets > siloBalance ? 0 : siloBalance - protectedAssets; }
+        availableLiquidity = siloBalance;  // Always use full balance
 
-        require(availableLiquidity != 0, ISilo.NoLiquidity());
+        // require(availableLiquidity != 0, ISilo.NoLiquidity());
 
         if (earnedFees > availableLiquidity) earnedFees = availableLiquidity;
 

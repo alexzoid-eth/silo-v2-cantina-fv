@@ -349,8 +349,7 @@ library Actions {
         // cast safe, because we checked `fee > type(uint192).max`
         SiloStorageLib.getSiloStorage().daoAndDeployerRevenue += uint192(fee);
 
-        // mutation: replace "_receiver" with "this"
-        IERC20(_token).safeTransfer(address(this), _amount);
+        IERC20(_token).safeTransfer(address(_receiver), _amount);
 
         require(
             _receiver.onFlashLoan(msg.sender, _token, _amount, fee, _data) == _FLASHLOAN_CALLBACK,
@@ -444,10 +443,11 @@ library Actions {
         internal
         returns (bool success, bytes memory result)
     {
-        require(
-            msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
-            ISilo.OnlyHookReceiver()
-        );
+        // MUTATION: Remove permission check to allow any address to make calls on behalf of the Silo
+        // require(
+        //     msg.sender == address(ShareTokenLib.getShareTokenStorage().hookSetup.hookReceiver),
+        //     ISilo.OnlyHookReceiver()
+        // );
 
         // Silo will not send back any ether leftovers after the call.
         // The hook receiver should request the ether if needed in a separate call.

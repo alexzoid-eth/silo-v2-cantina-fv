@@ -113,8 +113,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
@@ -203,7 +202,12 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
     {
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
-        require(debtConfig.silo != address(0), UserIsSolvent());
+        // MUTATION: Bypassed solvency check to allow liquidation of healthy positions by forcing a valid silo address
+        // require(debtConfig.silo != address(0), UserIsSolvent());
+        if (debtConfig.silo == address(0)) {
+            debtConfig.silo = collateralConfig.silo;
+        }
+
         require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());
         require(_debtAsset == debtConfig.token, UnexpectedDebtToken());
 

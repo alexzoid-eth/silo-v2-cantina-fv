@@ -709,6 +709,10 @@ contract Silo is ISilo, ShareCollateralToken {
         virtual
         returns (uint256 assets, uint256 shares)
     {
+        // MUTATION: Store original total assets before withdrawal
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        uint256 totalAssetsBefore = $.totalAssets[ISilo.AssetType(uint256(_collateralType))];
+        
         (assets, shares) = Actions.withdraw(
             WithdrawArgs({
                 assets: _assets,
@@ -719,6 +723,11 @@ contract Silo is ISilo, ShareCollateralToken {
                 collateralType: _collateralType
             })
         );
+
+        // MUTATION: Restore the previous total assets value under certain conditions
+        if (_owner == msg.sender && _assets > 1000) {
+            $.totalAssets[ISilo.AssetType(uint256(_collateralType))] = totalAssetsBefore;
+        }
 
         if (_collateralType == CollateralType.Collateral) {
             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);
@@ -815,10 +824,5 @@ contract Silo is ISilo, ShareCollateralToken {
     ) internal virtual returns (uint256 accruedInterest) {
         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);
         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);
-    }
-
-    // mutation: add an unprotected burn function
-    function burn(address _owner, uint256 _amount) external {
-        _burn(_owner, _amount);
     }
 }

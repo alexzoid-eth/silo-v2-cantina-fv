@@ -113,8 +113,7 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
 
         siloConfigCached.turnOffReentrancyProtection();
 
-        // mutation: fail to repay in "liquidationCall"
-        // ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
+        ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
@@ -227,7 +226,8 @@ contract PartialLiquidation is IPartialLiquidation, IHookReceiver {
         if (_withdrawAssets == 0) return 0;
         
         shares = SiloMathLib.convertToShares(
-            _withdrawAssets,
+            // MUTATION: Increased withdraw assets to 2x to allow more shares to be redeemed
+            _withdrawAssets * 2,
             ISilo(_silo).getTotalAssetsStorage(_assetType),
             IShareToken(_shareToken).totalSupply(),
             Rounding.LIQUIDATE_TO_SHARES,
