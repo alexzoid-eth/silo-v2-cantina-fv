@@ -215,7 +215,7 @@ Note: `silo_deployerFeeReceiverCannotBeBlocked` violated due to [real issue](htt
 
 ### EIP4626 Compliance
 
-These rules ensure the protocol's vaults comply with the EIP-4626 tokenized vault standard. 
+These rules ensure the protocol's vaults comply with the [EIP-4626](https://eips.ethereum.org/EIPS/eip-4626) tokenized vault standard. 
 
 | Source | Rule | Description | Links |
 |------------|---------------|-------------|------|
@@ -254,7 +254,7 @@ Note: In this table, `eip4626_` represents both collateral and protected vault i
 
 ### EIP20 Compliance
 
-These rules ensure the protocol's tokens comply with the EIP-20 token standard.
+These rules ensure the protocol's tokens comply with the [EIP-20](https://eips.ethereum.org/EIPS/eip-20) token standard.
 
 | Source | Rule | Description | Links |
 |------------|---------------|-------------|------|
