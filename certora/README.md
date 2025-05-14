@@ -1,5 +1,6 @@
 # Formal Verification Report: Silo v2
 
+- Competition: https://cantina.xyz/competitions/18f1e37b-9ac2-4ba9-b32e-50344500c1a7
 - Repository: https://github.com/Certora/silo-v2-cantina-fv
 - Latest Commit Hash: [a45606c](https://github.com/Certora/silo-v2-cantina-fv/commit/a45606c)
 - Date: January 2025
@@ -249,7 +250,7 @@ These rules ensure the protocol's vaults comply with the EIP-4626 tokenized vaul
 | [EIP4626-29](certora/specs/collateral.spec) | eip4626_depositMustRevertIfCannotDeposit | Deposit must revert if full deposit can't be processed | [✅](https://prover.certora.com/output/52567/45a84c4020b445c591a968849fc0edd7/?anonymousKey=7de0595ec2a85047c0a37f0295c7338a089bcf21) |
 | [EIP4626-30](certora/specs/collateral.spec) | eip4626_depositPossibility | Deposit functionality is possible | [✅](https://prover.certora.com/output/52567/f6e4773565e04f62b2cc44d43238c9c5/?anonymousKey=120d1e927ff8e1aefbfa9865a03718699a49e7af) |
 
-Note: In this table, eip4626_ represents both collateral and protected vault implementations of the same rule (e.g., eip4626_collateral_assetIntegrity and eip4626_protected_assetIntegrity). Links are provided for collateral execution path.
+Note: In this table, `eip4626_` represents both collateral and protected vault implementations of the same rule (e.g., `eip4626_collateral_assetIntegrity` and `eip4626_protected_assetIntegrity`). Links are provided for collateral execution path.
 
 ### EIP20 Compliance
 
