@@ -40,7 +40,7 @@ def generate_config(rule_name):
         ],
         "prover_args": [
             "-maxDecompiledCommandCount 10000000",
-            "-maxBlockCount 300000"
+            "-maxBlockCount 300000",
         ],
         "rule": [
             rule_name

@@ -29,8 +29,6 @@ persistent ghost bool ghostReentrancyProtectionDoubleCall {
 
 function turnOnReentrancyProtectionCVL(env e, address contract) {
 
-    assert(contract != 0);
-
     onlySiloOrTokenOrHookReceiverCVL(e);
 
     ghostReentrancyCalled = true;
@@ -42,8 +40,6 @@ function turnOnReentrancyProtectionCVL(env e, address contract) {
 }
 
 function turnOffReentrancyProtectionCVL(env e, address contract) {
-
-    assert(contract != 0);
 
     onlySiloOrTokenOrHookReceiverCVL(e);
 

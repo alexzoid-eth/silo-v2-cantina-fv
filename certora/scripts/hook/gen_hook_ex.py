@@ -59,7 +59,7 @@ def generate_config(rule_name, method, fn_name):
         ],
         "prover_args": [
             "-maxDecompiledCommandCount 10000000",
-            "-maxBlockCount 300000"
+            "-maxBlockCount 300000",
         ],
         "struct_link": [
             "Silo0:silo=Silo0",

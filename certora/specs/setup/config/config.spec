@@ -77,9 +77,7 @@ persistent ghost mathint ghostConfigDeployerFee {
         || ghostConfigDeployerFee >= BP2DP_NORMALIZATION() && ghostConfigDeployerFee <= FEE_15_PERCENT(); 
 }
 
-persistent ghost address ghostHookReceiver {
-    axiom ADDRESS_NOT_CONTRACT_IN_SCENE(ghostHookReceiver);
-}
+persistent ghost address ghostHookReceiver; 
 
 // Silo0
 

@@ -281,8 +281,8 @@ definition HOOK_MODE() returns bool =
 // `Silo`
 
 function getTotalAssetsStorageCVL(address silo, mathint assetType) returns uint256 {
-    assert(silo == _Silo0 || silo == _Silo1);
-    assert(assetType == ASSET_TYPE_PROTECTED() 
+    require(silo == _Silo0 || silo == _Silo1);
+    require(assetType == ASSET_TYPE_PROTECTED() 
         || assetType == ASSET_TYPE_COLLATERAL() 
         || assetType == ASSET_TYPE_DEBT()
         );
@@ -331,7 +331,7 @@ function onFlashLoanCVL(address _receiver) returns bytes32 {
 persistent ghost bool ghostBeforeActionCalled;
 persistent ghost uint256 ghostBeforeActionId;
 function beforeActionCVL(address _silo, uint256 _action) {
-    assert(_silo == _Silo0 || _silo == _Silo1);
+    require(_silo == _Silo0 || _silo == _Silo1);
     ghostBeforeActionCalled = true;
     ghostBeforeActionId = _action;
 }
@@ -339,7 +339,7 @@ function beforeActionCVL(address _silo, uint256 _action) {
 persistent ghost bool ghostAfterActionCalled;
 persistent ghost uint256 ghostAfterActionId;
 function afterActionCVL(address _silo, uint256 _action) {
-    assert(_silo == _Silo0 || _silo == _Silo1);
+    require(_silo == _Silo0 || _silo == _Silo1);
     ghostAfterActionCalled = true;
     ghostAfterActionId = _action;
 }

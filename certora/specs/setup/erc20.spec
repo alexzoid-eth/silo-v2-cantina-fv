@@ -120,11 +120,11 @@ function transferFromCVL(address token, address from, address to, uint256 amount
 
     if(transferFrom) {
         ASSERT(ghostERC20Allowances[token][from][to] == max_uint256 || ghostERC20Allowances[token][from][to] >= amount);
-        ghostERC20Allowances[token][from][to] = assert_uint256(ghostERC20Allowances[token][from][to] - amount);
+        ghostERC20Allowances[token][from][to] = require_uint256(ghostERC20Allowances[token][from][to] - amount);
     }
 
     ASSERT(ghostERC20Balances[token][from] >= amount);
-    ghostERC20Balances[token][from] = assert_uint256(ghostERC20Balances[token][from] - amount);
+    ghostERC20Balances[token][from] = require_uint256(ghostERC20Balances[token][from] - amount);
     ghostERC20Balances[token][to] = require_uint256(ghostERC20Balances[token][to] + amount);
 
     return true;
