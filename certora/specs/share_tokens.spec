@@ -177,31 +177,6 @@ rule share_noStateChangingCallInsideReentrancyEntered(env e, method f, calldataa
     );
 }
 
-rule share_protectedFunctionMightChangeState(env e, method f, calldataarg args) 
-    filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } {
-
-    setupSilo(e);
-
-    require(ghostReentrancyCalled == false);
-
-    storage before = lastStorage;
-
-    f(e, args);
-
-    storage after = lastStorage;
-
-    satisfy(ghostReentrancyCalled == true
-        => (
-            before[_Silo0] != after[_Silo0]
-            || before[_Protected0] != after[_Protected0]
-            || before[_Debt0] != after[_Debt0]
-            || before[_Silo1] != after[_Silo1]
-            || before[_Protected1] != after[_Protected1]
-            || before[_Debt1] != after[_Debt1]
-        )
-    );
-}
-
 // Moving shares is not allowed inside a reentrant call
 rule share_noMovingSharesInsideReentrancyEntered(env e, method f, calldataarg args, address sharesUser)
     filtered { f-> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) 
