@@ -6,7 +6,6 @@ rule_names = [
 
     "share_crossReentrancyProtectionNoDoubleCall",
     "share_noStateChangingCallInsideReentrancyEntered",
-    "share_protectedFunctionMightChangeState",
     "share_noMovingSharesInsideReentrancyEntered",
     "share_allowedReenterFunctionDoNotCallCrossReentrancyGuard",
 
