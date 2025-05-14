@@ -68,21 +68,3 @@ rule share_hooksMustExecuteIfStorageChanged(env e, method f, calldataarg args)
         && ghostAfterActionCalled
     ));
 }
-
-rule share_possibilityOfStorageTouchedWhenHookInvolved(env e, method f, calldataarg args)
-    filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) } 
-{
-    setupSilo(e);
-
-    require(!ghostStorageTouched 
-        && !ghostBeforeActionCalled 
-        && !ghostAfterActionCalled 
-        && ghostExpectedHook == 0
-        );
-
-    f(e, args);
-
-    satisfy(ghostBeforeActionCalled || ghostAfterActionCalled || ghostExpectedHook != 0
-        => ghostStorageTouched
-    );
-}

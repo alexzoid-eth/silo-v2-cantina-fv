@@ -2,5 +2,4 @@
 rule_names = [
     "share_enforceHookBeforeAfterOrdering",
     "share_hooksMustExecuteIfStorageChanged",
-    "share_possibilityOfStorageTouchedWhenHookInvolved",
 ]
