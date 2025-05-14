@@ -17,7 +17,7 @@ hook ALL_SSTORE(uint256 slot, uint256 val)  {
 }
 
 // Ensures no storage writes happen before `hookBefore` or after `hookAfter`
-rule hooks_enforceHookBeforeAfterOrdering(env e, method f, calldataarg args) 
+rule share_enforceHookBeforeAfterOrdering(env e, method f, calldataarg args) 
     filtered { f -> !EXCLUDED_OR_VIEW_SILO_FUNCTION(f) 
         // `$.transferWithChecks = true` in `forwardTransferFromNoChecks()` breaks the rule
         && !(f.selector == 0xd985616c) // forwardTransferFromNoChecks()
